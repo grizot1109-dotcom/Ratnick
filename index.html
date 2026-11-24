@@ -2182,7 +2182,7 @@ function medalTitle(m) {
 // картинки медалей лежат в папке medals/
 function medalSVG(m, size = 34) {
   const key = m.k === "h" || m.k === "x" ? m.k : m.k + m.p;
-  return `<img class="medal" src="medals/${key}.webp" width="${size}" height="${size}" alt="" decoding="async">`;
+  return `<img class="medal" src="medals/${key}.webp?v=2" width="${size}" height="${size}" alt="" decoding="async">`;
 }
 const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, mg: 0, ms: 0, mb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
 let medalsBusy = false;
