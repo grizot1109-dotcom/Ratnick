@@ -508,6 +508,19 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
 .eyebrow .combo .fl{width:1.1em;height:1.1em}
 .quiz{display:grid;grid-template-columns:1fr;gap:8px}
 .skiprow{display:flex;justify-content:flex-end;margin-top:-4px}
+.lvlup{position:fixed;inset:0;z-index:80;background:rgba(8,12,20,.55);display:grid;place-items:center;padding:16px;animation:lvfade .25s ease-out;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.lvlcard{background:var(--surface);color:var(--ink);border-radius:22px;padding:26px 22px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:lvpop .5s cubic-bezier(.3,1.5,.5,1)}
+.lvlcard h2{margin:12px 0 4px;font:700 1.3rem var(--f-display)}
+.lvlcard p{margin:4px 0;color:var(--muted);font-size:.9rem}
+.lvlcard .lvlnew{color:var(--ink);font-weight:600}
+.lvlcard .actions{justify-content:center;margin-top:14px}
+.lvlbig{width:92px;height:92px;margin:0 auto;border-radius:24px;display:grid;place-items:center;font:700 2.6rem var(--f-display);color:#fff;background:#64748B;box-shadow:0 0 0 6px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.25);animation:lvspin 1s cubic-bezier(.3,1.4,.5,1)}
+.lvlbig.lt1{background:#2A9D8F}.lvlbig.lt2{background:#3B82F6}.lvlbig.lt3{background:#8B5CF6}.lvlbig.lt4{background:#E0479E}.lvlbig.lt5{background:linear-gradient(135deg,#F7D774,#D99A0B);color:#3A2A00}
+.spark.big{position:fixed;width:9px;height:9px;z-index:90;animation-duration:.9s}
+@keyframes lvfade{from{opacity:0}}
+@keyframes lvpop{from{transform:scale(.6);opacity:0}}
+@keyframes lvspin{from{transform:rotate(-200deg) scale(.3)}}
+@media (prefers-reduced-motion:reduce){.lvlup,.lvlcard,.lvlbig{animation:none}}
 .skiprow .link{font-size:.9rem;padding:6px 2px}
 .opt{display:flex;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:500 .95rem var(--f-body);padding:13px 14px;border-radius:12px;cursor:pointer;line-height:1.3}
 .opt .on{flex:none;width:1.6em;height:1.6em;border-radius:50%;background:var(--sunk);color:var(--muted);display:grid;place-items:center;font:600 .78rem var(--f-mono)}
@@ -577,7 +590,7 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
     <div class="card duelbar" id="duelBar" hidden></div>
     <div class="card sec duelcard" id="duelCard" hidden></div>
     <div class="filters" id="filters">
-      <div class="seg2 kinds" role="group" aria-label="Тип заданий"><button id="kWrite" aria-pressed="true">Писать</button><button id="kQuiz" aria-pressed="false">Узнать</button><button id="kTask" aria-pressed="false">Задачи</button><button id="kSym" aria-pressed="false">Буквы</button><button id="kUnit" aria-pressed="false">Единицы</button></div>
+      <div class="seg2 kinds" role="group" aria-label="Тип заданий"><button id="kWrite" aria-pressed="true">Писать</button><button id="kQuiz" aria-pressed="false">Узнать</button><button id="kTask" aria-pressed="false">Задачи</button><button id="kSym" aria-pressed="false">Буквы</button><button id="kUnit" aria-pressed="false">Единицы</button><button id="kConst" aria-pressed="false">Константы</button></div>
       <select class="sel" id="modeSel" aria-label="Порядок формул">
         <option value="srs">Повторение</option><option value="rand">Вперемешку</option><option value="weak">Сначала слабые</option><option value="err">Мои ошибки</option>
       </select>
@@ -924,6 +937,43 @@ const QTY = [
   ["qnt", "Δm", "дефект масс", "кг"], ["qnt", "T", "период полураспада", "с"], ["qnt", "Z", "зарядовое число", ""], ["qnt", "A", "массовое число", ""],
   ["qnt", "E_{св}", "энергия связи ядра", "Дж"], ["qnt", "p", "импульс фотона", "кг·м/с"]
 ].map(([sec, sym, name, unit], i) => ({ id: "qty-" + i, sec, sym, name, unit, q: name, src: sym, lg: "" }));
+/* Константы для режима «Константы» (значения как в справочнике ЕГЭ).
+   [раздел, обозначение, название, мантисса, порядок (10^e), единица, род: "f" — «чему равна», "m" — «чему равен», "n" — «чему равно»] */
+const CONST = [
+  ["dyn", "g", "ускорение свободного падения на Земле", "9,8", 0, "м/с²", "n"],
+  ["dyn", "G", "гравитационная постоянная", "6,67", -11, "Н·м²/кг²", "f"],
+  ["dyn", "M_З", "масса Земли", "6", 24, "кг", "f"],
+  ["dyn", "R_З", "радиус Земли", "6400", 0, "км", "m"],
+  ["mkt", "N_A", "постоянная Авогадро", "6,02", 23, "моль⁻¹", "f"],
+  ["mkt", "k", "постоянная Больцмана", "1,38", -23, "Дж/К", "f"],
+  ["mkt", "R", "универсальная газовая постоянная", "8,31", 0, "Дж/(моль·К)", "f"],
+  ["mkt", "T_0", "0 °C в кельвинах", "273", 0, "К", "n"],
+  ["mkt", "p_0", "нормальное атмосферное давление", "1", 5, "Па", "n"],
+  ["mkt", "c_в", "удельная теплоёмкость воды", "4200", 0, "Дж/(кг·К)", "f"],
+  ["mkt", "λ_л", "удельная теплота плавления льда", "3,3", 5, "Дж/кг", "f"],
+  ["mkt", "L_в", "удельная теплота парообразования воды", "2,3", 6, "Дж/кг", "f"],
+  ["stat", "ρ_в", "плотность воды", "1000", 0, "кг/м³", "f"],
+  ["es", "k", "коэффициент в законе Кулона", "9", 9, "Н·м²/Кл²", "m"],
+  ["es", "ε_0", "электрическая постоянная", "8,85", -12, "Ф/м", "f"],
+  ["es", "e", "элементарный заряд (заряд электрона по модулю)", "1,6", -19, "Кл", "m"],
+  ["mag", "μ_0", "магнитная постоянная", "4π", -7, "Гн/м", "f"],
+  ["opt", "c", "скорость света в вакууме", "3", 8, "м/с", "f"],
+  ["qnt", "h", "постоянная Планка", "6,6", -34, "Дж·с", "f"],
+  ["qnt", "m_e", "масса электрона", "9,1", -31, "кг", "f"],
+  ["qnt", "m_p", "масса протона", "1,673", -27, "кг", "f"],
+  ["qnt", "m_n", "масса нейтрона", "1,675", -27, "кг", "f"],
+  ["qnt", "1 а.е.м.", "атомная единица массы", "1,66", -27, "кг", "f"],
+  ["qnt", "1 эВ", "1 электронвольт", "1,6", -19, "Дж", "m"]
+].map(([sec, sym, name, m, e, unit, g], i) => ({ id: "const-" + i, sec, sym, name, m, e, unit, g, q: name, src: sym, lg: "" }));
+const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+const constVal = (m, e, unit) => (e ? (m === "1" ? "" : m + "·") + "10" + String(e).split("").map(c => SUP[c]).join("") : m) + (unit ? " " + unit : "");
+// неправильные варианты: та же константа с ошибкой в порядке или в мантиссе
+function constTraps(c) {
+  const out = [];
+  if (c.e) { out.push([c.m, -c.e], [c.m, c.e + (c.e > 0 ? 1 : -1)], [c.m, c.e - (c.e > 0 ? 1 : -1)]); }
+  else { const x = parseFloat(c.m.replace(",", ".")); for (const k of [10, 0.1, 100]) { const y = +(x * k).toPrecision(4); out.push([String(y).replace(".", ","), 0]); } }
+  return out.filter(([m, e]) => !(m === c.m && e === c.e)).map(([m, e]) => constVal(m, e, c.unit));
+}
 /* Выведенные формулы: из каких формул списка получаются. Остальные — основные (определения и законы). */
 const DERIV = {
   "kin-2": ["kin-1"], "kin-3": ["kin-1", "kin-2"], "kin-4": ["kin-1"], "kin-7": ["kin-6"], "kin-9": ["kin-2"],
@@ -1163,8 +1213,8 @@ const score = s => s && s.n ? (s.ok + s.mid * 0.5) / s.n : null;
 /* ---------- Выбор вопроса ---------- */
 let duel = null; // идущая дуэль: { code, ids, i, start, correct, points }
 let mode = ["srs", "rand", "weak", "err"].includes(prefs.mode) ? prefs.mode : "srs", secFilter = SEC_NAME[prefs.sec] ? prefs.sec : "all";
-let kind = ["quiz", "task", "sym", "unit"].includes(prefs.kind) ? prefs.kind : "write";
-const QUIZ_KINDS = ["quiz", "sym", "unit"]; // выбор из 4 вариантов: 3 Дж, без комбо
+let kind = ["quiz", "task", "sym", "unit", "const"].includes(prefs.kind) ? prefs.kind : "write";
+const QUIZ_KINDS = ["quiz", "sym", "unit", "const"]; // выбор из 4 вариантов: 3 Дж, без комбо
 const isQuizKind = k => QUIZ_KINDS.includes(k);
 let current = null, recent = [], sessionStats = { n: 0, ok: 0, mid: 0 };
 // Колода: формулы раздела в случайном порядке без повторов, пока колода не кончится.
@@ -1232,8 +1282,9 @@ function pickSrs() {
 }
 let taskDeck = [];
 function pickQty() {
-  const pool = QTY.filter(x => inSection(x) && (kind !== "unit" || x.unit));
-  const all = pool.length ? pool : QTY.filter(x => kind !== "unit" || x.unit);
+  const SRC = kind === "const" ? CONST : QTY;
+  const pool = SRC.filter(x => inSection(x) && (kind !== "unit" || x.unit));
+  const all = pool.length ? pool : SRC.filter(x => kind !== "unit" || x.unit);
   const fresh = all.filter(x => !recent.includes(x.id));
   const from = fresh.length ? fresh : all;
   return from[Math.floor(Math.random() * from.length)];
@@ -1272,7 +1323,7 @@ function pickErr() {
 function pick() {
   if (duel) return BY_ID[duel.ids[duel.i]];
   if (kind === "task") return pickTask();
-  if (kind === "sym" || kind === "unit") return pickQty();
+  if (kind === "sym" || kind === "unit" || kind === "const") return pickQty();
   if (mode === "err") return pickErr();
   if (mode === "srs" && kind === "write") return pickSrs();
   for (let guard = 0; guard < 3; guard++) {
@@ -1655,8 +1706,9 @@ function nextQuestion() {
   $("gradeBox").hidden = isQuizKind(k) || !!duel;
   if (isQuizKind(k)) {
     setTrainUI("quiz");
-    $("qText").textContent = k === "sym" ? "Что обозначает эта буква?" : k === "unit" ? `В чём измеряется ${current.name}?` : "Что это за формула?";
-    $("qFx").innerHTML = fx(current.src);
+    $("qText").textContent = k === "sym" ? "Что обозначает эта буква?" : k === "unit" ? `В чём измеряется ${current.name}?`
+      : k === "const" ? `Чему ${{ f: "равна", m: "равен", n: "равно" }[current.g]} ${current.name}?` : "Что это за формула?";
+    $("qFx").innerHTML = k === "const" && / /.test(current.src) ? esc(current.src) : fx(current.src);
     renderQuiz(k);
   } else {
     setTrainUI("write");
@@ -1699,6 +1751,12 @@ function renderQuiz(k = "quiz") {
     const ok = x => !taken.has(x.name);
     quizOpts = quizChoices(current.name, QTY.filter(x => ok(x) && x.sec !== current.sec).map(x => x.name), QTY.filter(x => ok(x) && x.sec === current.sec).map(x => x.name));
     current.ans = `${current.name}${current.unit ? ", " + current.unit : ""}`;
+  } else if (k === "const") {
+    // 2 ловушки с ошибкой в степени/числе + 1 значение другой константы
+    const right = constVal(current.m, current.e, current.unit), traps = shuffle(constTraps(current)).slice(0, 2);
+    const others = CONST.filter(x => x !== current).map(x => constVal(x.m, x.e, x.unit));
+    quizOpts = quizChoices(right, others, traps);
+    current.ans = `${current.name} = ${right}`;
   } else if (k === "unit") {
     const ok = x => x.unit && x.unit !== current.unit;
     quizOpts = quizChoices(current.unit, QTY.filter(x => ok(x) && x.sec !== current.sec).map(x => x.unit), QTY.filter(x => ok(x) && x.sec === current.sec).map(x => x.unit));
@@ -1799,7 +1857,7 @@ function commit() {
   if (current.task) recordTask(current.id, grade, lastPts);
   else if (isQuizKind(k)) recordQuiz(grade === 2, lastPts);
   else record(current.id, grade, lastPts);
-  renderFlame(); scheduleSync();
+  renderFlame(); scheduleSync(); checkLevelUp();
   sessionStats.n++; if (grade === 2) sessionStats.ok++; if (grade === 1) sessionStats.mid++;
   checkAch();
   if (duel) {
@@ -1835,9 +1893,9 @@ function setMode(m) { mode = m; prefs.mode = m; savePrefs(); $("modeSel").value 
 $("modeSel").value = mode;
 $("modeSel").onchange = () => { setMode($("modeSel").value); recent = []; nextQuestion(); };
 function syncKind() {
-  for (const [id, k] of [["kWrite", "write"], ["kQuiz", "quiz"], ["kTask", "task"], ["kSym", "sym"], ["kUnit", "unit"]]) $(id).setAttribute("aria-pressed", String(kind === k));
+  for (const [id, k] of [["kWrite", "write"], ["kQuiz", "quiz"], ["kTask", "task"], ["kSym", "sym"], ["kUnit", "unit"], ["kConst", "const"]]) $(id).setAttribute("aria-pressed", String(kind === k));
   $("modeSel").querySelector('[value="srs"]').disabled = kind !== "write";
-  $("modeSel").hidden = kind === "task" || kind === "sym" || kind === "unit";
+  $("modeSel").hidden = kind === "task" || kind === "sym" || kind === "unit" || kind === "const";
   if (kind !== "write" && mode === "srs") $("modeSel").value = "rand"; else $("modeSel").value = mode;
 }
 function setKind(k) { kind = k; prefs.kind = k; savePrefs(); syncKind(); deck = []; taskDeck = []; recent = []; nextQuestion(); }
@@ -1846,6 +1904,7 @@ $("kWrite").onclick = () => setKind("write");
 $("kQuiz").onclick = () => setKind("quiz");
 $("kSym").onclick = () => setKind("sym");
 $("kUnit").onclick = () => setKind("unit");
+$("kConst").onclick = () => setKind("const");
 syncKind();
 
 document.addEventListener("keydown", e => {
@@ -2427,6 +2486,34 @@ const ACH = [
   { id: "all", icon: "Σ", name: "Энциклопедист", desc: "Каждая формула хоть раз решена верно", goal: F.length, val: () => F.filter(f => state.f[f.id] && state.f[f.id].ok > 0).length }
 ];
 const badgeCount = () => Object.keys(state.ach || {}).length;
+// всплывающее окно «Новый уровень!» — только при настоящем повышении
+if (!state.lvlSeen) { state.lvlSeen = lvlOf(myPts()); persist(); }
+function checkLevelUp() {
+  const l = lvlOf(myPts()), was = state.lvlSeen || 1;
+  if (l <= was) { if (l < was) { state.lvlSeen = l; persist(); } return; }
+  state.lvlSeen = l; persist();
+  const opened = [];
+  for (const k in COS) for (const it of COS[k]) if (it.lvl && it.lvl > was && it.lvl <= l)
+    opened.push(`${{ frame: "рамка", color: "цвет ника", bg: "фон профиля" }[k]} «${it.name}»`);
+  const ov = document.createElement("div"); ov.className = "lvlup"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", "Новый уровень");
+  ov.innerHTML = `<div class="lvlcard"><div class="lvlbig lt${lvlTier(l)}">${l}</div><h2>Новый уровень!</h2><p>Теперь у тебя уровень ${l}.${l < LVL_MAX ? ` До ${l + 1} — ещё ${lvlNeed(l + 1) - myPts()} Дж.` : " Это максимум!"}</p>
+    ${opened.length ? `<p class="lvlnew">Открыто: ${opened.map(esc).join(", ")}</p>` : ""}
+    <div class="actions">${opened.length ? `<button class="btn" id="lvlGo">Выбрать оформление</button>` : ""}<button class="btn primary" id="lvlOk">Круто!</button></div></div>`;
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.querySelector("#lvlOk").onclick = close;
+  ov.onclick = e => { if (e.target === ov) close(); };
+  const g = ov.querySelector("#lvlGo"); if (g) g.onclick = () => { close(); profileBack = activeView; openProfile(me.id, me.name || "Ты", myAv()); };
+  // салют
+  const r = ov.querySelector(".lvlbig").getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const colors = ["#F2B81F", "#FF7A59", "#3FC488", "#7C9BFF", "#E0479E"];
+  for (let i = 0; i < 28; i++) {
+    const a = i / 28 * Math.PI * 2 + Math.random() * .3, d = 60 + Math.random() * 70, sp = document.createElement("span");
+    sp.className = "spark big"; sp.style.left = (cx - 4) + "px"; sp.style.top = (cy - 4) + "px"; sp.style.background = colors[i % colors.length];
+    sp.style.setProperty("--dx", Math.cos(a) * d + "px"); sp.style.setProperty("--dy", Math.sin(a) * d + "px");
+    document.body.appendChild(sp); setTimeout(() => sp.remove(), 900);
+  }
+}
 function toast(html) {
   const t = $("toast"); t.innerHTML = html; t.hidden = false;
   clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 3800);
