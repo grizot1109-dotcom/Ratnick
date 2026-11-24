@@ -61,6 +61,7 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .off .fl path{fill:var(--line)}.off .fl .core{fill:var(--muted);opacity:.35}
 .flame.off{color:var(--muted)}
 .mecard .who{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mecard .who #myProf{margin-left:auto;padding:8px 14px;font-size:.85rem}
 .nmbig{font-family:var(--f-display);font-size:1.15rem;font-weight:500;overflow-wrap:anywhere}
 .mestats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mestats>div{display:flex;flex-direction:column;background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
@@ -262,6 +263,21 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="sakura"] nav button[aria-selected="true"],[data-skin="sakura"] .btn.primary{background:#E0567F;color:#fff;border-color:#E0567F}
 
 
+:root[data-skin="board"][data-skin]{--bg:#1C3328;--surface:#24402F;--sunk:#1A2F24;--line:#3A5A48;--grid:#2C4A3A;--ink:#F3F1E4;--muted:#A8BDAE;--accent:#F2C94C;--accent-soft:#3E4A2A;--ok:#86DBA0;--ok-soft:#24503A;--mid:#F2C94C;--mid-soft:#4A4426;--bad:#FF8A7A;--bad-soft:#563330;--flame:#FF9A3C;--flame-core:#FFE07A;--on-accent:#1C3328;color-scheme:dark}
+[data-skin="board"] body{background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:5px 5px}
+[data-skin="board"] .fx{color:#FFFFFF}
+:root[data-skin="space"][data-skin]{--bg:#120B2A;--surface:#1C1440;--sunk:#160F34;--line:#33296A;--grid:#231A4E;--ink:#F1ECFF;--muted:#A49BD6;--accent:#B79CFF;--accent-soft:#2D2264;--ok:#7CE3B8;--ok-soft:#163E3A;--mid:#FFD36E;--mid-soft:#3E3320;--bad:#FF8FA8;--bad-soft:#4A1E38;--flame:#FFB547;--flame-core:#FFE9A8;--on-accent:#120B2A;color-scheme:dark}
+[data-skin="space"] body{background:radial-gradient(1px 1px at 20% 12%,#fff8,transparent),radial-gradient(1px 1px at 70% 30%,#fff6,transparent),radial-gradient(1.5px 1.5px at 40% 60%,#fff7,transparent),radial-gradient(1px 1px at 85% 80%,#fff5,transparent),radial-gradient(1px 1px at 10% 90%,#fff6,transparent),linear-gradient(180deg,#1A0F3C 0%,#0C0820 100%) fixed}
+[data-skin="space"] .card{background:linear-gradient(180deg,rgba(40,28,90,.92),rgba(28,20,64,.92))}
+[data-skin="space"] nav button[aria-selected="true"],[data-skin="space"] .btn.primary{background:linear-gradient(90deg,#B79CFF,#7A5CFF);border-color:transparent;color:#120B2A}
+:root[data-skin="lab"][data-skin]{--bg:#F4F5F6;--surface:#FFFFFF;--sunk:#F0F1F3;--line:#D9DCE0;--grid:#ECEEF0;--ink:#1D2125;--muted:#6A717A;--accent:#F26A1B;--accent-soft:#FDE7DA;--ok:#1E8A55;--ok-soft:#DDF2E7;--mid:#C98A0B;--mid-soft:#FBEFD6;--bad:#D23B2E;--bad-soft:#F8E0DE;--flame:#F26A1B;--flame-core:#FFC233;--on-accent:#FFFFFF;color-scheme:light}
+[data-skin="lab"] .card{border-radius:6px}
+[data-skin="lab"] .btn,[data-skin="lab"] .g,[data-skin="lab"] .key,[data-skin="lab"] .opt{border-radius:6px}
+[data-skin="lab"] nav button[aria-selected="true"]{background:#1D2125;color:#fff}
+[data-skin="lab"] .btn.primary{color:#fff}
+[data-skin="lab"] .q{border-left:6px solid var(--accent)}
+[data-skin="lab"] h1{letter-spacing:.02em;text-transform:uppercase;font-size:1.05rem}
+[data-skin="board"] nav button[aria-selected="true"],[data-skin="board"] .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 /* дополнительные однотонные темы */
 :root[data-skin="graphite"][data-skin]{--bg:#17191C;--surface:#212429;--sunk:#1B1E22;--line:#33373E;--grid:#2A2E34;--ink:#E8EAED;--muted:#9AA0A8;--accent:#C9CED6;--accent-soft:#30343B;--ok:#7BD88F;--ok-soft:#203528;--mid:#E8C468;--mid-soft:#3A3322;--bad:#F07F7F;--bad-soft:#3E2526;--flame:#FF9F43;--flame-core:#FFD58A;--on-accent:#17191C;color-scheme:dark}
 :root[data-skin="concrete"][data-skin]{--bg:#E6E7E9;--surface:#F7F7F8;--sunk:#EDEEF0;--line:#CFD2D6;--grid:#DCDEE1;--ink:#202327;--muted:#6B7078;--accent:#4B5563;--accent-soft:#E1E4E8;--ok:#2F855A;--ok-soft:#DDEFE4;--mid:#B7791F;--mid-soft:#F6EAD2;--bad:#C53030;--bad-soft:#F6DADA;--flame:#E8590C;--flame-core:#FFC233;--on-accent:#FFFFFF;color-scheme:light}
@@ -276,6 +292,13 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="graphite"] .card,[data-skin="concrete"] .card{border-radius:8px}
 [data-skin="ocean"] body{background:linear-gradient(180deg,#0E2340 0%,#0A1A2F 60%) fixed}
 [data-skin="forest"] body{background:linear-gradient(180deg,#14281D 0%,#0F1F17 60%) fixed}
+/* профиль */
+.profhead{flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap}
+.profhead .t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.profhead .t small{color:var(--muted);font-size:.8rem}
+.tile .v .flamev{display:inline-flex;align-items:center;gap:4px}
+.board li[data-pid]{cursor:pointer}
+.board li[data-pid]:active{opacity:.7}
 /* аватарки */
 .av{width:2.1em;height:2.1em;border-radius:50%;display:inline-grid;place-items:center;flex:none;font:700 .95rem/1 var(--f-body);color:#fff;overflow:hidden;user-select:none}
 .av.emo{font-size:1.15rem}
@@ -438,6 +461,7 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
   <section class="panel" id="view-stats" hidden></section>
   <section class="ref" id="view-ref" hidden></section>
   <section class="panel" id="view-set" hidden></section>
+  <section class="panel" id="view-prof" hidden></section>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -1392,6 +1416,7 @@ function show(v) {
   activeView = v;
   for (const x of ["train", "lb", "stats", "ref"]) { $("view-" + x).hidden = x !== v; $("tab-" + x).setAttribute("aria-selected", String(x === v)); }
   $("view-set").hidden = v !== "set"; $("gearBtn").setAttribute("aria-pressed", String(v === "set"));
+  $("view-prof").hidden = v !== "prof"; if (v !== "prof") profileOf = null;
   if (v === "set") renderSettings();
   if (v === "stats") renderStats(); if (v === "ref") renderRef(); if (v === "lb") renderLb();
 }
@@ -1407,6 +1432,9 @@ const SKINS = [
   { id: "sunset", name: "Закат", note: "тёмная", bg: "#2A1226", card: "#3A1C32", ink: "#FFEDE3", accent: "#FF8A4C", accent2: "#FF5E7E" },
   { id: "ice", name: "Арктика", note: "светлая", bg: "#DFF0F7", card: "#FAFDFF", ink: "#0E2A3A", accent: "#1592C9", accent2: "#3CC4E6" },
   { id: "sakura", name: "Сакура", note: "светлая", bg: "#FBEFF2", card: "#FFFAFB", ink: "#4A2633", accent: "#E0567F" },
+  { id: "board", name: "Ночная доска", note: "тёмная", bg: "#1C3328", card: "#24402F", ink: "#FFFFFF", accent: "#F2C94C" },
+  { id: "space", name: "Космос", note: "тёмная", bg: "#1A0F3C", card: "#2A1E5A", ink: "#F1ECFF", accent: "#B79CFF", accent2: "#7A5CFF" },
+  { id: "lab", name: "Лаборатория", note: "светлая", bg: "#F4F5F6", card: "#FFFFFF", ink: "#1D2125", accent: "#F26A1B" },
   { id: "graphite", name: "Графит", note: "тёмная", bg: "#17191C", card: "#212429", ink: "#E8EAED", accent: "#C9CED6" },
   { id: "concrete", name: "Бетон", note: "светлая", bg: "#E6E7E9", card: "#F7F7F8", ink: "#202327", accent: "#4B5563" },
   { id: "forest", name: "Лес", note: "тёмная", bg: "#0F1F17", card: "#162B20", ink: "#E6F2E9", accent: "#5DD39E" },
@@ -1569,6 +1597,7 @@ function syncScore() {
         catch (e2) { delete body.p_badges; body.p_points = Math.min(body.p_points, body.p_attempts * 10); await send(); }
       }
     }
+    await syncProfile();
   }).catch(e => { console.warn("рейтинг:", e.message); });
   return syncing;
 }
@@ -1611,7 +1640,7 @@ function renderLbList() {
   el.innerHTML = `<ol class="board">${list.map((e, i) => {
     if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
     const mine = e.id === me.id;
-    return `<li class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
+    return `<li data-pid="${esc(e.id)}" data-name="${esc(e.name)}" data-av="${esc(mine ? me.avatar || "" : e.avatar || "")}" class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
       <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name, "", e.id)}
       <span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
@@ -1640,7 +1669,7 @@ function renderLb() {
   }
   const n = streak();
   el.innerHTML = `<div class="card sec mecard">
-      <div class="who"><span id="meAv" title="Сменить аватарку">${avHTML(me.avatar, me.name, "big")}</span><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button></div>
+      <div class="who"><span id="meAv" title="Сменить аватарку">${avHTML(me.avatar, me.name, "big")}</span><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button><button class="btn" id="myProf">Мой профиль</button></div>
       <div class="mestats">
         <div><span class="v flamev${state.days[dayKey()] ? "" : " off"}">${FLAME}${n}</span><span class="k">${plural(n, "день", "дня", "дней")} подряд</span></div>
         <div><span class="v">${dayPts(state.days[dayKey()])}</span><span class="k">очков сегодня</span></div>
@@ -1654,6 +1683,7 @@ function renderLb() {
       <div id="lbList"></div></div>` + duelLbHTML();
   $("renameBtn").onclick = () => { renaming = true; renderLb(); };
   $("meAv").onclick = () => show("set");
+  $("myProf").onclick = () => { profileBack = "lb"; openProfile(me.id, me.name, me.avatar); };
   $("lbDay").onclick = () => { lbPeriod = "day"; prefs.lbPeriod = "day"; savePrefs(); $("lbDay").setAttribute("aria-pressed", "true"); $("lbWeek").setAttribute("aria-pressed", "false"); renderLbList(); };
   $("lbWeek").onclick = () => { lbPeriod = "week"; prefs.lbPeriod = "week"; savePrefs(); $("lbWeek").setAttribute("aria-pressed", "true"); $("lbDay").setAttribute("aria-pressed", "false"); renderLbList(); };
   $("lbRefresh").onclick = loadBoard;
@@ -1821,7 +1851,7 @@ function renderDuelResults() {
   const head = list.length < 2 ? "Ждём соперников" : meRow === 0 ? "Ты победил!" : `Ты на ${meRow + 1}-м месте`;
   duelMsg(`<span class="eyebrow">Дуэль · ${esc(d.creator_name)}</span><h2>${head}</h2>
     ${list.length < 2 ? `<p class="empty">Отправь ссылку друзьям: как только кто-то сыграет, здесь появится таблица.</p>` : ""}
-    <ol class="board">${list.map((r, i) => `<li class="${r.player_id === me.id ? "me" : ""}${i < 3 && list.length > 1 ? " top" + (i + 1) : ""}">
+    <ol class="board">${list.map((r, i) => `<li data-pid="${esc(r.player_id)}" data-name="${esc(r.name)}" data-av="${esc(r.player_id === me.id ? me.avatar || "" : r.avatar || "")}" class="${r.player_id === me.id ? "me" : ""}${i < 3 && list.length > 1 ? " top" + (i + 1) : ""}">
       <span class="rk">${i + 1}</span>${avHTML(r.player_id === me.id ? me.avatar : r.avatar, r.name, "", r.player_id)}<span class="nm">${esc(r.name)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
       <span class="st">${fmtTime(r.time_ms)}</span><span class="pt"><b>${r.correct}</b> из ${d.formulas.length}</span></li>`).join("")}</ol>
     <div class="actions"><button class="btn primary" id="dShare">Позвать друзей</button><button class="btn" id="dRefresh">Обновить</button><button class="btn" id="dClose">К тренировке</button></div>`);
@@ -1855,6 +1885,104 @@ function route() {
   if (m && lbOn()) openDuel(m[1].toUpperCase());
 }
 window.addEventListener("hashchange", route);
+
+/* ---------- Профили ----------
+   Каждый игрок отправляет короткую сводку своей статистики; профиль друга собирается из неё. */
+function myProfileStats() {
+  const days = Object.keys(state.days).sort();
+  const sec = {};
+  for (const [k] of SECTIONS) {
+    let n = 0, ok = 0, mid = 0;
+    for (const f of F) if (f.sec === k && state.f[f.id]) { const s = state.f[f.id]; n += s.n; ok += s.ok; mid += s.mid; }
+    if (n) sec[k] = [ok, mid, n];
+  }
+  const week = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); week.push(dayPts(state.days[dayKey(d)])); }
+  return {
+    v: 1, since: days[0] || dayKey(), n: sumDays("n"), ok: sumDays("ok"), mid: sumDays("mid"),
+    pts: Object.values(state.days).reduce((a, d) => a + dayPts(d), 0), active: days.length,
+    streak: streak(), bestStreak: bestStreak(), bestCombo: state.bestCombo || 0,
+    learned: Object.values(state.f).filter(s => boxOf(s) >= 3).length, seen: F.filter(f => state.f[f.id]).length,
+    duelWins: (state.duelWins || []).length, ach: Object.keys(state.ach || {}).filter(id => ACH.some(a => a.id === id)), sec, week
+  };
+}
+let profileSent = "";
+async function syncProfile() {
+  if (!lbOn() || !me.name) return;
+  const stats = myProfileStats(), body = JSON.stringify(stats);
+  if (body === profileSent) return;
+  try { await api("rpc/set_profile", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name, p_stats: stats }) }); profileSent = body; }
+  catch (e) { /* база ещё без профилей */ }
+}
+// значения из чужого профиля — только числа и известные ключи
+const num = (x, max = 1e7) => Number.isFinite(+x) ? Math.max(0, Math.min(max, Math.round(+x))) : 0;
+function cleanStats(x) {
+  if (!x || typeof x !== "object") return null;
+  const sec = {};
+  for (const [k] of SECTIONS) if (Array.isArray(x.sec && x.sec[k])) sec[k] = x.sec[k].slice(0, 3).map(v => num(v));
+  return {
+    since: /^\d{4}-\d{2}-\d{2}$/.test(x.since) ? x.since : null, n: num(x.n), ok: num(x.ok), mid: num(x.mid), pts: num(x.pts), active: num(x.active),
+    streak: num(x.streak), bestStreak: num(x.bestStreak), bestCombo: num(x.bestCombo), learned: num(x.learned), seen: num(x.seen), duelWins: num(x.duelWins),
+    ach: Array.isArray(x.ach) ? x.ach.filter(id => ACH.some(a => a.id === id)) : [], sec,
+    week: Array.isArray(x.week) ? x.week.slice(-7).map(v => num(v)) : []
+  };
+}
+let profileOf = null; // { id, name, avatar }
+async function openProfile(id, name, avatar) {
+  profileOf = { id, name, avatar };
+  show("prof");
+  if (id === me.id) { renderProfile(cleanStats(myProfileStats()), me.name, me.avatar, id); return; }
+  $("view-prof").innerHTML = `<div class="card sec"><p class="empty">Загружаю профиль…</p></div>`;
+  let st = null;
+  try { const r = await api(`profiles?select=stats&player_id=eq.${id}`); st = r && r[0] ? cleanStats(r[0].stats) : null; } catch (e) {}
+  if (profileOf && profileOf.id === id) renderProfile(st, name, avatar, id);
+}
+function renderProfile(st, name, avatar, id) {
+  const el = $("view-prof"), mine = id === me.id;
+  const back = `<div><button class="link" id="profBack">← Назад</button></div>`;
+  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}</span>
+    ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
+    ${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}</div>`;
+  if (!st) {
+    el.innerHTML = back + head + `<div class="card sec"><p class="empty">Профиль ещё не заполнился. Он появится, когда ${esc(name)} откроет обновлённое приложение.</p></div>`;
+    wireProfile(); return;
+  }
+  const acc = st.n ? Math.round((st.ok + st.mid * .5) / st.n * 100) : null;
+  const tile = (v, k) => `<div class="card tile"><div class="v">${v}</div><div class="k">${k}</div></div>`;
+  const tiles = `<div class="tiles">
+    ${tile(`<span class="flamev${st.streak ? "" : " off"}">${FLAME}${st.streak}</span>`, `${plural(st.streak, "день", "дня", "дней")} подряд · рекорд ${st.bestStreak}`)}
+    ${tile(st.pts, `${plural(st.pts, "очко", "очка", "очков")} всего`)}
+    ${tile(acc === null ? "—" : acc + "%", `точность, ${st.n} ${plural(st.n, "ответ", "ответа", "ответов")}`)}
+    ${tile(st.learned, `${plural(st.learned, "формула выучена", "формулы выучены", "формул выучено")} · видел ${st.seen}`)}
+    ${tile(st.bestCombo, "лучшее комбо")}
+    ${tile(st.duelWins, plural(st.duelWins, "победа в дуэлях", "победы в дуэлях", "побед в дуэлях"))}
+  </div>`;
+  const got = ACH.filter(a => st.ach.includes(a.id));
+  const achs = `<div class="card sec"><header><h2>Достижения</h2><span>${got.length} из ${ACH.length}</span></header>
+    ${got.length ? `<div class="achs">${got.map(a => `<div class="ach got"><span class="ic">${achIcon(a)}</span><span class="an">${esc(a.name)}</span><span class="ad">${esc(a.desc)}</span></div>`).join("")}</div>` : `<p class="empty">Пока ни одного.</p>`}</div>`;
+  const secRows = SECTIONS.filter(([k]) => st.sec[k]).map(([k, n]) => { const [ok, mid, all] = st.sec[k]; const bad = Math.max(0, all - ok - mid); const p = x => (x / all * 100).toFixed(1) + "%";
+    return `<div class="row"><span class="nm">${n}</span><div class="bar"><i style="width:${p(ok)};background:var(--ok)"></i><i style="width:${p(mid)};background:var(--mid)"></i><i style="width:${p(bad)};background:var(--bad)"></i></div><span class="num"><b>${Math.round((ok + mid * .5) / all * 100)}%</b> · ${all}</span></div>`; }).join("");
+  const W = 20, H = 60, max = Math.max(20, ...st.week);
+  const lbl = i => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toLocaleDateString("ru-RU", { weekday: "short" }); };
+  const bars = st.week.map((v, i) => { const h = v / max * H, x = i * (W + 18) + 6; return `<rect x="${x}" y="${10 + H - h}" width="${W}" height="${Math.max(h, 1)}" rx="3" fill="${v ? "var(--accent)" : "var(--line)"}"/>${v ? `<text x="${x + W / 2}" y="${6 + H - h}" text-anchor="middle">${v}</text>` : ""}<text x="${x + W / 2}" y="${H + 24}" text-anchor="middle">${lbl(i)}</text>`; }).join("");
+  el.innerHTML = back + head + tiles
+    + `<div class="card sec"><header><h2>Очки за неделю</h2><span>${st.week.reduce((a, b) => a + b, 0)}</span></header><svg class="chart" viewBox="0 0 ${7 * (W + 18)} ${H + 30}" role="img" aria-label="Очки по дням">${bars}</svg></div>`
+    + achs
+    + (secRows ? `<div class="card sec"><header><h2>Разделы</h2><span>точность · ответов</span></header><div class="rows">${secRows}</div></div>` : "");
+  wireProfile();
+  if ((parseAv(avatar) || {}).photo) ensurePhotos([id], () => profileOf && profileOf.id === id && renderProfile(st, name, avatar, id));
+}
+function wireProfile() {
+  $("profBack").onclick = () => show(profileBack || "lb");
+  const e = $("profEdit"); if (e) e.onclick = () => show("set");
+}
+let profileBack = "lb";
+// нажатие на строку в рейтинге или в таблице дуэли открывает профиль
+document.addEventListener("click", e => {
+  const li = e.target.closest && e.target.closest("li[data-pid]");
+  if (!li) return;
+  profileBack = activeView;
+  openProfile(li.dataset.pid, li.dataset.name || "Игрок", li.dataset.av || "");
+});
 
 renderFlame();
 syncScore();
