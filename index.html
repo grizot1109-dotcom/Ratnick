@@ -2075,12 +2075,13 @@ function boardEntries() {
   return [...by.values()].filter(e => e.n > 0 || e.id === me.id).sort((a, b) => b.pts - a.pts || b.n - a.n || a.name.localeCompare(b.name));
 }
 /* ---------- Уровни и оформление ----------
-   Уровень — по всем джоулям за всё время: до уровня n нужно 25·n·(n−1) Дж (макс. 50).
+   Уровень — по всем джоулям за всё время: до уровня n нужно 100·n·(n−1) Дж (макс. 50).
    Оформление (рамка аватарки, цвет ника, фон профиля) открывается уровнями и медалями,
    хранится в state.cos и уходит в профиль на сервере, чтобы его видели другие. */
 const LVL_MAX = 50;
-const lvlNeed = n => 25 * n * (n - 1);
-const lvlOf = p => Math.max(1, Math.min(LVL_MAX, Math.floor((1 + Math.sqrt(1 + 4 * Math.max(0, p) / 25)) / 2)));
+const LVL_K = 100;
+const lvlNeed = n => LVL_K * n * (n - 1);
+const lvlOf = p => Math.max(1, Math.min(LVL_MAX, Math.floor((1 + Math.sqrt(1 + 4 * Math.max(0, p) / LVL_K)) / 2)));
 const myPts = () => Object.values(state.days).reduce((a, d) => a + dayPts(d), 0);
 const lvlTier = l => l >= 50 ? 5 : Math.floor(l / 10);
 const lvlHTML = l => l ? `<span class="lvl lt${lvlTier(l)}" title="Уровень ${l}">${l}</span>` : "";
