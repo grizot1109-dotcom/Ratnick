@@ -105,6 +105,10 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outlin
 .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 .82rem var(--f-body);padding:6px 12px;border-radius:999px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.refchips{display:flex;gap:6px;padding:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.refchips::-webkit-scrollbar{display:none}
+.refchips .chip{flex:none;white-space:nowrap}
+.chip small{opacity:.6;font-size:.72rem}
 .sel{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 .82rem var(--f-body);padding:6px 10px;border-radius:999px;max-width:100%}
 .spacer{flex:1}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
@@ -1844,11 +1848,18 @@ function renderCheat() {
 }
 
 /* ---------- Справочник ---------- */
+let refSec = SEC_NAME[prefs.refSec] ? prefs.refSec : "all";
 function renderRef() {
-  $("view-ref").innerHTML = SECTIONS.map(([k, name]) => `<div class="card"><h2>${name}</h2>${
+  const chips = `<div class="card refchips" role="group" aria-label="Раздел">${[["all", "Все"], ...SECTIONS].map(([k, name]) =>
+    `<button class="chip" data-rs="${k}" aria-pressed="${refSec === k}">${name}${k === "all" ? "" : ` <small>${F.filter(f => f.sec === k).length}</small>`}</button>`).join("")}</div>`;
+  $("view-ref").innerHTML = chips + SECTIONS.filter(([k]) => refSec === "all" || refSec === k).map(([k, name]) => `<div class="card"><h2>${name}</h2>${
     F.filter(f => f.sec === k).map(f => { const s = state.f[f.id];
       return `<div class="ri"><div class="t">${esc(f.q)}</div><span class="go">${s ? `<span class="pill ${band(score(s))}">${s.ok}/${s.n}</span>` : `<span class="pill none">не было</span>`}</span><div class="fx">${fx(f.src)}</div>${legendHTML(f)}</div>`; }).join("")
   }</div>`).join("");
+  const box = document.querySelector("#view-ref .refchips"), sx = renderRef.sx || 0;
+  box.scrollLeft = sx;
+  document.querySelectorAll("#view-ref .chip[data-rs]").forEach(b => b.onclick = () => { renderRef.sx = box.scrollLeft; refSec = b.dataset.rs; prefs.refSec = refSec; savePrefs(); renderRef(); });
+  if (!sx) { const on = box.querySelector('[aria-pressed="true"]'); if (on) box.scrollLeft = on.offsetLeft - 10; }
 }
 
 /* ---------- Вкладки ---------- */
