@@ -101,7 +101,33 @@ canvas{display:block;width:100%;height:clamp(240px,42vh,400px);touch-action:none
 .ai .note{font-size:.78rem;color:var(--muted)}
 .ai .note:empty{display:none}
 .fx.small{font-size:1.25rem}
-.fx .miss{color:var(--bad);text-decoration:underline wavy;text-underline-offset:.2em}
+.seg{display:inline-flex;align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-body);padding:6px 14px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.kbwrap{display:flex;flex-direction:column;gap:10px}
+.editor{min-height:96px;padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:text;overflow-x:auto}
+.editor .fx{font-size:1.65rem;line-height:1.5}
+.editor .ph{color:var(--muted);font-size:.9rem}
+.caret{display:inline-block;width:2px;height:1.05em;background:var(--accent);vertical-align:middle;margin:0 -1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.caret{animation:none}}
+.slot{display:inline-block;min-width:.62em;height:.95em;border:1.5px dashed var(--muted);border-radius:4px;vertical-align:middle;margin:0 .05em}
+.fx sub .slot,.fx sup .slot{height:.8em}
+.fx sub,.fx sup{line-height:1}
+.kb{display:flex;flex-direction:column;gap:6px;user-select:none;-webkit-user-select:none}
+.kbtabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.kt{border:1px solid var(--line);background:var(--sunk);color:var(--muted);font:600 .82rem var(--f-body);padding:7px 0;border-radius:8px;cursor:pointer}
+.kt[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.keys{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.key{height:44px;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:400 1.2rem var(--f-math);border-radius:8px;cursor:pointer;padding:0;display:grid;place-items:center;box-shadow:0 1px 0 var(--line)}
+.key i{font-style:italic}
+.key:active{background:var(--accent-soft)}
+.key.word{font:400 .85rem var(--f-math)}
+.key.act{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-size:1.05rem}
+.key.op{background:var(--sunk)}
+.key.nav{background:var(--sunk);font:500 .95rem var(--f-body);color:var(--muted)}
+.key sub,.key sup{font-size:.6em}
+.fr.mini{font-size:.62em;line-height:1.05}
 .ai.thinking .dot{animation:pulse 1s infinite alternate}
 @keyframes pulse{to{opacity:.2}}
 @media (prefers-reduced-motion:reduce){.ai.thinking .dot{animation:none}}
@@ -166,7 +192,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 
 <div class="wrap">
   <header>
-    <div class="brand"><h1>Формулограф</h1><span class="sync">проверка прямо на телефоне</span></div>
+    <div class="brand"><h1>Формулограф</h1><span class="sync">тренажёр формул по физике</span></div>
     <nav role="tablist">
       <button role="tab" id="tab-train" aria-selected="true" data-view="train">Тренировка</button>
       <button role="tab" id="tab-stats" aria-selected="false" data-view="stats">Статистика</button>
@@ -186,9 +212,33 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
       <p class="qtext" id="qText">Вопрос</p>
     </div>
 
-    <div class="board" id="board">
+    <div class="seg" role="group" aria-label="Способ ввода">
+      <button id="inKb" aria-pressed="true">Клавиатура</button><button id="inHand" aria-pressed="false">От руки</button>
+    </div>
+
+    <div id="kbWrap" class="kbwrap">
+      <div class="card editor" id="editor" aria-label="Твой ответ"></div>
+      <div class="kb" id="kb">
+        <div class="kbtabs" id="kbTabs"></div>
+        <div class="keys" id="kbKeys"></div>
+        <div class="keys acts">
+          <button class="key act" data-a="frac" title="Дробь"><span class="fr mini"><span>□</span><span>□</span></span></button>
+          <button class="key act" data-a="sqrt" title="Корень">√□</button>
+          <button class="key act" data-a="sub" title="Нижний индекс"><i>x</i><sub>□</sub></button>
+          <button class="key act" data-a="sup" title="Степень"><i>x</i><sup>□</sup></button>
+          <button class="key op" data-a="=">=</button>
+          <button class="key op" data-a="+">+</button>
+          <button class="key op" data-a="−">−</button>
+          <button class="key nav" data-a="left" title="Влево">◀</button>
+          <button class="key nav" data-a="right" title="Вправо / выйти из дроби">▶</button>
+          <button class="key nav" data-a="back" title="Стереть">⌫</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="board" id="board" hidden>
       <canvas id="cv" aria-label="Поле для формулы"></canvas>
-      <div class="hint" id="hint">Пиши крупно, символы раздельно.<br>Дробь — горизонтальной чертой, корень — галочкой с чертой сверху.</div>
+      <div class="hint" id="hint">Напиши формулу по памяти,<br>потом нажми «Показать ответ» и оцени себя</div>
       <div class="tools">
         <button id="tPen" aria-pressed="true" title="Маркер"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></button>
         <button id="tErase" aria-pressed="false" title="Ластик (стирает штрих)"><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M5 15l9-9 5 5-7 7H8z"/></svg></button>
@@ -204,7 +254,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 
     <div class="card reveal" id="reveal" hidden>
       <div class="answer"><span class="label">Правильно:</span><div class="fx" id="ansFx"></div></div>
-      <div class="ai" id="ai" hidden><span class="dot"></span><div class="aibody"><span id="aiText"></span><div class="recog"><span class="label">Распознано:</span><span class="fx small" id="aiRec"></span></div><span class="note" id="aiNote"></span></div></div>
+      <div class="ai" id="ai" hidden><span class="dot"></span><div class="aibody"><span id="aiText"></span><div class="recog"><span class="label">Твой ответ:</span><span class="fx small" id="aiRec"></span></div><span class="note" id="aiNote"></span></div></div>
       <div class="grade">
         <span class="label">Как получилось?</span>
         <button class="g ok" data-r="2" aria-pressed="false"><span class="sw"></span>Верно<span class="sug"></span></button>
@@ -221,8 +271,6 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
   <section class="ref" id="view-ref" hidden></section>
 </div>
 
-<script src="glyphs.js"></script>
-<script src="recognizer.js"></script>
 <script>
 /* ---------- Формулы ----------
    Мини-разметка: \f{числитель}{знаменатель}, \s{подкоренное}, _x или _{xx}, ^x или ^{xx}, * = точка умножения */
@@ -408,11 +456,6 @@ function record(id, r) {
 }
 const score = s => s && s.n ? (s.ok + s.mid * 0.5) / s.n : null;
 
-/* ---------- Личные образцы почерка ---------- */
-const INK_KEY = LS_KEY + "-ink";
-try { Recog.setPersonal(JSON.parse(ls.get(INK_KEY) || "{}")); } catch {}
-const saveInk = () => ls.set(INK_KEY, JSON.stringify(Recog.getPersonal()));
-
 /* ---------- Выбор вопроса ---------- */
 let mode = prefs.mode || "weak", secFilter = prefs.sec || "all";
 let current = null, recent = [], sessionStats = { n: 0, ok: 0, mid: 0 };
@@ -497,22 +540,226 @@ new ResizeObserver(sizeCanvas).observe(cv);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
 new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-function exportPNG() {
-  const all = strokes.flat(); if (!all.length) return Promise.resolve(null);
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const [x, y] of all) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
-  const pad = 24; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
-  const scale = Math.min(2, 1200 / Math.max(x1 - x0, y1 - y0));
-  const c = document.createElement("canvas");
-  c.width = Math.ceil((x1 - x0) * scale); c.height = Math.ceil((y1 - y0) * scale);
-  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
-  for (const s of strokes) drawStroke(g, s, "#111", scale, x0, y0);
-  return new Promise(res => c.toBlob(res, "image/png"));
-}
-
 /* ---------- Ход тренировки ---------- */
 const $ = id => document.getElementById(id);
-let phase = "draw", grade = null, lastCheck = null;
+let phase = "draw", grade = null;
+let inputMode = prefs.input === "hand" ? "hand" : "kb";
+/* ---------- Редактор формулы (клавиатура) ---------- */
+const SLOTS = { frac: ["a", "b"], sqrt: ["a"], sub: ["a"], sup: ["a"] };
+let eroot = [], ecur = { list: eroot, i: 0 }, ereg = [];
+function parentOf(list, within = eroot) {
+  if (list === eroot) return null;
+  for (let i = 0; i < within.length; i++) {
+    const n = within[i]; if (n.t === "c") continue;
+    for (const k of SLOTS[n.t]) {
+      if (n[k] === list) return { node: n, key: k, list: within, i };
+      const r = parentOf(list, n[k]); if (r) return r;
+    }
+  }
+  return null;
+}
+const isEmptyNode = n => n.t !== "c" && SLOTS[n.t].every(k => !n[k].length);
+const lastSlot = n => n[SLOTS[n.t][SLOTS[n.t].length - 1]];
+function eIns(node) {
+  ecur.list.splice(ecur.i, 0, node);
+  if (node.t === "c") ecur.i++; else ecur = { list: node[SLOTS[node.t][0]], i: 0 };
+  eRender();
+}
+function eRight() {
+  const { list, i } = ecur;
+  if (i < list.length) { const n = list[i]; if (n.t === "c") ecur.i++; else ecur = { list: n[SLOTS[n.t][0]], i: 0 }; }
+  else {
+    const p = parentOf(list); if (!p) return;
+    const ks = SLOTS[p.node.t], k = ks.indexOf(p.key);
+    ecur = k < ks.length - 1 ? { list: p.node[ks[k + 1]], i: 0 } : { list: p.list, i: p.i + 1 };
+  }
+  eRender();
+}
+function eLeft() {
+  const { list, i } = ecur;
+  if (i > 0) { const n = list[i - 1]; if (n.t === "c") ecur.i--; else { const s = lastSlot(n); ecur = { list: s, i: s.length }; } }
+  else {
+    const p = parentOf(list); if (!p) return;
+    const ks = SLOTS[p.node.t], k = ks.indexOf(p.key);
+    ecur = k > 0 ? { list: p.node[ks[k - 1]], i: p.node[ks[k - 1]].length } : { list: p.list, i: p.i };
+  }
+  eRender();
+}
+function eBack() {
+  const { list, i } = ecur;
+  if (i > 0) {
+    const n = list[i - 1];
+    if (n.t === "c" || isEmptyNode(n)) { list.splice(i - 1, 1); ecur.i--; }
+    else { const s = lastSlot(n); ecur = { list: s, i: s.length }; }
+  } else {
+    const p = parentOf(list); if (!p) return;
+    if (isEmptyNode(p.node)) { p.list.splice(p.i, 1); ecur = { list: p.list, i: p.i }; }
+    else { const ks = SLOTS[p.node.t], k = ks.indexOf(p.key); ecur = k > 0 ? { list: p.node[ks[k - 1]], i: p.node[ks[k - 1]].length } : { list: p.list, i: p.i }; }
+  }
+  eRender();
+}
+function eClear() { eroot = []; ecur = { list: eroot, i: 0 }; eRender(); }
+const glyphHTML = c => c === "=" ? '<span class="op">=</span>' : (LET.test(c) && c !== "Δ" ? `<i>${esc(c)}</i>` : esc(c));
+function treeHTML(list, edit) {
+  const caret = i => edit && ecur.list === list && ecur.i === i ? '<span class="caret"></span>' : "";
+  if (!list.length) {
+    const k = edit ? ereg.push({ list, i: 0 }) - 1 : -1;
+    return edit ? `<span class="slot" data-k="${k}">${caret(0)}</span>` : "";
+  }
+  let h = caret(0);
+  list.forEach((n, i) => {
+    const k = edit ? ereg.push({ list, i: i + 1 }) - 1 : -1;
+    if (n.t === "c") h += `<span class="ch" data-k="${k}">${glyphHTML(n.c)}</span>`;
+    else if (n.t === "frac") h += `<span class="fr"><span>${treeHTML(n.a, edit) || "&nbsp;"}</span><span>${treeHTML(n.b, edit) || "&nbsp;"}</span></span>`;
+    else if (n.t === "sqrt") h += `<span class="sq"><span class="rs">√</span><span class="rad">${treeHTML(n.a, edit) || "&nbsp;"}</span></span>`;
+    else h += `<${n.t}>${treeHTML(n.a, edit)}</${n.t}>`;
+    h += caret(i + 1);
+  });
+  return h;
+}
+function eRender() {
+  ereg = [];
+  const el = $("editor");
+  el.innerHTML = eroot.length ? `<div class="fx">${treeHTML(eroot, true)}</div>`
+    : `<div class="fx"><span class="caret"></span></div><span class="ph">Набери формулу кнопками ниже</span>`;
+}
+$("editor").addEventListener("click", e => {
+  if (phase !== "draw") return;
+  const t = e.target.closest("[data-k]");
+  ecur = t ? ereg[+t.dataset.k] : { list: eroot, i: eroot.length };
+  eRender();
+});
+
+const KEYSETS = {
+  abc: "qwertyuiopasdfghjklzxcvbnm".split(""),
+  ABC: "QWERTYUIOPASDFGHJKLZXCVBNM".split(""),
+  gr: ["α", "β", "γ", "ε", "η", "θ", "λ", "μ", "ν", "π", "ρ", "σ", "τ", "φ", "ω", "Δ", "Φ", "Γ", "Ω", "ℰ"],
+  ru: ["т", "р", "ж", "п", "з", "н", "к", "в", "ы", "х", "с", "ц", "и", "м", "о", "а", "е", "у", "л", "Л"],
+  num: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "(", ")", "|", "·", "%", "sin", "cos", "tg"]
+};
+const KEYTABS = [["abc", "abc"], ["ABC", "ABC"], ["gr", "αβγ"], ["ru", "абв"], ["num", "123"]];
+let keyset = "abc";
+function renderKeys() {
+  $("kbTabs").innerHTML = KEYTABS.map(([k, n]) => `<button class="kt" data-set="${k}" aria-pressed="${k === keyset}">${n}</button>`).join("");
+  $("kbKeys").innerHTML = KEYSETS[keyset].map(c => `<button class="key${c.length > 1 ? " word" : ""}" data-c="${esc(c)}">${c.length > 1 ? c : glyphHTML(c)}</button>`).join("");
+}
+$("kb").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || phase !== "draw") return;
+  if (b.dataset.set) { keyset = b.dataset.set; renderKeys(); return; }
+  if (b.dataset.c) { for (const ch of b.dataset.c) eIns({ t: "c", c: ch }); return; }
+  const a = b.dataset.a;
+  if (a === "frac") eIns({ t: "frac", a: [], b: [] });
+  else if (a === "sqrt" || a === "sub" || a === "sup") eIns({ t: a, a: [] });
+  else if (a === "left") eLeft(); else if (a === "right") eRight(); else if (a === "back") eBack(); else if (a === "clear") eClear();
+  else if (a) eIns({ t: "c", c: a });
+});
+renderKeys();
+
+/* ---------- Сравнение с эталоном ---------- */
+function parseSrc(src, withOpt) {
+  function seq(s) {
+    const out = []; let i = 0;
+    const group = () => {
+      const o = s[i];
+      if (o === "{" || o === "[") { const c = o === "{" ? "}" : "]"; let d = 1, j = i + 1; while (j < s.length && d) { if (s[j] === o) d++; else if (s[j] === c) d--; j++; } const g = s.slice(i + 1, j - 1); i = j; return g; }
+      return s[i++] || "";
+    };
+    while (i < s.length) {
+      const c = s[i];
+      if (c === " ") { i++; continue; }
+      if (c === "\\") { const k = s[i + 1]; i += 2; if (k === "f") { const a = group(), b = group(); out.push({ t: "frac", a: seq(a), b: seq(b) }); } else if (k === "s") out.push({ t: "sqrt", a: seq(group()) }); continue; }
+      if (c === "_" || c === "^") { i++; out.push({ t: c === "_" ? "sub" : "sup", a: seq(group()) }); continue; }
+      if (c === "[") { const g = group(); if (withOpt) out.push(...seq(g)); continue; }
+      if (c === "*") { out.push({ t: "c", c: "·" }); i++; continue; }
+      out.push({ t: "c", c }); i++;
+    }
+    return out;
+  }
+  return seq(src);
+}
+// похожие по виду кириллические буквы в индексах принимаем и латиницей
+const NORM = { "а": "a", "е": "e", "к": "k", "м": "m", "о": "o", "р": "p", "с": "c", "т": "t", "х": "x", "у": "y", "п": "n", "н": "H", "ℰ": "E", "−": "-", "-": "-" };
+const nc = c => NORM[c] || c;
+const isOp = (n, ops) => n.t === "c" && ops.includes(nc(n.c));
+function sidesOf(list) {
+  const out = [[]];
+  for (const n of list) { if (n.t === "c" && (n.c === "·" || n.c === " ")) continue; if (isOp(n, "=")) out.push([]); else out[out.length - 1].push(n); }
+  return out.map(sumCanon);
+}
+const canon = list => sidesOf(list).join("=");
+function sumCanon(items) {
+  const atoms = [];
+  for (let i = 0; i < items.length; i++) {
+    const n = items[i];
+    if (n.t === "c" && (n.c === "(" || n.c === "|")) {
+      const close = n.c === "(" ? ")" : "|"; let d = 1, j = i + 1;
+      for (; j < items.length; j++) { const m = items[j]; if (m.t !== "c") continue; if (n.c === "(" && m.c === "(") d++; if (m.c === close && !--d) break; }
+      if (j < items.length) { atoms.push({ t: "grp", k: n.c, s: sumCanon(items.slice(i + 1, j)) }); i = j; continue; }
+    }
+    atoms.push(n);
+  }
+  const terms = []; let cur = { sign: "+", f: [] };
+  for (const a of atoms) {
+    if (isOp(a, "+-")) {
+      const minus = nc(a.c) === "-";
+      if (cur.f.length) { terms.push(cur); cur = { sign: minus ? "-" : "+", f: [] }; }
+      else if (minus) cur.sign = cur.sign === "-" ? "+" : "-";
+      continue;
+    }
+    cur.f.push(a);
+  }
+  if (cur.f.length || !terms.length) terms.push(cur);
+  return terms.map(t => t.sign + prodCanon(t.f)).sort().join("");
+}
+function prodCanon(atoms) {
+  const fs = [];
+  for (const a of atoms) {
+    if (a.t === "sub" || a.t === "sup") { const s = (a.t === "sub" ? "_{" : "^{") + canon(a.a) + "}"; if (fs.length) fs[fs.length - 1] += s; else fs.push(s); continue; }
+    let s;
+    if (a.t === "c") s = nc(a.c);
+    else if (a.t === "grp") s = a.k + a.s + (a.k === "(" ? ")" : "|");
+    else if (a.t === "frac") s = "F{" + canon(a.a) + "}{" + canon(a.b) + "}";
+    else if (a.t === "sqrt") s = "S{" + canon(a.a) + "}";
+    if (a.t === "c" && /\d/.test(a.c) && fs.length && /^\d+$/.test(fs[fs.length - 1])) fs[fs.length - 1] += s;
+    else fs.push(s);
+  }
+  return fs.sort().join("*");
+}
+function sameExpr(user, exp) {
+  const a = sidesOf(user), b = sidesOf(exp);
+  if (a.join("=") === b.join("=")) return true;
+  return a.length === 2 && b.length === 2 && a[0] === b[1] && a[1] === b[0];
+}
+function flat(list, out = []) {
+  for (const n of list) {
+    if (n.t === "c") { if (n.c !== "·" && n.c !== " ") out.push(nc(n.c)); continue; }
+    out.push(n.t + "{"); flat(n.a, out);
+    if (n.t === "frac") { out.push("}{"); flat(n.b, out); }
+    out.push("}");
+  }
+  return out;
+}
+function editDist(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function swapTop(list) {
+  const k = list.findIndex(n => isOp(n, "="));
+  return k < 0 ? null : [...list.slice(k + 1), list[k], ...list.slice(0, k)];
+}
+function checkTyped(user, src) {
+  if (!user.length) return { verdict: 0, diff: null };
+  const variants = [parseSrc(src, true), parseSrc(src, false)];
+  if (variants.some(v => sameExpr(user, v))) return { verdict: 2, diff: 0 };
+  const us = [user, swapTop(user)].filter(Boolean).map(u => flat(u));
+  let best = Infinity, W = 1;
+  for (const v of variants) { const f = flat(v); for (const u of us) { const d = editDist(u, f); if (d < best) { best = d; W = f.filter(t => !t.endsWith("{") && t !== "}").length; } } }
+  return { verdict: best <= Math.max(1, Math.round(W * 0.2)) ? 1 : 0, diff: best };
+}
+
 function histText(id) {
   const s = state.f[id];
   if (!s) return "новая формула";
@@ -525,7 +772,8 @@ function nextQuestion() {
   $("qHist").textContent = histText(current.id);
   $("qText").textContent = current.q;
   strokes = []; cur = null; redraw();
-  phase = "draw"; grade = null; lastCheck = null;
+  phase = "draw"; grade = null;
+  eClear(); $("kbWrap").hidden = inputMode !== "kb";
   $("reveal").hidden = true; $("preActions").hidden = false; $("ai").hidden = true;
   document.querySelectorAll(".g").forEach(b => { b.setAttribute("aria-pressed", "false"); b.querySelector(".sug").textContent = ""; });
   $("nextBtn").disabled = true;
@@ -539,51 +787,27 @@ function reveal(gaveUp) {
   phase = "reveal";
   $("ansFx").innerHTML = fx(current.src);
   $("preActions").hidden = true; $("reveal").hidden = false;
-  if (gaveUp || !strokes.length) { $("ai").hidden = true; setGrade(0); return; }
-  const box = $("ai"); box.hidden = false; box.className = "ai thinking";
-  $("aiText").textContent = "Проверяю…"; $("aiRec").innerHTML = ""; $("aiNote").textContent = "";
-  const q = current, ink = strokes.map(s => s.slice());
-  setTimeout(() => {
-    if (current !== q) return;
-    let r;
-    try { r = Recog.check(ink, q.src); }
-    catch (e) { box.className = "ai"; $("aiText").textContent = "Не получилось разобрать запись. Сравни с правильной формулой и оцени сам."; return; }
-    lastCheck = r;
-    box.className = "ai " + ["bad", "mid", "ok"][r.verdict];
-    const miss = r.missing ? r.missing.filter(t => t.c && !t.opt).map(t => t.c) : [];
-    $("aiText").textContent = r.verdict === 2 ? "Совпадает с правильной формулой."
-      : (r.verdict === 1 ? "Почти: есть расхождения." : "Не совпадает с правильной формулой.")
-        + (miss.length ? " Не хватает: " + miss.slice(0, 5).join(" ") + "." : "");
-    $("aiRec").innerHTML = renderTokens(r.tokens, r.status);
-    $("aiNote").textContent = r.verdict === 2 ? "" : "Если распознало неправильно, а ответ верный, нажми «Верно»: приложение запомнит твой почерк.";
-    document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = +b.dataset.r === r.verdict ? "· авто" : ""; });
-    if (grade === null) setGrade(r.verdict);
-  }, 30);
-}
-function renderTokens(tokens, status) {
-  let i = 0;
-  const seq = stop => {
-    let h = "";
-    while (i < tokens.length) {
-      const t = tokens[i];
-      if (t.s && stop.includes(t.s)) return h;
-      i++;
-      if (t.s === "FR(") { const a = seq(["FR|"]); i++; const b = seq(["FR)"]); i++; h += `<span class="fr"><span>${a || "&nbsp;"}</span><span>${b || "&nbsp;"}</span></span>`; }
-      else if (t.s === "SQ(") { const a = seq(["SQ)"]); i++; h += `<span class="sq"><span class="rs">√</span><span class="rad">${a || "&nbsp;"}</span></span>`; }
-      else if (!t.s) {
-        const st = status.get(t.k), bad = !st || st.c >= 0.6;
-        const ch = !bad && st.e ? st.e : t.cands[0].c;
-        const inner = LET.test(ch) && ch !== "Δ" ? `<i>${esc(ch)}</i>` : esc(ch);
-        h += bad ? `<span class="miss">${inner}</span>` : inner;
-      }
-    }
-    return h;
-  };
-  return seq([]) || "—";
+  document.querySelectorAll(".g .sug").forEach(x => x.textContent = "");
+  if (inputMode === "hand") {
+    $("ai").hidden = true;
+    if (gaveUp || !strokes.length) setGrade(0);
+  } else {
+    $("kbWrap").hidden = true;
+    const r = gaveUp ? { verdict: 0 } : checkTyped(eroot, current.src);
+    const box = $("ai");
+    box.hidden = !!gaveUp; box.className = "ai " + ["bad", "mid", "ok"][r.verdict];
+    $("aiText").textContent = r.verdict === 2 ? "Верно!" : r.verdict === 1
+      ? `Почти: ${r.diff} ${plural(r.diff, "символ отличается", "символа отличаются", "символов отличаются")}.`
+      : (eroot.length ? "Не совпадает с правильной формулой." : "Ответ пустой.");
+    $("aiRec").innerHTML = treeHTML(eroot, false) || "—";
+    $("aiNote").textContent = r.verdict === 2 ? "" : "Если считаешь, что записал правильно (например, в другой форме), поменяй оценку.";
+    document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = !gaveUp && +b.dataset.r === r.verdict ? "· авто" : ""; });
+    setGrade(r.verdict);
+  }
+  $("reveal").scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 }
 function commit() {
   if (grade === null) return;
-  if (grade === 2 && lastCheck && lastCheck.verdict < 2 && Recog.learnFrom(lastCheck)) saveInk();
   record(current.id, grade);
   sessionStats.n++; if (grade === 2) sessionStats.ok++; if (grade === 1) sessionStats.mid++;
   renderSession(); nextQuestion();
@@ -594,6 +818,15 @@ function renderSession() {
   el.innerHTML = `<span>За сессию: <b>${s.n}</b></span><span>верно <b>${s.ok}</b></span><span>с недочётом <b>${s.mid}</b></span><span>неверно <b>${s.n - s.ok - s.mid}</b></span>`;
 }
 $("checkBtn").onclick = () => reveal(false);
+function setInput(m) {
+  inputMode = m; prefs.input = m; savePrefs();
+  $("inKb").setAttribute("aria-pressed", m === "kb"); $("inHand").setAttribute("aria-pressed", m === "hand");
+  $("kbWrap").hidden = m !== "kb"; $("board").hidden = m !== "hand";
+  $("checkBtn").firstChild.textContent = m === "kb" ? "Проверить" : "Показать ответ";
+  if (m === "hand") sizeCanvas();
+}
+$("inKb").onclick = () => setInput("kb");
+$("inHand").onclick = () => setInput("hand");
 $("giveUp").onclick = () => reveal(true);
 $("nextBtn").onclick = commit;
 document.querySelectorAll(".g").forEach(b => b.onclick = () => setGrade(+b.dataset.r));
@@ -609,7 +842,13 @@ syncMode();
 
 document.addEventListener("keydown", e => {
   if (activeView !== "train" || e.target.tagName === "SELECT") return;
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); strokes.pop(); redraw(); return; }
+  if (inputMode === "hand" && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); strokes.pop(); redraw(); return; }
+  if (inputMode === "kb" && phase === "draw" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const k = e.key, map = { "/": () => eIns({ t: "frac", a: [], b: [] }), "_": () => eIns({ t: "sub", a: [] }), "^": () => eIns({ t: "sup", a: [] }),
+      "ArrowLeft": eLeft, "ArrowRight": eRight, "Backspace": eBack, "Tab": eRight };
+    if (map[k]) { e.preventDefault(); map[k](); return; }
+    if (k.length === 1 && /[\p{L}\d()+=|%*-]/u.test(k)) { e.preventDefault(); eIns({ t: "c", c: k === "-" ? "−" : k === "*" ? "·" : k }); return; }
+  }
   if (e.key === "Enter") { e.preventDefault(); if (phase === "draw") reveal(false); else commit(); }
   if (phase === "reveal" && ["1","2","3"].includes(e.key)) setGrade({ "1": 2, "2": 1, "3": 0 }[e.key]);
 });
@@ -685,23 +924,14 @@ function renderStats() {
    <div class="card sec"><header><h2>Активность</h2><span>последние 14 дней</span></header>
      <svg class="chart" viewBox="0 0 ${14 * W + 2} ${H + 28}" role="img" aria-label="Число попыток по дням">${bars}</svg></div>
    <div class="card sec"><header><h2>Последние ошибки</h2></header><div class="weak">${mistHtml}</div></div>
-   <div class="card sec"><header><h2>Мой почерк</h2></header>
-     <p class="empty" id="inkInfo"></p></div>
    <div class="danger" id="danger"><button class="btn warn" id="resetBtn">Сбросить статистику</button></div>`;
-  renderInk();
+
   const dw = $("drillWeak"); if (dw) dw.onclick = () => { mode = "weak"; prefs.mode = mode; secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); syncMode(); recent = []; nextQuestion(); show("train"); };
   $("resetBtn").onclick = () => {
     $("danger").innerHTML = `<span>Удалить все ${tot} ${plural(tot,"попытку","попытки","попыток")} без возможности восстановить?</span><button class="btn warn" id="resetYes">Да, сбросить</button><button class="btn" id="resetNo">Отмена</button>`;
     $("resetYes").onclick = () => { state = blank(); persist(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
     $("resetNo").onclick = renderStats;
   };
-}
-
-function renderInk() {
-  const el = $("inkInfo"); if (!el) return;
-  const n = Recog.personalCount();
-  el.textContent = n ? `Запомнено образцов твоих символов: ${n}. Они помогают узнавать твой почерк.` : "Пока нет. Когда автопроверка ошибается, а ты отмечаешь «Верно», приложение запоминает, как ты пишешь эти символы.";
-  if (n) { const b = document.createElement("button"); b.className = "link"; b.textContent = "Забыть мой почерк"; b.onclick = () => { Recog.setPersonal({}); saveInk(); renderInk(); }; el.append(" ", b); }
 }
 
 /* ---------- Справочник ---------- */
@@ -724,6 +954,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => show(b.da
 function refreshAll() { if (activeView === "stats") renderStats(); if (activeView === "ref") renderRef(); if (current && phase === "draw") $("qHist").textContent = histText(current.id); }
 
 renderSession();
+setInput(inputMode);
 nextQuestion();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
