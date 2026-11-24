@@ -889,7 +889,8 @@ function pickTask() {
     taskDeck = shuffle(pool.map(t => t.id));
   }
   let k = taskDeck.findIndex(id => !recent.includes(id)); if (k < 0) k = 0;
-  return TASKS.find(t => t.id === taskDeck.splice(k, 1)[0]);
+  const id = taskDeck.splice(k, 1)[0];
+  return TASKS.find(t => t.id === id);
 }
 function pick() {
   if (duel) return BY_ID[duel.ids[duel.i]];
