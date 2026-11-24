@@ -419,6 +419,18 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
 .fx.plain{font:600 1.05rem/1.35 var(--f-body);white-space:normal}
 .ptsline{font:600 .95rem var(--f-body);color:var(--ink);display:flex;gap:8px;align-items:center}
 .ptsline .mult{font-size:.75rem;color:var(--flame);background:var(--mid-soft);padding:2px 8px;border-radius:999px}
+/* эффекты верного ответа: вспышка, летящие джоули, искры при комбо */
+.ai.flash{animation:aiflash .7s ease-out}
+.ai.flash .dot{animation:dotpop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes aiflash{0%{background:var(--ok-soft);box-shadow:0 0 0 2px var(--ok),0 0 0 0 rgba(30,138,85,.45)}100%{box-shadow:0 0 0 2px transparent,0 0 0 12px rgba(30,138,85,0)}}
+@keyframes dotpop{0%{transform:scale(0)}60%{transform:scale(2.2)}100%{transform:scale(1)}}
+.flyj{position:absolute;z-index:60;pointer-events:none;font:700 1rem var(--f-display);color:#F2B81F;text-shadow:0 1px 2px rgba(0,0,0,.25);white-space:nowrap;animation:flyj 1s ease-out forwards}
+@keyframes flyj{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.1)}100%{opacity:0;transform:translate(-50%,-48px) scale(1)}}
+.spark{position:absolute;z-index:60;width:6px;height:6px;border-radius:50%;pointer-events:none;animation:spark .65s ease-out forwards}
+@keyframes spark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.ptsline .mult.bump{animation:mbump .5s cubic-bezier(.3,1.8,.5,1)}
+@keyframes mbump{40%{transform:scale(1.5) rotate(-8deg)}}
+@media (prefers-reduced-motion:reduce){.ai.flash,.ai.flash .dot,.ptsline .mult.bump{animation:none}.flyj,.spark{display:none}}
 .lgd{display:flex;flex-direction:column;gap:3px;font-size:.84rem;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 .lgd .fx{font-size:1rem;line-height:1.3;color:var(--ink);white-space:normal}
 .lgd .fx .op{margin:0 .15em}
@@ -1350,6 +1362,33 @@ function award(r) {
   renderCombo();
   return lastPts;
 }
+// праздник за верный ответ: 1) вспышка, 2) «+N Дж» улетает вверх, 3) искры — только при комбо
+function celebrate() {
+  const box = $("ai");
+  box.classList.remove("flash"); void box.offsetWidth; box.classList.add("flash");
+  const pts = ptsFor(grade), m = isQuizNow() ? 1 : multOf(combo), line = $("ptsLine");
+  requestAnimationFrame(() => {
+    const r = line.getBoundingClientRect();
+    if (!r.width) return;
+    if (pts > 0) {
+      const f = document.createElement("span"); f.className = "flyj"; f.textContent = `+${pts} Дж ⚡`;
+      f.style.left = (r.left + scrollX + 60) + "px"; f.style.top = (r.top + scrollY - 4) + "px";
+      document.body.appendChild(f); setTimeout(() => f.remove(), 1050);
+    }
+    if (m > 1) {
+      const mb = line.querySelector(".mult"); if (!mb) return;
+      mb.classList.remove("bump"); void mb.offsetWidth; mb.classList.add("bump");
+      const q = mb.getBoundingClientRect(), cx = q.left + scrollX + q.width / 2, cy = q.top + scrollY + q.height / 2;
+      const colors = ["#F2B81F", "#FF7A59", "#3FC488", "#7C9BFF"], n = m === 3 ? 16 : 10;
+      for (let i = 0; i < n; i++) {
+        const a = i / n * Math.PI * 2 + Math.random() * .4, d = 22 + Math.random() * (m === 3 ? 26 : 16), sp = document.createElement("span");
+        sp.className = "spark"; sp.style.left = (cx - 3) + "px"; sp.style.top = (cy - 3) + "px"; sp.style.background = colors[i % 4];
+        sp.style.setProperty("--dx", Math.cos(a) * d + "px"); sp.style.setProperty("--dy", Math.sin(a) * d + "px");
+        document.body.appendChild(sp); setTimeout(() => sp.remove(), 700);
+      }
+    }
+  });
+}
 function renderCombo() {
   const el = $("combo"), m = multOf(combo);
   el.hidden = combo < 2;
@@ -1440,6 +1479,7 @@ function answerQuiz(i) {
   const box = $("ai"); box.hidden = false; box.className = "ai " + (ok ? "ok" : "bad");
   $("aiText").textContent = ok ? "Верно!" : "Неверно."; $("aiRecRow").hidden = true; $("aiNote").textContent = "";
   showReveal();
+  if (ok) celebrate();
 }
 $("quiz").addEventListener("click", e => { const b = e.target.closest(".opt"); if (b) answerQuiz(+b.dataset.i); });
 
@@ -1486,6 +1526,7 @@ function reveal(gaveUp) {
   document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = !gaveUp && +b.dataset.r === r.verdict ? "· авто" : ""; });
   setGrade(r.verdict);
   showReveal();
+  if (!gaveUp && r.verdict === 2) celebrate();
 }
 function showReveal() {
   $("reveal").hidden = false;
@@ -1541,7 +1582,7 @@ function renderSession() {
 $("checkBtn").onclick = () => reveal(false);
 $("giveUp").onclick = () => reveal(true);
 $("nextBtn").onclick = commit;
-document.querySelectorAll(".g").forEach(b => b.onclick = () => setGrade(+b.dataset.r));
+document.querySelectorAll(".g").forEach(b => b.onclick = () => { const was = grade; setGrade(+b.dataset.r); if (grade === 2 && was !== 2 && phase === "reveal") celebrate(); });
 
 const secSel = $("secSel");
 secSel.innerHTML = `<option value="all">Все разделы</option>` + SECTIONS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
