@@ -112,8 +112,11 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outlin
 .key.word{font:400 .85rem var(--f-math)}
 .key.act{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-size:1.05rem}
 .key.op{background:var(--sunk)}
+.keys.acts{grid-template-columns:repeat(8,minmax(0,1fr))}
+.keys.arrows{grid-template-columns:repeat(4,minmax(0,1fr))}
+.keys.arrows .key{height:40px;font-size:1rem}
 .key.nav{background:var(--sunk);font:500 .95rem var(--f-body);color:var(--muted)}
-.key sub,.key sup{font-size:.6em}
+.key sub,.key sup{font-size:.6em;line-height:0;position:relative;vertical-align:baseline}.key sup{top:-.6em}.key sub{top:.35em}
 .fr.mini{font-size:.62em;line-height:1.05}
 .ai.thinking .dot{animation:pulse 1s infinite alternate}
 @keyframes pulse{to{opacity:.2}}
@@ -207,14 +210,18 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
         <div class="keys acts">
           <button class="key act" data-a="frac" title="Дробь"><span class="fr mini"><span>□</span><span>□</span></span></button>
           <button class="key act" data-a="sqrt" title="Корень">√□</button>
-          <button class="key act" data-a="sub" title="Нижний индекс"><i>x</i><sub>□</sub></button>
-          <button class="key act" data-a="sup" title="Степень"><i>x</i><sup>□</sup></button>
+          <button class="key act" data-a="sub" title="Нижний индекс"><span><i>x</i><sub>□</sub></span></button>
+          <button class="key act" data-a="sup" title="Степень"><span><i>x</i><sup>□</sup></span></button>
           <button class="key op" data-a="=">=</button>
           <button class="key op" data-a="+">+</button>
           <button class="key op" data-a="−">−</button>
-          <button class="key nav" data-a="left" title="Влево">◀</button>
-          <button class="key nav" data-a="right" title="Вправо / выйти из дроби">▶</button>
           <button class="key nav" data-a="back" title="Стереть">⌫</button>
+        </div>
+        <div class="keys arrows">
+          <button class="key nav" data-a="left" title="Влево">◀</button>
+          <button class="key nav" data-a="up" title="Вверх: в числитель, в степень">▲</button>
+          <button class="key nav" data-a="down" title="Вниз: в знаменатель, в индекс">▼</button>
+          <button class="key nav" data-a="right" title="Вправо / выйти из дроби">▶</button>
         </div>
       </div>
     </div>
@@ -484,6 +491,23 @@ function eRight() {
   }
   eRender();
 }
+// ▲/▼: между числителем и знаменателем, в степень/индекс и обратно на строку
+function eVert(dir) {
+  const up = dir === "up";
+  let idx = ecur.i;
+  for (let p = parentOf(ecur.list); p; p = parentOf(p.list)) {
+    const n = p.node;
+    if (n.t === "frac" && p.key === (up ? "b" : "a")) { const t = n[up ? "a" : "b"]; ecur = { list: t, i: Math.min(idx, t.length) }; eRender(); return; }
+    if (n.t === (up ? "sub" : "sup")) { ecur = { list: p.list, i: p.i + 1 }; eRender(); return; }
+    idx = p.i;
+  }
+  const L = ecur.list, i = ecur.i;
+  for (const j of [i, i - 1]) {
+    const n = L[j]; if (!n || n.t === "c") continue;
+    const t = n.t === (up ? "sup" : "sub") ? n.a : n.t === "frac" ? n[up ? "a" : "b"] : null;
+    if (t) { ecur = { list: t, i: j === i ? 0 : t.length }; eRender(); return; }
+  }
+}
 function eLeft() {
   const { list, i } = ecur;
   if (i > 0) { const n = list[i - 1]; if (n.t === "c") ecur.i--; else { const s = lastSlot(n); ecur = { list: s, i: s.length }; } }
@@ -559,7 +583,7 @@ $("kb").addEventListener("click", e => {
   const a = b.dataset.a;
   if (a === "frac") eIns({ t: "frac", a: [], b: [] });
   else if (a === "sqrt" || a === "sub" || a === "sup") eIns({ t: a, a: [] });
-  else if (a === "left") eLeft(); else if (a === "right") eRight(); else if (a === "back") eBack(); else if (a === "clear") eClear();
+  else if (a === "up" || a === "down") eVert(a); else if (a === "left") eLeft(); else if (a === "right") eRight(); else if (a === "back") eBack(); else if (a === "clear") eClear();
   else if (a) eIns({ t: "c", c: a });
 });
 renderKeys();
@@ -740,7 +764,7 @@ document.addEventListener("keydown", e => {
   if (activeView !== "train" || e.target.tagName === "SELECT") return;
   if (phase === "draw" && !e.ctrlKey && !e.metaKey && !e.altKey) {
     const k = e.key, map = { "/": () => eIns({ t: "frac", a: [], b: [] }), "_": () => eIns({ t: "sub", a: [] }), "^": () => eIns({ t: "sup", a: [] }),
-      "ArrowLeft": eLeft, "ArrowRight": eRight, "Backspace": eBack, "Tab": eRight };
+      "ArrowLeft": eLeft, "ArrowRight": eRight, "ArrowUp": () => eVert("up"), "ArrowDown": () => eVert("down"), "Backspace": eBack, "Tab": eRight };
     if (map[k]) { e.preventDefault(); map[k](); return; }
     if (k.length === 1 && /[\p{L}\d()+=|%*-]/u.test(k)) { e.preventDefault(); eIns({ t: "c", c: k === "-" ? "−" : k === "*" ? "·" : k }); return; }
   }
