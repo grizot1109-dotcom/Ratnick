@@ -297,6 +297,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="graphite"] .card,[data-skin="concrete"] .card{border-radius:8px}
 [data-skin="ocean"] body{background:linear-gradient(180deg,#0E2340 0%,#0A1A2F 60%) fixed}
 [data-skin="forest"] body{background:linear-gradient(180deg,#14281D 0%,#0F1F17 60%) fixed}
+.stemo{margin-left:5px;font-size:1em;line-height:1;display:inline-block;vertical-align:-.05em}
 /* профиль */
 .profhead{flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap}
 .profhead .t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
@@ -334,9 +335,6 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
 .emojis{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
 .emojis button{aspect-ratio:1;border:1.5px solid var(--line);background:var(--sunk);border-radius:10px;font-size:1.35rem;cursor:pointer;padding:0;display:grid;place-items:center}
 .emojis button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.colors{display:flex;flex-wrap:wrap;gap:8px}
-.colors button{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-.colors button[aria-pressed="true"]{border-color:var(--ink)}
 .who .av{cursor:pointer}
 /* настройки */
 .gear{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;padding:0}
@@ -1658,19 +1656,27 @@ const AV_EMOJI = ["🦊","🐱","🐶","🐼","🐸","🐧","🦉","🐙","🦄"
 const AV_COLORS = ["#2A4FD0","#E0567F","#F26A1B","#1E8A55","#8B5CFF","#14A3B8","#C8502D","#D4A017","#4A5568","#111827"];
 const photoCache = new Map(), photoPending = new Set();
 const validPhoto = x => typeof x === "string" && x.length <= 40000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(x);
+// строка аватарки: "photo:<версия>" (своё фото) и/или ";<эмодзи>" (статус рядом с ником)
 function parseAv(a) {
-  if (typeof a === "string" && /^photo:[a-z0-9]{1,12}$/.test(a)) return { photo: true };
-  const m = typeof a === "string" ? a.match(/^(.+):(\d)$/u) : null;
-  if (!m || !AV_EMOJI.includes(m[1])) return null; // только эмодзи из нашего списка
-  return { e: m[1], c: AV_COLORS[+m[2]] || AV_COLORS[0], ci: +m[2] };
+  if (typeof a !== "string") return null;
+  const old = a.match(/^(.+):(\d)$/u); // старый формат «эмодзи:цвет» — эмодзи становится статусом
+  if (old && AV_EMOJI.includes(old[1])) return { photo: false, status: old[1] };
+  const [ph, st] = a.split(";");
+  const photo = /^photo:[a-z0-9]{1,12}$/.test(ph || ""), status = AV_EMOJI.includes(st) ? st : null; // только эмодзи из списка
+  return photo || status ? { photo, status } : null;
 }
+function myAv() {
+  const ph = /^photo:[a-z0-9]{1,12}$/.test(me.avatar || "") ? me.avatar : "";
+  return AV_EMOJI.includes(me.status) ? `${ph};${me.status}` : ph;
+}
+const statusHTML = a => { const v = parseAv(a); return v && v.status ? `<span class="stemo" title="Статус">${v.status}</span>` : ""; };
 function nameColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
 function avHTML(a, name, cls = "", pid = null) {
   const v = parseAv(a);
   if (v && v.photo) {
     const img = pid === me.id || pid === null ? me.photo : photoCache.get(pid);
     if (validPhoto(img)) return `<img class="av ${cls}" src="${img}" alt="">`;
-  } else if (v) return `<span class="av emo ${cls}" style="background:${v.c}" aria-hidden="true">${v.e}</span>`;
+  }
   const letter = (String(name || "?").trim()[0] || "?").toUpperCase();
   return `<span class="av letter ${cls}" style="background:${nameColor(name)}" aria-hidden="true">${esc(letter)}</span>`;
 }
@@ -1709,19 +1715,19 @@ async function uploadPhoto(file) {
 }
 async function removePhoto() {
   try { await api("rpc/set_avatar", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name, p_img: "" }) }); } catch (e) {}
-  me.photo = ""; setAvatar("");
+  me.photo = ""; me.avatar = ""; saveMe(); syncScore(); renderSettings();
 }
 function avatarCardHTML() {
-  const v = parseAv(me.avatar) || { e: null, ci: 0 };
+  const v = parseAv(myAv()) || {};
   return `<div class="card sec avpick"><header><h2>Аватарка</h2><span>видна в рейтинге и дуэлях</span></header>
-    <div class="avnow">${avHTML(me.avatar, me.name || "?", "big")}<div class="t"><b>${esc(me.name || "Без ника")}</b><small>${v.photo ? "Стоит твоё фото" : v.e ? "Выбери другую картинку или цвет" : "Пока стоит первая буква ника"}</small></div></div>
+    <div class="avnow">${avHTML(myAv(), me.name || "?", "big")}<div class="t"><b>${esc(me.name || "Без ника")}${statusHTML(myAv())}</b><small>${v.photo ? "Стоит твоё фото" : "Пока стоит первая буква ника — загрузи фото"}</small></div></div>
     ${lbOn() ? `<div class="avbtns"><label class="btn primary" for="avFile">Загрузить фото</label><input type="file" id="avFile" accept="image/*">${v.photo ? `<button class="btn" id="avDel">Убрать фото</button>` : ""}<span class="empty" id="avStatus"></span></div>
-    <p class="hintline">Фото увидят все в рейтинге и дуэлях. Не ставь то, что не хотел бы показывать другим.</p>` : ""}
-    <div class="emojis">${AV_EMOJI.map(e => `<button data-e="${e}" aria-pressed="${e === v.e}" aria-label="${e}">${e}</button>`).join("")}</div>
-    <div class="colors">${AV_COLORS.map((c, i) => `<button data-c="${i}" style="background:${c}" aria-pressed="${i === v.ci}" aria-label="Цвет ${i + 1}"></button>`).join("")}</div>
-    ${v.e ? `<div><button class="link" id="avReset">Вернуть букву ника</button></div>` : ""}</div>`;
+    <p class="hintline">Фото увидят все в рейтинге и дуэлях. Не ставь то, что не хотел бы показывать другим.</p>` : ""}</div>
+    <div class="card sec avpick"><header><h2>Статус</h2><span>стоит рядом с ником</span></header>
+    <div class="emojis">${AV_EMOJI.map(e => `<button data-e="${e}" aria-pressed="${e === me.status}" aria-label="${e}">${e}</button>`).join("")}</div>
+    ${me.status ? `<div><button class="link" id="stReset">Убрать статус</button></div>` : ""}</div>`;
 }
-function setAvatar(a) { me.avatar = a; saveMe(); syncScore(); renderSettings(); }
+function setStatus(e) { me.status = e; saveMe(); syncScore(); renderSettings(); }
 function renderSettings() {
   const cur = skinNow();
   $("view-set").innerHTML = avatarCardHTML() + `<div class="card sec"><header><h2>Тема оформления</h2><span>сохраняется на этом телефоне</span></header>
@@ -1733,11 +1739,8 @@ function renderSettings() {
         <span class="nm2">${k.name}<small>${k.note}</small></span></button>`;
     }).join("")}</div></div>
     <div class="card sec"><h2>Что ещё</h2><p class="empty">Ник меняется во вкладке «Рейтинг», статистику можно сбросить во вкладке «Статистика».</p></div>`;
-  const av = parseAv(me.avatar) || { e: null, ci: 0 };
-  $("view-set").querySelectorAll(".emojis button").forEach(b => b.onclick = () => setAvatar(`${b.dataset.e}:${av.ci}`));
-  $("view-set").querySelectorAll(".colors button").forEach(b => b.onclick = () => setAvatar(`${av.e || AV_EMOJI[0]}:${b.dataset.c}`));
-  if (av.photo) av.ci = 0;
-  const ar = $("avReset"); if (ar) ar.onclick = () => setAvatar("");
+  $("view-set").querySelectorAll(".emojis button").forEach(b => b.onclick = () => setStatus(b.dataset.e === me.status ? "" : b.dataset.e));
+  const sr = $("stReset"); if (sr) sr.onclick = () => setStatus("");
   const af = $("avFile"); if (af) af.onchange = () => { if (af.files && af.files[0]) uploadPhoto(af.files[0]); };
   const ad = $("avDel"); if (ad) ad.onclick = removePhoto;
   $("view-set").querySelectorAll(".skin").forEach(b => b.onclick = () => {
@@ -1758,6 +1761,7 @@ const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : randHex(16).replac
 let me = (() => { try { const m = JSON.parse(ls.get(ME_KEY) || "null"); if (m && m.id && m.secret) return m; } catch {} return null; })();
 if (!me) { me = { id: uuid(), secret: randHex(16), name: "" }; ls.set(ME_KEY, JSON.stringify(me)); }
 const saveMe = () => ls.set(ME_KEY, JSON.stringify(me));
+{ const old = typeof me.avatar === "string" && me.avatar.match(/^(.+):(\d)$/u); if (old) { me.status = old[1]; me.avatar = ""; saveMe(); } }
 
 const dayPts = v => v ? (v.pts !== undefined ? v.pts : v.ok * 10 + v.mid * 5) : 0;
 function weekStart(d = new Date()) { const x = new Date(d); const k = (x.getDay() + 6) % 7; x.setDate(x.getDate() - k); return x; }
@@ -1791,7 +1795,7 @@ function syncScore() {
       const v = state.days[k];
       if (!v && k !== dayKey()) continue;
       const body = { p_id: me.id, p_secret: me.secret, p_name: me.name, p_day: k,
-        p_points: dayPts(v), p_correct: v ? v.ok : 0, p_attempts: v ? v.n : 0, p_streak: k === dayKey() ? st : (v ? st : 0), p_badges: badgeCount(), p_avatar: parseAv(me.avatar) ? me.avatar : "" };
+        p_points: dayPts(v), p_correct: v ? v.ok : 0, p_attempts: v ? v.n : 0, p_streak: k === dayKey() ? st : (v ? st : 0), p_badges: badgeCount(), p_avatar: myAv() };
       const send = () => api("rpc/submit_score", { method: "POST", body: JSON.stringify(body) });
       try { await send(); }
       catch (e) {
@@ -1858,9 +1862,9 @@ function renderLbList() {
   el.innerHTML = `<ol class="board">${list.map((e, i) => {
     if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
     const mine = e.id === me.id;
-    return `<li data-pid="${esc(e.id)}" data-name="${esc(e.name)}" data-av="${esc(mine ? me.avatar || "" : e.avatar || "")}" class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
-      <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name, "", e.id)}
-      <span class="nmc"><span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>${olHTML(e.id)}</span>
+    return `<li data-pid="${esc(e.id)}" data-name="${esc(e.name)}" data-av="${esc(mine ? myAv() : e.avatar || "")}" class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
+      <span class="rk">${rank}</span>${avHTML(mine ? myAv() : e.avatar, e.name, "", e.id)}
+      <span class="nmc"><span class="nm">${esc(e.name)}${statusHTML(mine ? myAv() : e.avatar)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>${olHTML(e.id)}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
       <span class="pt">${BOLT}<b>${e.pts}</b> Дж</span></li>`;
   }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
@@ -1887,7 +1891,7 @@ function renderLb() {
   }
   const n = streak();
   el.innerHTML = `<div class="card sec mecard">
-      <div class="who"><span id="meAv" title="Сменить аватарку">${avHTML(me.avatar, me.name, "big")}</span><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button><button class="btn" id="myProf">Мой профиль</button></div>
+      <div class="who"><span id="meAv" title="Сменить аватарку">${avHTML(myAv(), me.name, "big")}</span><span class="nmbig">${esc(me.name)}${statusHTML(myAv())}</span><button class="link" id="renameBtn">изменить ник</button><button class="btn" id="myProf">Мой профиль</button></div>
       <div class="mestats">
         <div><span class="v flamev${state.days[dayKey()] ? "" : " off"}">${FLAME}${n}</span><span class="k">${plural(n, "день", "дня", "дней")} подряд</span></div>
         <div><span class="v">${BOLT}${dayPts(state.days[dayKey()])}</span><span class="k">Дж сегодня</span></div>
@@ -1901,7 +1905,7 @@ function renderLb() {
       <div id="lbList"></div></div>` + duelLbHTML();
   $("renameBtn").onclick = () => { renaming = true; renderLb(); };
   $("meAv").onclick = () => show("set");
-  $("myProf").onclick = () => { profileBack = "lb"; openProfile(me.id, me.name, me.avatar); };
+  $("myProf").onclick = () => { profileBack = "lb"; openProfile(me.id, me.name, myAv()); };
   $("lbDay").onclick = () => { lbPeriod = "day"; prefs.lbPeriod = "day"; savePrefs(); $("lbDay").setAttribute("aria-pressed", "true"); $("lbWeek").setAttribute("aria-pressed", "false"); renderLbList(); };
   $("lbWeek").onclick = () => { lbPeriod = "week"; prefs.lbPeriod = "week"; savePrefs(); $("lbWeek").setAttribute("aria-pressed", "true"); $("lbDay").setAttribute("aria-pressed", "false"); renderLbList(); };
   $("lbRefresh").onclick = loadBoard;
@@ -2048,7 +2052,7 @@ async function finishDuel() {
   duelMsg(`<p class="empty">Отправляю результат…</p>`);
   try {
     await syncing;
-    const body = { p_code: d.code, p_id: me.id, p_secret: me.secret, p_name: me.name, p_correct: d.correct, p_points: d.points, p_time_ms: time, p_avatar: parseAv(me.avatar) ? me.avatar : "" };
+    const body = { p_code: d.code, p_id: me.id, p_secret: me.secret, p_name: me.name, p_correct: d.correct, p_points: d.points, p_time_ms: time, p_avatar: myAv() };
     try { await api("rpc/submit_duel", { method: "POST", body: JSON.stringify(body) }); }
     catch (e) { delete body.p_avatar; await api("rpc/submit_duel", { method: "POST", body: JSON.stringify(body) }); }
     state.activeDuel = null; persist();
@@ -2070,8 +2074,8 @@ function renderDuelResults() {
   const head = list.length < 2 ? "Ждём соперников" : meRow === 0 ? "Ты победил!" : `Ты на ${meRow + 1}-м месте`;
   duelMsg(`<span class="eyebrow">Дуэль · ${esc(d.creator_name)}</span><h2>${head}</h2>
     ${list.length < 2 ? `<p class="empty">Отправь ссылку друзьям: как только кто-то сыграет, здесь появится таблица.</p>` : ""}
-    <ol class="board">${list.map((r, i) => `<li data-pid="${esc(r.player_id)}" data-name="${esc(r.name)}" data-av="${esc(r.player_id === me.id ? me.avatar || "" : r.avatar || "")}" class="${r.player_id === me.id ? "me" : ""}${i < 3 && list.length > 1 ? " top" + (i + 1) : ""}">
-      <span class="rk">${i + 1}</span>${avHTML(r.player_id === me.id ? me.avatar : r.avatar, r.name, "", r.player_id)}<span class="nm">${esc(r.name)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
+    <ol class="board">${list.map((r, i) => `<li data-pid="${esc(r.player_id)}" data-name="${esc(r.name)}" data-av="${esc(r.player_id === me.id ? myAv() : r.avatar || "")}" class="${r.player_id === me.id ? "me" : ""}${i < 3 && list.length > 1 ? " top" + (i + 1) : ""}">
+      <span class="rk">${i + 1}</span>${avHTML(r.player_id === me.id ? myAv() : r.avatar, r.name, "", r.player_id)}<span class="nm">${esc(r.name)}${statusHTML(r.player_id === me.id ? myAv() : r.avatar)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
       <span class="st">${fmtTime(r.time_ms)}</span><span class="pt"><b>${r.correct}</b> из ${d.formulas.length}</span></li>`).join("")}</ol>
     <div class="actions"><button class="btn primary" id="dShare">Позвать друзей</button><button class="btn" id="dRefresh">Обновить</button><button class="btn" id="dClose">К тренировке</button></div>`);
   ensurePhotos(list.filter(r => (parseAv(r.avatar) || {}).photo).map(r => r.player_id), renderDuelResults);
@@ -2149,7 +2153,7 @@ let profileOf = null; // { id, name, avatar }
 async function openProfile(id, name, avatar) {
   profileOf = { id, name, avatar };
   show("prof");
-  if (id === me.id) { renderProfile(cleanStats(myProfileStats()), me.name, me.avatar, id); return; }
+  if (id === me.id) { renderProfile(cleanStats(myProfileStats()), me.name, myAv(), id); return; }
   $("view-prof").innerHTML = `<div class="card sec"><p class="empty">Загружаю профиль…</p></div>`;
   let st = null;
   try { const r = await api(`profiles?select=stats&player_id=eq.${id}`); st = r && r[0] ? cleanStats(r[0].stats) : null; } catch (e) {}
@@ -2159,7 +2163,7 @@ async function openProfile(id, name, avatar) {
 function renderProfile(st, name, avatar, id) {
   const el = $("view-prof"), mine = id === me.id;
   const back = `<div><button class="link" id="profBack">← Назад</button></div>`;
-  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}</span>${olHTML(id)}
+  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}${statusHTML(avatar)}</span>${olHTML(id)}
     ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
     ${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}</div>`;
   if (!st) {
