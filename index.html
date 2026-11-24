@@ -62,7 +62,7 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .flame.off{color:var(--muted)}
 .mecard .who{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .mecard .who #myProf{margin-left:auto;padding:8px 14px;font-size:.85rem}
-.nmbig{font-family:var(--f-display);font-size:1.15rem;font-weight:500;overflow-wrap:anywhere}
+.nmbig{font-family:var(--f-display);font-size:1.15rem;font-weight:500;overflow-wrap:break-word;min-width:0}
 .mestats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mestats>div{display:flex;flex-direction:column;background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
 .mestats .v{font-family:var(--f-display);font-size:1.35rem;font-weight:500;display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
@@ -276,6 +276,34 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="space"] .card{background:linear-gradient(180deg,rgba(40,28,90,.92),rgba(28,20,64,.92))}
 [data-skin="space"] nav button[aria-selected="true"],[data-skin="space"] .btn.primary{background:linear-gradient(90deg,#B79CFF,#7A5CFF);border-color:transparent;color:#120B2A}
 [data-skin="board"] nav button[aria-selected="true"],[data-skin="board"] .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+/* стеклянные темы: общие правила для всех data-skin, начинающихся с g- */
+:root[data-skin="g-black"][data-skin]{--bg:#0B0B0E;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.04);--line:rgba(255,255,255,.12);--grid:rgba(255,255,255,.05);--ink:#F2F2F5;--muted:#A3A3AE;--accent:#D9D9E0;--accent-soft:rgba(255,255,255,.10);--on-accent:#111114;--nav-bg:rgba(255,255,255,.10);--nav-ink:#FFFFFF;--nav-line:rgba(255,255,255,.55);--glow:rgba(255,255,255,.18);--ok:#6EE08F;--ok-soft:rgba(110,224,143,.14);--mid:#F2C14E;--mid-soft:rgba(242,193,78,.14);--bad:#FF6B6B;--bad-soft:rgba(255,107,107,.14);--flame:#FF7A2F;--flame-core:#FFD06A;color-scheme:dark}
+[data-skin="g-black"] body{background:linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.045) 34% 46%,transparent 46% 62%,rgba(255,255,255,.03) 62% 70%,transparent 70%),radial-gradient(120% 80% at 80% 0%,#26262D 0%,transparent 60%),linear-gradient(180deg,#141418,#08080A);background-attachment:fixed;background-color:var(--bg)}
+:root[data-skin="g-steel"][data-skin]{--bg:#151C28;--surface:rgba(170,190,230,.08);--sunk:rgba(170,190,230,.05);--line:rgba(190,205,235,.16);--grid:rgba(190,205,235,.06);--ink:#EEF2F9;--muted:#9EABC2;--accent:#93A8D0;--accent-soft:rgba(147,168,208,.16);--on-accent:#101624;--nav-bg:rgba(147,168,208,.22);--nav-ink:#FFFFFF;--nav-line:rgba(190,210,245,.6);--glow:rgba(147,168,208,.3);--ok:#6EE08F;--ok-soft:rgba(110,224,143,.14);--mid:#F2C14E;--mid-soft:rgba(242,193,78,.14);--bad:#FF7B7B;--bad-soft:rgba(255,123,123,.14);--flame:#FF7A2F;--flame-core:#FFD06A;color-scheme:dark}
+[data-skin="g-steel"] body{background:linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.05) 34% 46%,transparent 46% 62%,rgba(255,255,255,.035) 62% 70%,transparent 70%),radial-gradient(120% 80% at 80% 0%,#33405A 0%,transparent 60%),linear-gradient(180deg,#1E2737,#10151F);background-attachment:fixed;background-color:var(--bg)}
+:root[data-skin="g-red"][data-skin]{--bg:#0A0A0B;--surface:rgba(255,255,255,.05);--sunk:rgba(255,255,255,.035);--line:rgba(255,90,80,.22);--grid:rgba(255,255,255,.05);--ink:#F5F1F0;--muted:#B3A6A4;--accent:#E3342F;--accent-soft:rgba(227,52,47,.16);--on-accent:#FFFFFF;--nav-bg:linear-gradient(180deg,#F0443D,#B8211C);--nav-ink:#FFFFFF;--nav-line:rgba(255,120,110,.7);--glow:rgba(227,52,47,.45);--ok:#6EE08F;--ok-soft:rgba(110,224,143,.14);--mid:#F2C14E;--mid-soft:rgba(242,193,78,.14);--bad:#FF6B6B;--bad-soft:rgba(255,107,107,.14);--flame:#FF5A2F;--flame-core:#FFD06A;color-scheme:dark}
+[data-skin="g-red"] body{background:linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.035) 34% 46%,transparent 46% 62%,rgba(255,255,255,.025) 62% 70%,transparent 70%),radial-gradient(90% 60% at 100% 0%,rgba(227,52,47,.16) 0%,transparent 60%),linear-gradient(180deg,#121213,#070707);background-attachment:fixed;background-color:var(--bg)}
+:root[data-skin="g-marble"][data-skin]{--bg:#EEE6DA;--surface:rgba(255,255,255,.55);--sunk:rgba(255,255,255,.4);--line:rgba(120,95,60,.18);--grid:rgba(120,95,60,.08);--ink:#1D1915;--muted:#6F6252;--accent:#B39468;--accent-soft:rgba(179,148,104,.18);--on-accent:#FFFFFF;--nav-bg:linear-gradient(180deg,#C2A57B,#9E7F55);--nav-ink:#FFFFFF;--nav-line:rgba(160,128,85,.6);--glow:rgba(179,148,104,.35);--ok:#2E8A55;--ok-soft:rgba(46,138,85,.14);--mid:#B7791F;--mid-soft:rgba(183,121,31,.14);--bad:#C53A2F;--bad-soft:rgba(197,58,47,.12);--flame:#E8590C;--flame-core:#FFC233;color-scheme:light}
+[data-skin="g-marble"] body{background:linear-gradient(128deg,transparent 0 38%,rgba(150,125,90,.16) 39%,transparent 41%),linear-gradient(143deg,transparent 0 62%,rgba(150,125,90,.12) 63%,transparent 65.5%),linear-gradient(110deg,transparent 0 18%,rgba(150,125,90,.10) 19%,transparent 21%),linear-gradient(155deg,transparent 0 82%,rgba(150,125,90,.10) 83%,transparent 85%),radial-gradient(120% 90% at 20% 10%,#FBF7F1 0%,transparent 60%),linear-gradient(180deg,#F2EBE1,#E6DCCD);background-attachment:fixed;background-color:var(--bg)}
+:root[data-skin="g-emerald"][data-skin]{--bg:#0F2A1F;--surface:rgba(140,230,180,.07);--sunk:rgba(140,230,180,.045);--line:rgba(150,235,190,.18);--grid:rgba(150,235,190,.06);--ink:#EAF7EF;--muted:#9CC3AD;--accent:#4FD484;--accent-soft:rgba(79,212,132,.16);--on-accent:#0B2117;--nav-bg:rgba(79,212,132,.22);--nav-ink:#FFFFFF;--nav-line:rgba(120,235,165,.6);--glow:rgba(79,212,132,.35);--ok:#4FD484;--ok-soft:rgba(79,212,132,.16);--mid:#F2C14E;--mid-soft:rgba(242,193,78,.14);--bad:#FF7B7B;--bad-soft:rgba(255,123,123,.14);--flame:#FF7A2F;--flame-core:#FFD06A;color-scheme:dark}
+[data-skin="g-emerald"] body{background:linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.05) 34% 46%,transparent 46% 62%,rgba(255,255,255,.035) 62% 70%,transparent 70%),radial-gradient(120% 80% at 80% 0%,#2A6B4C 0%,transparent 60%),linear-gradient(180deg,#1B4634,#0C241A);background-attachment:fixed;background-color:var(--bg)}
+:root[data-skin="g-amethyst"][data-skin]{--bg:#1A1330;--surface:rgba(190,160,255,.08);--sunk:rgba(190,160,255,.05);--line:rgba(200,175,255,.18);--grid:rgba(200,175,255,.06);--ink:#F2ECFF;--muted:#B0A3D3;--accent:#A35CFF;--accent-soft:rgba(163,92,255,.18);--on-accent:#FFFFFF;--nav-bg:rgba(163,92,255,.3);--nav-ink:#FFFFFF;--nav-line:rgba(190,140,255,.7);--glow:rgba(163,92,255,.45);--ok:#6EE08F;--ok-soft:rgba(110,224,143,.14);--mid:#F2C14E;--mid-soft:rgba(242,193,78,.14);--bad:#FF7B9C;--bad-soft:rgba(255,123,156,.14);--flame:#FF7A2F;--flame-core:#FFD06A;color-scheme:dark}
+[data-skin="g-amethyst"] body{background:linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.05) 34% 46%,transparent 46% 62%,rgba(255,255,255,.035) 62% 70%,transparent 70%),radial-gradient(120% 80% at 80% 0%,#47306F 0%,transparent 60%),linear-gradient(180deg,#2A1E47,#120C22);background-attachment:fixed;background-color:var(--bg)}
+:root[data-skin="g-sky"][data-skin]{--bg:#D7E8FB;--surface:rgba(255,255,255,.55);--sunk:rgba(255,255,255,.4);--line:rgba(40,100,190,.16);--grid:rgba(40,100,190,.07);--ink:#0E2340;--muted:#4D6586;--accent:#1B73E8;--accent-soft:rgba(27,115,232,.14);--on-accent:#FFFFFF;--nav-bg:linear-gradient(180deg,#3B8CF5,#1462D6);--nav-ink:#FFFFFF;--nav-line:rgba(60,140,245,.6);--glow:rgba(27,115,232,.35);--ok:#1E8A55;--ok-soft:rgba(30,138,85,.14);--mid:#B7791F;--mid-soft:rgba(183,121,31,.14);--bad:#D23B54;--bad-soft:rgba(210,59,84,.12);--flame:#FF6A2F;--flame-core:#FFC233;color-scheme:light}
+[data-skin="g-sky"] body{background:linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.35) 34% 46%,transparent 46% 62%,rgba(255,255,255,.25) 62% 70%,transparent 70%),radial-gradient(120% 80% at 20% 0%,#F4F9FF 0%,transparent 60%),linear-gradient(180deg,#E3EFFD,#BFD9F7);background-attachment:fixed;background-color:var(--bg)}
+[data-skin^="g-"] .card,[data-skin^="g-"] nav,[data-skin^="g-"] .flame,[data-skin^="g-"] .gear{background:var(--surface);border:1px solid var(--line);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 30px rgba(0,0,0,.18)}
+[data-skin^="g-"] .card{border-radius:18px}
+[data-skin^="g-"] nav button[aria-selected="true"]{background:var(--nav-bg);color:var(--nav-ink);box-shadow:inset 0 0 0 1px var(--nav-line),0 0 16px var(--glow)}
+[data-skin^="g-"] .btn{background:var(--surface);border-color:var(--line);color:var(--ink)}
+[data-skin^="g-"] .btn.primary{background:var(--nav-bg);border-color:var(--nav-line);color:var(--nav-ink);box-shadow:0 0 16px var(--glow)}
+[data-skin^="g-"] #profEdit,[data-skin^="g-"] #myProf{border-color:var(--nav-line)}
+:root[data-skin^="g-"] .kt[aria-pressed="true"]{background:var(--nav-bg);border-color:var(--nav-line);color:var(--nav-ink)}
+[data-skin^="g-"] .key{background:var(--surface);border-color:var(--line);box-shadow:none}
+[data-skin^="g-"] .key.act{background:var(--accent-soft);color:var(--ink)}
+[data-skin^="g-"] .link{color:var(--accent)}
+[data-skin^="g-"] .toast .ic{color:#fff}
+[data-skin^="g-"] .ach.got .ic{color:var(--on-accent)}
+:root[data-skin="g-black"] .btn.primary,:root[data-skin="g-black"] .kt[aria-pressed="true"]{color:#fff}
 /* дополнительные однотонные темы */
 :root[data-skin="graphite"][data-skin]{--bg:#17191C;--surface:#212429;--sunk:#1B1E22;--line:#33373E;--grid:#2A2E34;--ink:#E8EAED;--muted:#9AA0A8;--accent:#C9CED6;--accent-soft:#30343B;--ok:#7BD88F;--ok-soft:#203528;--mid:#E8C468;--mid-soft:#3A3322;--bad:#F07F7F;--bad-soft:#3E2526;--flame:#FF9F43;--flame-core:#FFD58A;--on-accent:#17191C;color-scheme:dark}
 :root[data-skin="forest"][data-skin]{--bg:#0F1F17;--surface:#162B20;--sunk:#12241A;--line:#2A4535;--grid:#1D3527;--ink:#E6F2E9;--muted:#93B39F;--accent:#5DD39E;--accent-soft:#1E3D2C;--ok:#5DD39E;--ok-soft:#1E3D2C;--mid:#E9C46A;--mid-soft:#3B3520;--bad:#EF8A80;--bad-soft:#40251F;--flame:#F4A259;--flame-core:#FFE29A;--on-accent:#0F1F17;color-scheme:dark}
@@ -1618,6 +1646,13 @@ $("gearBtn").onclick = () => show(activeView === "set" ? "train" : "set");
 
 /* ---------- Темы оформления ---------- */
 const SKINS = [
+  { id: "g-black", glass: 1, name: "Чёрное стекло", note: "тёмная", bg: "linear-gradient(160deg,#26262D,#08080A)", meta: "#0B0B0E", card: "rgba(255,255,255,.08)", ink: "#F2F2F5", accent: "#D9D9E0" },
+  { id: "g-steel", glass: 1, name: "Сталь", note: "тёмная", bg: "linear-gradient(160deg,#33405A,#10151F)", meta: "#151C28", card: "rgba(170,190,230,.12)", ink: "#EEF2F9", accent: "#93A8D0" },
+  { id: "g-red", glass: 1, name: "Чёрно-красная", note: "тёмная", bg: "linear-gradient(160deg,#2A1212,#070707)", meta: "#0A0A0B", card: "rgba(255,255,255,.07)", ink: "#F5F1F0", accent: "#E3342F", accent2: "#B8211C" },
+  { id: "g-marble", glass: 1, name: "Мрамор", note: "светлая", bg: "linear-gradient(135deg,#FBF7F1,#E6DCCD)", meta: "#EEE6DA", card: "rgba(255,255,255,.7)", ink: "#1D1915", accent: "#B39468", accent2: "#9E7F55" },
+  { id: "g-emerald", glass: 1, name: "Изумруд", note: "тёмная", bg: "linear-gradient(160deg,#2A6B4C,#0C241A)", meta: "#0F2A1F", card: "rgba(140,230,180,.12)", ink: "#EAF7EF", accent: "#4FD484" },
+  { id: "g-amethyst", glass: 1, name: "Аметист", note: "тёмная", bg: "linear-gradient(160deg,#47306F,#120C22)", meta: "#1A1330", card: "rgba(190,160,255,.12)", ink: "#F2ECFF", accent: "#A35CFF" },
+  { id: "g-sky", glass: 1, name: "Небо", note: "светлая", bg: "linear-gradient(160deg,#F4F9FF,#BFD9F7)", meta: "#D7E8FB", card: "rgba(255,255,255,.7)", ink: "#0E2340", accent: "#1B73E8", accent2: "#3B8CF5" },
   { id: "note", name: "Тетрадь", note: "светлая или тёмная, как в системе", bg: "#E9EDF2", card: "#FFFFFF", ink: "#16223A", accent: "#2A4FD0" },
   { id: "neon", name: "Неон", note: "тёмная", bg: "#07080F", card: "#10122A", ink: "#ECEEFF", accent: "#2EF2D0", accent2: "#FF3D9A" },
   { id: "mm", name: "Миллиметровка", note: "светлая", bg: "#F2EADA", card: "#FBF6EC", ink: "#3A2819", accent: "#C8502D", grid: 1 },
@@ -1635,13 +1670,14 @@ const SKINS = [
   { id: "lavender", name: "Лаванда", note: "светлая", bg: "#F1EEFB", card: "#FBFAFF", ink: "#2B2345", accent: "#7C5CE0" },
   { id: "mint", name: "Мята", note: "светлая", bg: "#E6F6F1", card: "#F8FDFB", ink: "#11322A", accent: "#14A07A" }
 ];
-// порядок в настройках: «Тетрадь», потом светлые, потом тёмные
-SKINS.sort((a, b) => (a.id === "note" ? 0 : a.note === "светлая" ? 1 : 2) - (b.id === "note" ? 0 : b.note === "светлая" ? 1 : 2));
+// порядок в настройках: стеклянные, «Тетрадь», светлые, тёмные
+const skinOrder = k => k.glass ? -1 : k.id === "note" ? 0 : k.note === "светлая" ? 1 : 2;
+SKINS.sort((a, b) => skinOrder(a) - skinOrder(b));
 const skinNow = () => SKINS.some(k => k.id === prefs.skin) ? prefs.skin : "note";
 function applySkin(id) {
   const k = SKINS.find(x => x.id === id) || SKINS[0];
   if (k.id === "note") document.documentElement.removeAttribute("data-skin"); else document.documentElement.setAttribute("data-skin", k.id);
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => m.setAttribute("content", k.id === "note" ? (i ? "#0F141D" : "#E9EDF2") : k.bg));
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => m.setAttribute("content", k.id === "note" ? (i ? "#0F141D" : "#E9EDF2") : k.meta || k.bg));
 }
 /* ---------- Аватарки: эмодзи + цвет кружка, строка "🦊:3" ---------- */
 const AV_EMOJI = ["🦊","🐱","🐶","🐼","🐸","🐧","🦉","🐙","🦄","🐲","🐺","🦁","🐯","🐵","🐨","🐻","🚀","⚡","🔥","💡","🧲","🔭","⚛️","🧪","🌌","🪐","☄️","🌈","🎧","🎮","⚽","🏀","🎸","👾","🤖","😎","🧠","👑","💎","🍕"];
@@ -1728,7 +1764,7 @@ function renderSettings() {
       const bg = k.grid ? `${k.bg} linear-gradient(rgba(200,80,45,.18) 1px,transparent 1px) 0 0/10px 10px` : k.bg;
       return `<button class="skin" data-k="${k.id}" aria-pressed="${k.id === cur}">
         <span class="pv" style="background:${bg}"><b style="background:${grad}"></b><i style="background:${k.card};color:${k.ink};${k.mono ? "font-family:var(--f-mono);font-style:normal;font-size:.8rem" : ""}">E = mc²</i><u style="background:${grad}"></u></span>
-        <span class="nm2">${k.name}<small>${k.note}</small></span></button>`;
+        <span class="nm2">${k.name}<small>${k.glass ? "стекло · " : ""}${k.note}</small></span></button>`;
     }).join("")}</div></div>
     <div class="card sec"><h2>Что ещё</h2><p class="empty">Ник меняется во вкладке «Рейтинг», статистику можно сбросить во вкладке «Статистика».</p></div>`;
   $("view-set").querySelectorAll(".emojis button").forEach(b => b.onclick = () => setStatus(b.dataset.e === me.status ? "" : b.dataset.e));
