@@ -946,7 +946,7 @@ function refreshAll() { if (activeView === "stats") renderStats(); if (activeVie
 
 /* ---------- Огонёк и рейтинг ---------- */
 // Supabase: адрес проекта и публичный ключ (anon / publishable). Таблицы — в supabase.sql.
-const LEADERBOARD = { url: "", key: "" };
+const LEADERBOARD = { url: "https://ftgkjtfzhylmbvuldcfe.supabase.co", key: "sb_publishable_RbyH44pJCkVDO0ljNDY40g_qwR9wnMW" };
 const lbOn = () => !!(LEADERBOARD.url && LEADERBOARD.key);
 const ME_KEY = LS_KEY + "-player";
 const randHex = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(x => x.toString(16).padStart(2, "0")).join(""); };
