@@ -108,7 +108,8 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outlin
 .reveal{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
 .answer{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
 .answer .label{font-size:.78rem;color:var(--muted)}
-.fx{font-family:var(--f-math);font-size:1.75rem;line-height:1.6;white-space:nowrap;overflow-x:auto;max-width:100%}
+.fx{font-family:var(--f-math);font-size:1.75rem;line-height:1.6;white-space:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100%;scrollbar-width:none}
+.fx::-webkit-scrollbar{display:none}
 .fx i{font-style:italic}
 .fx .fn{font-style:normal;margin:0 .08em}
 .fx .op{margin:0 .25em}
@@ -353,7 +354,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 const SECTIONS = [
  ["kin","Кинематика"],["dyn","Динамика"],["cons","Законы сохранения"],["stat","Статика и гидростатика"],
  ["mkt","МКТ и термодинамика"],["es","Электростатика"],["dc","Постоянный ток"],["mag","Магнетизм и индукция"],
- ["osc","Колебания и волны"],["ac","Переменный ток"],["opt","Оптика"],["srt","Теория относительности"],["qnt","Квантовая и ядерная физика"]
+ ["osc","Колебания и волны"],["ac","Переменный ток"],["opt","Оптика"],["qnt","Квантовая и ядерная физика"]
 ];
 const DEF = {
   v: "v:скорость, м/с", v0: "v_0:начальная скорость, м/с", s: "s:путь (перемещение), м", t: "t:время, с",
@@ -526,8 +527,8 @@ const RAW = {
  ac:[
   ["Действующее значение силы переменного тока","I = \\f{I_{max}}{\\s{2}}","I:действующее значение силы тока, А;@Imax"],
   ["Действующее значение переменного напряжения","U = \\f{U_{max}}{\\s{2}}","U:действующее значение напряжения, В;@Umax"],
-  ["Индуктивное сопротивление","X_L = ωL","X_L:индуктивное сопротивление, Ом;@w;@L"],
-  ["Ёмкостное сопротивление","X_C = \\f{1}{ωC}","X_C:ёмкостное сопротивление, Ом;@w;@C"],
+  null, // индуктивное сопротивление — не из ЕГЭ
+  null, // ёмкостное сопротивление — не из ЕГЭ
   ["Коэффициент трансформации","k = \\f{U_1}{U_2}","k:коэффициент трансформации;U_1:напряжение на первичной обмотке, В;U_2:напряжение на вторичной обмотке, В"],
   ["Связь напряжений и числа витков трансформатора","\\f{U_1}{U_2} = \\f{N_1}{N_2}","U_1, U_2:напряжения на обмотках, В;N_1, N_2:число витков в обмотках"]
  ],
@@ -544,14 +545,6 @@ const RAW = {
   ["Относительный показатель преломления","n_{21} = \\f{n_2}{n_1}","n_{21}:показатель преломления второй среды относительно первой;n_1, n_2:абсолютные показатели преломления сред"],
   ["Формула тонкой линзы через оптическую силу","D = \\f{1}{d} + \\f{1}{f}","D:оптическая сила, дптр;d:расстояние от предмета до линзы, м;f:расстояние от линзы до изображения, м"],
   ["Период дифракционной решётки","d = \\f{l}{N}","d:период решётки, м;l:ширина решётки, м;N:число штрихов"]
- ],
- srt:[
-  ["Релятивистское сокращение длины","l = l_0\\s{1 − \\f{v^2}{c^2}}","l:длина в движущейся системе, м;l_0:собственная длина, м;v:скорость, м/с;@c"],
-  ["Релятивистское замедление времени","t = \\f{t_0}{\\s{1 − \\f{v^2}{c^2}}}","t:время в неподвижной системе, с;t_0:собственное время, с;v:скорость, м/с;@c"],
-  ["Релятивистский импульс","p = \\f{mv}{\\s{1 − \\f{v^2}{c^2}}}","@pi;m:масса покоя, кг;@v;@c"],
-  ["Энергия покоя","E_0 = mc^2","E_0:энергия покоя, Дж;m:масса покоя, кг;@c"],
-  ["Полная энергия релятивистской частицы","E = \\f{mc^2}{\\s{1 − \\f{v^2}{c^2}}}","E:полная энергия, Дж;m:масса покоя, кг;@c;@v"],
-  ["Релятивистский закон сложения скоростей","v = \\f{v_1 + v_2}{1 + \\f{v_1v_2}{c^2}}","v:результирующая скорость, м/с;v_1, v_2:складываемые скорости, м/с;@c"]
  ],
  qnt:[
   ["Энергия фотона через частоту","E = hν","E:энергия фотона, Дж;@h6;@nu"],
@@ -572,7 +565,7 @@ const RAW = {
 };
 const SEC_NAME = Object.fromEntries(SECTIONS);
 const F = [];
-for (const [sec] of SECTIONS) RAW[sec].forEach(([q, src, lg], i) => F.push({ id: sec + "-" + i, sec, q, src, lg: lg || "" }));
+for (const [sec] of SECTIONS) RAW[sec].forEach((x, i) => { if (x) F.push({ id: sec + "-" + i, sec, q: x[0], src: x[1], lg: x[2] || "" }); });
 const BY_ID = Object.fromEntries(F.map(f => [f.id, f]));
 
 /* ---------- Рендер мини-разметки ---------- */
@@ -890,7 +883,8 @@ function parseSrc(src, withOpt) {
   return seq(src);
 }
 // похожие по виду кириллические буквы в индексах принимаем и латиницей
-const NORM = { "а": "a", "е": "e", "к": "k", "м": "m", "о": "o", "р": "p", "с": "c", "т": "t", "х": "x", "у": "y", "п": "n", "н": "H", "ℰ": "E", "−": "-", "-": "-" };
+// ν и v в шрифте не отличить; путь в школе часто пишут как S
+const NORM = { "ν": "v", "S": "s", "а": "a", "е": "e", "к": "k", "м": "m", "о": "o", "р": "p", "с": "c", "т": "t", "х": "x", "у": "y", "п": "n", "н": "H", "ℰ": "E", "−": "-", "-": "-" };
 const nc = c => NORM[c] || c;
 const isOp = (n, ops) => n.t === "c" && ops.includes(nc(n.c));
 function sidesOf(list) {
@@ -1190,7 +1184,7 @@ const band = sc => sc === null ? "none" : sc >= 0.8 ? "ok" : sc >= 0.5 ? "mid" :
 function secAgg(sec) {
   let n = 0, ok = 0, mid = 0, bad = 0, seen = 0;
   for (const f of F) if (f.sec === sec) { const s = state.f[f.id]; if (s) { n += s.n; ok += s.ok; mid += s.mid; bad += s.bad; seen++; } }
-  return { n, ok, mid, bad, seen, total: RAW[sec].length };
+  return { n, ok, mid, bad, seen, total: F.filter(f => f.sec === sec).length };
 }
 function streak() {
   let d = new Date(), k = 0;
@@ -1208,7 +1202,7 @@ function renderStats() {
     <div class="card tile"><div class="v">${tot}</div><div class="k">${plural(tot,"попытка","попытки","попыток")} всего</div></div>
     <div class="card tile"><div class="v">${acc === null ? "—" : acc + "%"}</div><div class="k">точность (недочёт = ½)</div></div>
     <div class="card tile"><div class="v">${streak()}</div><div class="k">${plural(streak(),"день","дня","дней")} подряд</div></div>
-    <div class="card tile"><div class="v">${all.length}<span style="font-size:.9rem;color:var(--muted)"> / ${F.length}</span></div><div class="k">формул встречалось</div></div>
+    <div class="card tile"><div class="v">${F.filter(f => state.f[f.id]).length}<span style="font-size:.9rem;color:var(--muted)"> / ${F.length}</span></div><div class="k">формул встречалось</div></div>
   </div>`;
   if (!tot) {
     el.innerHTML = tiles + achHTML() + `<div class="card sec"><h2>Здесь появится ваша статистика</h2>
@@ -1444,7 +1438,7 @@ const ACH = [
   { id: "mem20", icon: "∞", name: "Долгая память", desc: "20 формул с повтором через неделю и дольше", goal: 20, val: () => Object.values(state.f).filter(s => boxOf(s) >= 3).length },
   { id: "duel1", icon: "⚔", name: "Дуэлянт", desc: "Выиграй дуэль", goal: 1, val: () => (state.duelWins || []).length },
   { id: "duel5", icon: "⚔5", name: "Гроза дуэлей", desc: "Выиграй 5 дуэлей", goal: 5, val: () => (state.duelWins || []).length },
-  ...SECTIONS.map(([k, name]) => ({ id: "sec-" + k, icon: SEC_ICON[k] || "•", name: name, desc: "Все формулы раздела, последний ответ — верно", goal: RAW[k].length,
+  ...SECTIONS.map(([k, name]) => ({ id: "sec-" + k, icon: SEC_ICON[k] || "•", name: name, desc: "Все формулы раздела, последний ответ — верно", goal: F.filter(f => f.sec === k).length,
     val: () => F.filter(f => f.sec === k && state.f[f.id] && state.f[f.id].lastR === 2).length })),
   { id: "all", icon: "Σ", name: "Энциклопедист", desc: "Каждая формула хоть раз решена верно", goal: F.length, val: () => F.filter(f => state.f[f.id] && state.f[f.id].ok > 0).length }
 ];
