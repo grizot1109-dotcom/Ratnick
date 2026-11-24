@@ -438,23 +438,38 @@ const score = s => s && s.n ? (s.ok + s.mid * 0.5) / s.n : null;
 /* ---------- Выбор вопроса ---------- */
 let mode = prefs.mode || "weak", secFilter = prefs.sec || "all";
 let current = null, recent = [], sessionStats = { n: 0, ok: 0, mid: 0 };
+// Колода: формулы раздела в случайном порядке без повторов, пока колода не кончится.
+// В режиме «Сначала слабые» формулы с ошибками попадают в колоду лишний раз.
+let deck = [];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function buildDeck() {
+  const pool = F.filter(f => secFilter === "all" || f.sec === secFilter).map(f => f.id);
+  let d = shuffle(pool.slice());
+  if (mode === "weak") {
+    const extra = [];
+    for (const id of pool) {
+      const s = state.f[id]; if (!s) continue;
+      const sc = score(s);
+      if (s.lastR === 0 || sc < 0.5) extra.push(id, id); else if (s.lastR === 1 || sc < 0.8) extra.push(id);
+    }
+    // лишние копии раскладываем по второй половине колоды, не ближе 3 карт к такой же
+    for (const id of shuffle(extra)) {
+      let k = Math.floor(d.length / 3 + Math.random() * (d.length * 2 / 3 + 1)), tries = 0;
+      while (tries++ < 20 && d.slice(Math.max(0, k - 3), k + 3).includes(id)) k = Math.floor(Math.random() * (d.length + 1));
+      d.splice(k, 0, id);
+    }
+  }
+  deck = d;
+}
 function pick() {
-  const pool = F.filter(f => secFilter === "all" || f.sec === secFilter);
-  const cand = pool.filter(f => !recent.includes(f.id));
-  const list = cand.length ? cand : pool;
-  if (mode === "rand") return list[Math.floor(Math.random() * list.length)];
-  const now = Date.now();
-  const w = list.map(f => {
-    const s = state.f[f.id], sc = score(s);
-    if (!s) return 3;
-    let x = 1 + (1 - sc) * 6;
-    if (s.lastR === 0) x += 3; else if (s.lastR === 1) x += 1.5;
-    x += Math.min(2, (now - s.last) / 864e5 / 3);
-    return x;
-  });
-  let r = Math.random() * w.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
-  return list[list.length - 1];
+  for (let guard = 0; guard < 3; guard++) {
+    if (!deck.length) buildDeck();
+    const k = deck.findIndex(id => !recent.includes(id));
+    if (k >= 0) return BY_ID[deck.splice(k, 1)[0]];
+    deck = [];
+    if (guard === 1) recent = [];
+  }
+  return F[Math.floor(Math.random() * F.length)];
 }
 
 /* ---------- Ход тренировки ---------- */
@@ -754,10 +769,10 @@ document.querySelectorAll(".g").forEach(b => b.onclick = () => setGrade(+b.datas
 const secSel = $("secSel");
 secSel.innerHTML = `<option value="all">Все разделы</option>` + SECTIONS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
 secSel.value = secFilter;
-secSel.onchange = () => { secFilter = secSel.value; prefs.sec = secFilter; savePrefs(); recent = []; nextQuestion(); };
+secSel.onchange = () => { secFilter = secSel.value; prefs.sec = secFilter; savePrefs(); recent = []; deck = []; nextQuestion(); };
 function syncMode() { $("modeRand").setAttribute("aria-pressed", mode === "rand"); $("modeWeak").setAttribute("aria-pressed", mode === "weak"); }
-$("modeRand").onclick = () => { mode = "rand"; prefs.mode = mode; savePrefs(); syncMode(); };
-$("modeWeak").onclick = () => { mode = "weak"; prefs.mode = mode; savePrefs(); syncMode(); };
+$("modeRand").onclick = () => { mode = "rand"; prefs.mode = mode; savePrefs(); syncMode(); deck = []; };
+$("modeWeak").onclick = () => { mode = "weak"; prefs.mode = mode; savePrefs(); syncMode(); deck = []; };
 syncMode();
 
 document.addEventListener("keydown", e => {
@@ -845,7 +860,7 @@ function renderStats() {
    <div class="card sec"><header><h2>Последние ошибки</h2></header><div class="weak">${mistHtml}</div></div>
    <div class="danger" id="danger"><button class="btn warn" id="resetBtn">Сбросить статистику</button></div>`;
 
-  const dw = $("drillWeak"); if (dw) dw.onclick = () => { mode = "weak"; prefs.mode = mode; secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); syncMode(); recent = []; nextQuestion(); show("train"); };
+  const dw = $("drillWeak"); if (dw) dw.onclick = () => { mode = "weak"; prefs.mode = mode; secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); syncMode(); recent = []; deck = shuffle(weak.map(x => x.f.id)); nextQuestion(); show("train"); };
   $("resetBtn").onclick = () => {
     $("danger").innerHTML = `<span>Удалить все ${tot} ${plural(tot,"попытку","попытки","попыток")} без возможности восстановить?</span><button class="btn warn" id="resetYes">Да, сбросить</button><button class="btn" id="resetNo">Отмена</button>`;
     $("resetYes").onclick = () => { state = blank(); persist(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
