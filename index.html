@@ -1511,7 +1511,7 @@ function checkTyped(user, src) {
 /* ---------- Очки и комбо ----------
    Очки называются джоулями (Дж). Верно — 10 Дж, с недочётом — половина, ошибка — 0. После 5 верных подряд ×2, после 10 — ×3.
    Режим «Узнать»: 3 Дж за верный ответ, без комбо (и не сбрасывает комбо из «Писать»). Считается итоговая оценка (можно поправить вручную). */
-let combo = 0, lastPts = 0, lastMult = 1, ptsBase = 10;
+let combo = Number.isFinite(state.combo) ? state.combo : 0, lastPts = 0, lastMult = 1, ptsBase = 10; // серия сохраняется между перезагрузками
 const multOf = c => c >= 10 ? 3 : c >= 5 ? 2 : 1;
 const isQuizNow = () => !duel && kind === "quiz";
 const ptsFor = r => isQuizNow() ? (r === 2 ? 3 : 0) : r === 2 ? ptsBase * multOf(combo) : r === 1 ? ptsBase / 2 : 0;
@@ -1525,6 +1525,7 @@ function award(r) {
   if (isQuizNow()) { lastMult = 1; return lastPts; }
   lastMult = r === 2 ? multOf(combo) : 1;
   combo = r === 2 ? combo + 1 : 0;
+  state.combo = combo;
   if (combo > (state.bestCombo || 0)) state.bestCombo = combo;
   renderCombo();
   return lastPts;
@@ -1874,7 +1875,7 @@ function renderStats() {
   const dw = $("drillWeak"); if (dw) dw.onclick = () => { if (kind !== "write") { kind = "write"; prefs.kind = "write"; syncKind(); } setMode("weak"); secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); recent = []; deck = shuffle(weak.map(x => x.f.id)); nextQuestion(); show("train"); };
   $("resetBtn").onclick = () => {
     $("danger").innerHTML = `<span>Удалить все ${tot} ${plural(tot,"попытку","попытки","попыток")} без возможности восстановить?</span><button class="btn warn" id="resetYes">Да, сбросить</button><button class="btn" id="resetNo">Отмена</button>`;
-    $("resetYes").onclick = () => { state = blank(); persist(); renderFlame(); syncScore(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
+    $("resetYes").onclick = () => { state = blank(); combo = 0; persist(); renderFlame(); syncScore(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
     $("resetNo").onclick = renderStats;
   };
 }
