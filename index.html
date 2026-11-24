@@ -54,6 +54,7 @@ nav{display:grid;grid-template-columns:repeat(4,auto);gap:2px;background:var(--s
 nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-body);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
 @media (max-width:480px){nav{width:100%;grid-template-columns:repeat(4,1fr)}nav button{padding:7px 4px;font-size:.8rem}}
 .brand{align-items:center}
+.brand .gear{margin-left:auto}
 .flame{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px 3px 6px;cursor:pointer;color:var(--ink);font:700 .95rem var(--f-body);font-variant-numeric:tabular-nums}
 .fl{width:1.15em;height:1.15em;flex:none}
 .fl path{fill:var(--flame)}.fl .core{fill:var(--flame-core)}
@@ -216,6 +217,64 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .ri .t{font-size:.86rem;color:var(--muted);min-width:0}
 .ri .fx{font-size:1.3rem;grid-column:1/-1}
 .ri .go{grid-row:1;grid-column:2}
+
+/* ---------- Темы оформления (выбираются в настройках; атрибут data-skin на <html>) ---------- */
+:root[data-skin="neon"][data-skin]{--bg:#07080F;--surface:#10122A;--sunk:#0B0D1F;--line:#262A55;--grid:#191C3A;--ink:#ECEEFF;--muted:#8C91C7;--accent:#2EF2D0;--accent-soft:#0C3536;--ok:#2EF2D0;--ok-soft:#0C3536;--mid:#FFD23F;--mid-soft:#3A3212;--bad:#FF3D9A;--bad-soft:#3A1030;--flame:#FF3D9A;--flame-core:#FFD23F;--gold:#FFD23F;--silver:#B8C0E0;--bronze:#E0A070;color-scheme:dark}
+[data-skin="neon"] .btn.primary{color:#07080F;box-shadow:0 0 18px rgba(46,242,208,.5)}
+[data-skin="neon"] .card{box-shadow:0 0 0 1px rgba(46,242,208,.08),0 0 24px rgba(120,80,255,.10)}
+[data-skin="neon"] nav button[aria-selected="true"]{background:linear-gradient(90deg,#2EF2D0,#8B5CFF);color:#07080F}
+[data-skin="neon"] h1{background:linear-gradient(90deg,#2EF2D0,#FF3D9A);-webkit-background-clip:text;background-clip:text;color:transparent}
+[data-skin="neon"] .g.ok[aria-pressed="true"]{box-shadow:0 0 14px rgba(46,242,208,.45)}
+[data-skin="neon"] .ptsline .mult{background:#3A1030;color:#FF3D9A;box-shadow:0 0 10px rgba(255,61,154,.5)}
+[data-skin="neon"] .key.act{color:#2EF2D0}
+
+:root[data-skin="mm"][data-skin]{--bg:#F2EADA;--surface:#FBF6EC;--sunk:#F1E7D4;--line:#E1CCB0;--grid:#EBD9C2;--ink:#3A2819;--muted:#8A715A;--accent:#C8502D;--accent-soft:#F7DCCF;--ok:#3E8A4F;--ok-soft:#DDEBD6;--mid:#B7791F;--mid-soft:#F4E3C4;--bad:#B83A2E;--bad-soft:#F4D6D0;--flame:#C8502D;--flame-core:#F2A65A;color-scheme:light}
+[data-skin="mm"] body{background-image:linear-gradient(rgba(200,80,45,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(200,80,45,.13) 1px,transparent 1px),linear-gradient(rgba(200,80,45,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(200,80,45,.06) 1px,transparent 1px);background-size:40px 40px,40px 40px,8px 8px,8px 8px}
+[data-skin="mm"] .card{box-shadow:0 1px 0 var(--line)}
+[data-skin="mm"] nav button[aria-selected="true"]{background:var(--accent);color:#FBF6EC}
+[data-skin="mm"] .btn.primary{color:#FBF6EC}
+
+:root[data-skin="matrix"][data-skin]{--bg:#020803;--surface:#06120A;--sunk:#030C06;--line:#0F3A1C;--grid:#0A2412;--ink:#B8FFC9;--muted:#4FA868;--accent:#33FF77;--accent-soft:#0B2E16;--ok:#33FF77;--ok-soft:#0B2E16;--mid:#E8FF5A;--mid-soft:#25290B;--bad:#FF5A5A;--bad-soft:#2E0E0E;--flame:#33FF77;--flame-core:#D9FFE3;--gold:#33FF77;--silver:#7FBF8F;--bronze:#4FA868;--f-display:"JetBrains Mono",ui-monospace,monospace;--f-body:"JetBrains Mono",ui-monospace,monospace;color-scheme:dark}
+[data-skin="matrix"] body{background-image:repeating-linear-gradient(0deg,rgba(51,255,119,.035) 0 1px,transparent 1px 3px)}
+[data-skin="matrix"] .fx,[data-skin="matrix"] .fx i{color:#7DFFA2;text-shadow:0 0 6px rgba(51,255,119,.5)}
+[data-skin="matrix"] h1{color:#33FF77;text-shadow:0 0 10px rgba(51,255,119,.6)}
+[data-skin="matrix"] h1::before{content:"> "}
+[data-skin="matrix"] nav button[aria-selected="true"]{background:#33FF77;color:#020803}
+[data-skin="matrix"] .btn.primary{color:#020803;box-shadow:0 0 14px rgba(51,255,119,.45)}
+[data-skin="matrix"] .card{border-radius:4px}
+[data-skin="matrix"] .board .top1 .rk,[data-skin="matrix"] .board .top2 .rk,[data-skin="matrix"] .board .top3 .rk{color:#020803}
+
+:root[data-skin="sunset"][data-skin]{--bg:#1E0F1C;--surface:#2A1626;--sunk:#22121F;--line:#4A2A40;--grid:#331A2E;--ink:#FFEDE3;--muted:#C9A1A6;--accent:#FF8A4C;--accent-soft:#4A2423;--ok:#8EE3A6;--ok-soft:#1F3E2E;--mid:#FFC65C;--mid-soft:#4A3520;--bad:#FF6B7F;--bad-soft:#4A1D2A;--flame:#FF8A4C;--flame-core:#FFD36E;color-scheme:dark}
+[data-skin="sunset"] body{background:linear-gradient(180deg,#3A1530 0%,#1E0F1C 45%,#140A13 100%) fixed}
+[data-skin="sunset"] .card{background:linear-gradient(180deg,rgba(52,26,46,.95),rgba(38,19,34,.95))}
+[data-skin="sunset"] nav button[aria-selected="true"],[data-skin="sunset"] .btn.primary{background:linear-gradient(90deg,#FF5E7E,#FF9A3C);border-color:transparent;color:#1E0F1C}
+[data-skin="sunset"] h1{background:linear-gradient(90deg,#FFB36B,#FF5E7E);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+:root[data-skin="ice"][data-skin]{--bg:#E8F3F8;--surface:#FAFDFF;--sunk:#EEF6FA;--line:#C9E0EA;--grid:#DCEBF2;--ink:#0E2A3A;--muted:#5C7C8C;--accent:#1592C9;--accent-soft:#D6EEF8;--ok:#13906A;--ok-soft:#D6F2E8;--mid:#C98A0B;--mid-soft:#FBEFD6;--bad:#D23B54;--bad-soft:#F8DDE3;--flame:#FF7A3D;--flame-core:#FFC233;color-scheme:light}
+[data-skin="ice"] body{background:linear-gradient(180deg,#DFF0F7 0%,#F2F8FB 60%) fixed}
+[data-skin="ice"] .card{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-color:#CFE4EE;box-shadow:0 4px 18px rgba(21,146,201,.08)}
+[data-skin="ice"] nav button[aria-selected="true"],[data-skin="ice"] .btn.primary{background:linear-gradient(90deg,#1592C9,#3CC4E6);border-color:transparent;color:#fff}
+
+:root[data-skin="sakura"][data-skin]{--bg:#FBEFF2;--surface:#FFFAFB;--sunk:#FCEEF2;--line:#F1D3DC;--grid:#F6E1E7;--ink:#4A2633;--muted:#9A6B7A;--accent:#E0567F;--accent-soft:#FCDDE6;--ok:#3E9A6A;--ok-soft:#DCF1E4;--mid:#C98A2B;--mid-soft:#F9EBD5;--bad:#C9364F;--bad-soft:#F8D9DF;--flame:#E0567F;--flame-core:#FFB3C6;color-scheme:light}
+[data-skin="sakura"] body{background-image:radial-gradient(circle at 15% 8%,rgba(255,182,203,.35) 0 60px,transparent 61px),radial-gradient(circle at 90% 40%,rgba(255,182,203,.25) 0 90px,transparent 91px);background-attachment:fixed}
+[data-skin="sakura"] .card{border-radius:20px;border-color:#F1D3DC;box-shadow:0 4px 16px rgba(224,86,127,.07)}
+[data-skin="sakura"] .btn,[data-skin="sakura"] .g,[data-skin="sakura"] .opt{border-radius:14px}
+[data-skin="sakura"] nav button[aria-selected="true"],[data-skin="sakura"] .btn.primary{background:#E0567F;color:#fff;border-color:#E0567F}
+
+/* настройки */
+.gear{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;padding:0}
+.gear svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gear[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+.skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.skin{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:8px;text-align:left;color:var(--ink);font:600 .88rem var(--f-body)}
+.skin[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.skin .pv{height:86px;border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.skin .pv b{display:block;height:9px;width:62%;border-radius:4px}
+.skin .pv i{display:block;flex:1;border-radius:6px;padding:6px;font:italic 400 1rem/1 var(--f-math)}
+.skin .pv u{display:block;height:12px;width:40%;border-radius:4px;text-decoration:none}
+.skin .nm2{display:flex;flex-direction:column;gap:1px}
+[data-skin] .kt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.skin .nm2 small{color:var(--muted);font-weight:500;font-size:.72rem}
 .link{border:0;background:none;color:var(--accent);font:500 .8rem var(--f-body);cursor:pointer;padding:2px 0;text-decoration:none}
 .filters .seg2{flex:none}
 .qfx{font-size:2rem;padding-top:4px}
@@ -262,10 +321,11 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 </style>
 </head>
 <body>
+<script>try{var _p=JSON.parse(localStorage.getItem("formulograf-v1-prefs")||"{}");if(_p.skin&&_p.skin!=="note")document.documentElement.setAttribute("data-skin",_p.skin)}catch(e){}</script>
 
 <div class="wrap">
   <header class="top">
-    <div class="brand"><h1>Формулограф</h1><button class="flame" id="flame" aria-label="Огонёк: дней подряд"></button></div>
+    <div class="brand"><h1>Формулограф</h1><button class="flame" id="flame" aria-label="Огонёк: дней подряд"></button><button class="gear" id="gearBtn" aria-label="Настройки" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
     <nav role="tablist">
       <button role="tab" id="tab-train" aria-selected="true" data-view="train">Тренировка</button>
       <button role="tab" id="tab-lb" aria-selected="false" data-view="lb">Рейтинг</button>
@@ -343,6 +403,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
   <section class="panel" id="view-lb" hidden></section>
   <section class="panel" id="view-stats" hidden></section>
   <section class="ref" id="view-ref" hidden></section>
+  <section class="panel" id="view-set" hidden></section>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -1273,9 +1334,45 @@ let activeView = "train";
 function show(v) {
   activeView = v;
   for (const x of ["train", "lb", "stats", "ref"]) { $("view-" + x).hidden = x !== v; $("tab-" + x).setAttribute("aria-selected", String(x === v)); }
+  $("view-set").hidden = v !== "set"; $("gearBtn").setAttribute("aria-pressed", String(v === "set"));
+  if (v === "set") renderSettings();
   if (v === "stats") renderStats(); if (v === "ref") renderRef(); if (v === "lb") renderLb();
 }
 $("flame").onclick = () => show("lb");
+$("gearBtn").onclick = () => show(activeView === "set" ? "train" : "set");
+
+/* ---------- Темы оформления ---------- */
+const SKINS = [
+  { id: "note", name: "Тетрадь", note: "светлая или тёмная, как в системе", bg: "#E9EDF2", card: "#FFFFFF", ink: "#16223A", accent: "#2A4FD0" },
+  { id: "neon", name: "Неон", note: "тёмная", bg: "#07080F", card: "#10122A", ink: "#ECEEFF", accent: "#2EF2D0", accent2: "#FF3D9A" },
+  { id: "mm", name: "Миллиметровка", note: "светлая", bg: "#F2EADA", card: "#FBF6EC", ink: "#3A2819", accent: "#C8502D", grid: 1 },
+  { id: "matrix", name: "Матрица", note: "тёмная", bg: "#020803", card: "#06120A", ink: "#7DFFA2", accent: "#33FF77", mono: 1 },
+  { id: "sunset", name: "Закат", note: "тёмная", bg: "#2A1226", card: "#3A1C32", ink: "#FFEDE3", accent: "#FF8A4C", accent2: "#FF5E7E" },
+  { id: "ice", name: "Арктика", note: "светлая", bg: "#DFF0F7", card: "#FAFDFF", ink: "#0E2A3A", accent: "#1592C9", accent2: "#3CC4E6" },
+  { id: "sakura", name: "Сакура", note: "светлая", bg: "#FBEFF2", card: "#FFFAFB", ink: "#4A2633", accent: "#E0567F" }
+];
+const skinNow = () => SKINS.some(k => k.id === prefs.skin) ? prefs.skin : "note";
+function applySkin(id) {
+  const k = SKINS.find(x => x.id === id) || SKINS[0];
+  if (k.id === "note") document.documentElement.removeAttribute("data-skin"); else document.documentElement.setAttribute("data-skin", k.id);
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => m.setAttribute("content", k.id === "note" ? (i ? "#0F141D" : "#E9EDF2") : k.bg));
+}
+function renderSettings() {
+  const cur = skinNow();
+  $("view-set").innerHTML = `<div class="card sec"><header><h2>Тема оформления</h2><span>сохраняется на этом телефоне</span></header>
+    <div class="skins">${SKINS.map(k => {
+      const grad = k.accent2 ? `linear-gradient(90deg,${k.accent},${k.accent2})` : k.accent;
+      const bg = k.grid ? `${k.bg} linear-gradient(rgba(200,80,45,.18) 1px,transparent 1px) 0 0/10px 10px` : k.bg;
+      return `<button class="skin" data-k="${k.id}" aria-pressed="${k.id === cur}">
+        <span class="pv" style="background:${bg}"><b style="background:${grad}"></b><i style="background:${k.card};color:${k.ink};${k.mono ? "font-family:var(--f-mono);font-style:normal;font-size:.8rem" : ""}">E = mc²</i><u style="background:${grad}"></u></span>
+        <span class="nm2">${k.name}<small>${k.note}</small></span></button>`;
+    }).join("")}</div></div>
+    <div class="card sec"><h2>Что ещё</h2><p class="empty">Ник меняется во вкладке «Рейтинг», статистику можно сбросить во вкладке «Статистика».</p></div>`;
+  $("view-set").querySelectorAll(".skin").forEach(b => b.onclick = () => {
+    prefs.skin = b.dataset.k; savePrefs(); applySkin(prefs.skin); renderSettings();
+  });
+}
+applySkin(skinNow());
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => show(b.dataset.view));
 function refreshAll() { if (activeView === "stats") renderStats(); if (activeView === "ref") renderRef(); if (current && phase === "draw") $("qHist").textContent = histText(current.id); }
 
