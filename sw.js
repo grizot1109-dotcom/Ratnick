@@ -1,6 +1,6 @@
 // Офлайн-кэш: отдаём из кэша сразу, в фоне обновляем с сети.
-const CACHE = "formulograf-v2";
-const CORE = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+const CACHE = "formulograf-v3";
+const CORE = ["./", "index.html", "glyphs.js", "recognizer.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));

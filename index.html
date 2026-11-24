@@ -91,11 +91,17 @@ canvas{display:block;width:100%;height:clamp(240px,42vh,400px);touch-action:none
 .fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .1em;line-height:1.2}
 .fr>span:first-child{border-bottom:.06em solid currentColor;padding:0 .18em .04em}
 .fr>span:last-child{padding-top:.04em}
-.sq{white-space:nowrap}.sq .rad{border-top:.06em solid currentColor;padding:0 .12em;margin-left:.02em}
+.sq{white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle}.sq>.rs{font-size:1.3em;line-height:1;margin-right:-.05em}.sq .rad{display:inline-block;border-top:.06em solid currentColor;padding:.12em .12em 0;margin-left:.02em}
 .ai{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:.9rem}
 .ai .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--muted)}
 .ai.ok .dot{background:var(--ok)}.ai.mid .dot{background:var(--mid)}.ai.bad .dot{background:var(--bad)}
-.ai .rec{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);display:block}
+.ai .aibody{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.ai .recog{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.ai .recog .label{font-size:.78rem;color:var(--muted)}
+.ai .note{font-size:.78rem;color:var(--muted)}
+.ai .note:empty{display:none}
+.fx.small{font-size:1.25rem}
+.fx .miss{color:var(--bad);text-decoration:underline wavy;text-underline-offset:.2em}
 .ai.thinking .dot{animation:pulse 1s infinite alternate}
 @keyframes pulse{to{opacity:.2}}
 @media (prefers-reduced-motion:reduce){.ai.thinking .dot{animation:none}}
@@ -160,7 +166,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 
 <div class="wrap">
   <header>
-    <div class="brand"><h1>Формулограф</h1><span class="sync" id="sync">статистика в этом браузере</span></div>
+    <div class="brand"><h1>Формулограф</h1><span class="sync">проверка прямо на телефоне</span></div>
     <nav role="tablist">
       <button role="tab" id="tab-train" aria-selected="true" data-view="train">Тренировка</button>
       <button role="tab" id="tab-stats" aria-selected="false" data-view="stats">Статистика</button>
@@ -173,8 +179,6 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
       <select class="sel" id="secSel" aria-label="Раздел"></select>
       <button class="chip" id="modeRand" aria-pressed="false">Вперемешку</button>
       <button class="chip" id="modeWeak" aria-pressed="true">Сначала слабые</button>
-      <span class="spacer"></span>
-      <button class="chip" id="aiToggle" aria-pressed="true" hidden>Проверка Claude</button>
     </div>
 
     <div class="card q">
@@ -184,7 +188,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 
     <div class="board" id="board">
       <canvas id="cv" aria-label="Поле для формулы"></canvas>
-      <div class="hint" id="hint">Напишите формулу маркером, пальцем или мышью</div>
+      <div class="hint" id="hint">Пиши крупно, символы раздельно.<br>Дробь — горизонтальной чертой, корень — галочкой с чертой сверху.</div>
       <div class="tools">
         <button id="tPen" aria-pressed="true" title="Маркер"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></button>
         <button id="tErase" aria-pressed="false" title="Ластик (стирает штрих)"><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M5 15l9-9 5 5-7 7H8z"/></svg></button>
@@ -200,7 +204,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 
     <div class="card reveal" id="reveal" hidden>
       <div class="answer"><span class="label">Правильно:</span><div class="fx" id="ansFx"></div></div>
-      <div class="ai" id="ai" hidden><span class="dot"></span><div><span id="aiText"></span><span class="rec" id="aiRec"></span></div></div>
+      <div class="ai" id="ai" hidden><span class="dot"></span><div class="aibody"><span id="aiText"></span><div class="recog"><span class="label">Распознано:</span><span class="fx small" id="aiRec"></span></div><span class="note" id="aiNote"></span></div></div>
       <div class="grade">
         <span class="label">Как получилось?</span>
         <button class="g ok" data-r="2" aria-pressed="false"><span class="sw"></span>Верно<span class="sug"></span></button>
@@ -217,6 +221,8 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
   <section class="ref" id="view-ref" hidden></section>
 </div>
 
+<script src="glyphs.js"></script>
+<script src="recognizer.js"></script>
 <script>
 /* ---------- Формулы ----------
    Мини-разметка: \f{числитель}{знаменатель}, \s{подкоренное}, _x или _{xx}, ^x или ^{xx}, * = точка умножения */
@@ -259,7 +265,7 @@ const RAW = {
   ["Механическая работа силы","A = Fs cos α"],
   ["Мощность (через работу и время)","N = \\f{A}{t}"],
   ["Мощность через силу и скорость","N = Fv"],
-  ["КПД механизма","η = \\f{A_п}{A_з}*100%"],
+  ["КПД механизма","η = \\f{A_п}{A_з}[*100%]"],
   ["Теорема о кинетической энергии","A = E_{к2} − E_{к1}"]
  ],
  stat:[
@@ -284,7 +290,7 @@ const RAW = {
   ["Количество теплоты при сгорании топлива","Q = qm"],
   ["КПД тепловой машины (через теплоты)","η = \\f{Q_1 − Q_2}{Q_1}"],
   ["КПД идеальной тепловой машины (цикл Карно)","η = \\f{T_1 − T_2}{T_1}"],
-  ["Относительная влажность воздуха","φ = \\f{p}{p_н}*100%"]
+  ["Относительная влажность воздуха","φ = \\f{p}{p_н}[*100%]"]
  ],
  es:[
   ["Закон Кулона","F = k\\f{|q_1||q_2|}{r^2}"],
@@ -363,11 +369,12 @@ function fx(s, text) {
     if (c === "\\") {
       const k = s[i + 1]; i += 2;
       if (k === "f") { const a = group(), b = group(); out += text ? `(${fx(a,1)})/(${fx(b,1)})` : `<span class="fr"><span>${fx(a)}</span><span>${fx(b)}</span></span>`; }
-      else if (k === "s") { const a = group(); out += text ? `√(${fx(a,1)})` : `<span class="sq">√<span class="rad">${fx(a)}</span></span>`; }
+      else if (k === "s") { const a = group(); out += text ? `√(${fx(a,1)})` : `<span class="sq"><span class="rs">√</span><span class="rad">${fx(a)}</span></span>`; }
       continue;
     }
     if (c === "_" || c === "^") { i++; const g = group(); out += text ? `${c}{${fx(g,1)}}` : (c === "_" ? `<sub>${fx(g)}</sub>` : `<sup>${fx(g)}</sup>`); continue; }
     if (LET.test(c)) { let j = i; while (j < s.length && LET.test(s[j])) j++; const w = s.slice(i, j); i = j; out += text ? w : (UP.has(w) ? `<span class="fn">${w}</span>` : `<i>${w}</i>`); continue; }
+    if (c === "[" || c === "]") { i++; continue; }
     if (c === "*") { out += "·"; i++; continue; }
     if (c === "=" && !text) { out += '<span class="op">=</span>'; i++; continue; }
     out += text ? c : esc(c); i++;
@@ -387,19 +394,7 @@ try { const s = JSON.parse(ls.get(LS_KEY) || "null"); if (s && s.v === 1) state 
 const prefs = (() => { try { return JSON.parse(ls.get(LS_KEY + "-prefs") || "{}"); } catch { return {}; } })();
 const savePrefs = () => ls.set(LS_KEY + "-prefs", JSON.stringify(prefs));
 
-let remoteRef = null, saving = false, dirty = false;
-async function pushRemote() {
-  if (!remoteRef) return;
-  if (saving) { dirty = true; return; }
-  saving = true;
-  try { await remoteRef.set(JSON.parse(JSON.stringify(state))); setSync("статистика сохранена в аккаунте"); }
-  catch { setSync("не удалось сохранить в аккаунт, копия в браузере"); }
-  saving = false;
-  if (dirty) { dirty = false; pushRemote(); }
-}
-function persist() { ls.set(LS_KEY, JSON.stringify(state)); pushRemote(); }
-const setSync = t => { document.getElementById("sync").textContent = t; };
-
+function persist() { ls.set(LS_KEY, JSON.stringify(state)); }
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 function record(id, r) {
   const s = state.f[id] || (state.f[id] = { n: 0, ok: 0, mid: 0, bad: 0, last: 0, lastR: null });
@@ -413,35 +408,10 @@ function record(id, r) {
 }
 const score = s => s && s.n ? (s.ok + s.mid * 0.5) / s.n : null;
 
-/* ---------- Возможности Claude (если страница открыта в claude.ai) ---------- */
-let sample = null, sampleImages = false;
-(async () => {
-  const c = window.claude; if (!c || !c.use) return;
-  c.use("sample").then(async s => {
-    if (!s) return;
-    try { const lim = await s.limits(); sampleImages = !!(lim && lim.images); } catch { sampleImages = false; }
-    if (!sampleImages) return;
-    sample = s;
-    const t = document.getElementById("aiToggle");
-    t.hidden = false; t.setAttribute("aria-pressed", prefs.ai === false ? "false" : "true");
-  });
-  try {
-    const [db, user] = await Promise.all([c.use("db"), c.use("user")]);
-    if (!db || !user) return;
-    const uid = await user.id(); if (!uid) return;
-    const ref = db.collection("data/users/" + uid).doc("trainer");
-    const snap = await Promise.race([ref.get(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 10000))]);
-    const remote = snap.data();
-    remoteRef = ref;
-    if (remote && remote.v === 1 && (remote.total || 0) >= state.total) {
-      state = JSON.parse(JSON.stringify(remote));
-      ls.set(LS_KEY, JSON.stringify(state));
-      setSync("статистика из аккаунта");
-      refreshAll();
-    } else if (state.total > 0) { pushRemote(); }
-    else setSync("статистика сохраняется в аккаунте");
-  } catch { /* остаёмся на браузерном хранилище */ }
-})();
+/* ---------- Личные образцы почерка ---------- */
+const INK_KEY = LS_KEY + "-ink";
+try { Recog.setPersonal(JSON.parse(ls.get(INK_KEY) || "{}")); } catch {}
+const saveInk = () => ls.set(INK_KEY, JSON.stringify(Recog.getPersonal()));
 
 /* ---------- Выбор вопроса ---------- */
 let mode = prefs.mode || "weak", secFilter = prefs.sec || "all";
@@ -542,21 +512,20 @@ function exportPNG() {
 
 /* ---------- Ход тренировки ---------- */
 const $ = id => document.getElementById(id);
-let phase = "draw", grade = null, aiGrade = null, aiCtl = null;
+let phase = "draw", grade = null, lastCheck = null;
 function histText(id) {
   const s = state.f[id];
   if (!s) return "новая формула";
   return `раньше: ${s.ok} из ${s.n} верно`;
 }
 function nextQuestion() {
-  if (aiCtl) { aiCtl.abort(); aiCtl = null; }
   current = pick();
   recent.push(current.id); if (recent.length > 4) recent.shift();
   $("qSec").textContent = SEC_NAME[current.sec];
   $("qHist").textContent = histText(current.id);
   $("qText").textContent = current.q;
   strokes = []; cur = null; redraw();
-  phase = "draw"; grade = null; aiGrade = null;
+  phase = "draw"; grade = null; lastCheck = null;
   $("reveal").hidden = true; $("preActions").hidden = false; $("ai").hidden = true;
   document.querySelectorAll(".g").forEach(b => { b.setAttribute("aria-pressed", "false"); b.querySelector(".sug").textContent = ""; });
   $("nextBtn").disabled = true;
@@ -570,48 +539,51 @@ function reveal(gaveUp) {
   phase = "reveal";
   $("ansFx").innerHTML = fx(current.src);
   $("preActions").hidden = true; $("reveal").hidden = false;
-  if (gaveUp) { setGrade(0); return; }
-  const aiOn = sample && prefs.ai !== false && strokes.length;
-  if (aiOn) runAI(); else if (!strokes.length) setGrade(0);
-}
-async function runAI() {
+  if (gaveUp || !strokes.length) { $("ai").hidden = true; setGrade(0); return; }
   const box = $("ai"); box.hidden = false; box.className = "ai thinking";
-  $("aiText").textContent = "Claude смотрит на вашу запись…"; $("aiRec").textContent = "";
-  const ctl = aiCtl = new AbortController();
-  const img = await exportPNG();
-  const q = current, prompt =
-`Ты проверяешь ученика на тренажёре физических формул. На изображении — формула, написанная от руки.
-Вопрос: «${q.q}».
-Эталон: ${fx(q.src, 1)}
-Правила оценки:
-- "correct": формула верна; допускаются эквивалентные алгебраические преобразования, другие общепринятые обозначения (Ek вместо E_к, векторные стрелки, x вместо ·, опущенный модуль там, где он очевиден).
-- "partial": по сути верно, но есть недочёт: пропущен коэффициент 1/2 или 100%, перепутан индекс, нет знака минус, неверная степень у одной величины и т. п.
-- "wrong": другая формула, грубая ошибка, нечитаемо или пусто.
-Ответь строго JSON без пояснений: {"verdict":"correct|partial|wrong","recognized":"что написал ученик, обычной строкой","comment":"по-русски, одно короткое предложение: что не так или что всё верно"}`;
-  try {
-    const res = await sample.json(prompt, { images: [img], modelTier: "default", signal: ctl.signal });
-    if (ctl !== aiCtl || current !== q) return;
-    const v = { correct: 2, partial: 1, wrong: 0 }[res && res.verdict];
-    if (v === undefined) throw { code: "bad_shape" };
-    aiGrade = v;
-    box.className = "ai " + ["bad", "mid", "ok"][v];
-    $("aiText").textContent = String(res.comment || ["Неверно", "С недочётом", "Верно"][v]);
-    $("aiRec").textContent = res.recognized ? "распознано: " + String(res.recognized) : "";
-    document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = +b.dataset.r === v ? "· Claude" : ""; });
-    if (grade === null) setGrade(v);
-  } catch (e) {
-    if (ctl !== aiCtl || (e && e.code === "cancelled")) return;
-    box.className = "ai";
-    const msg = {
-      not_granted: "Проверка Claude отключена. Оцените ответ сами.",
-      rate_limited: "Слишком много запросов подряд. Оцените этот ответ сами.",
-    }[e && e.code] || "Claude не смог проверить запись. Сравните с правильной формулой и оцените сами.";
-    $("aiText").textContent = msg; $("aiRec").textContent = "";
-    if (e && e.code === "not_granted") { sample = null; $("aiToggle").hidden = true; }
-  }
+  $("aiText").textContent = "Проверяю…"; $("aiRec").innerHTML = ""; $("aiNote").textContent = "";
+  const q = current, ink = strokes.map(s => s.slice());
+  setTimeout(() => {
+    if (current !== q) return;
+    let r;
+    try { r = Recog.check(ink, q.src); }
+    catch (e) { box.className = "ai"; $("aiText").textContent = "Не получилось разобрать запись. Сравни с правильной формулой и оцени сам."; return; }
+    lastCheck = r;
+    box.className = "ai " + ["bad", "mid", "ok"][r.verdict];
+    const miss = r.missing ? r.missing.filter(t => t.c && !t.opt).map(t => t.c) : [];
+    $("aiText").textContent = r.verdict === 2 ? "Совпадает с правильной формулой."
+      : (r.verdict === 1 ? "Почти: есть расхождения." : "Не совпадает с правильной формулой.")
+        + (miss.length ? " Не хватает: " + miss.slice(0, 5).join(" ") + "." : "");
+    $("aiRec").innerHTML = renderTokens(r.tokens, r.status);
+    $("aiNote").textContent = r.verdict === 2 ? "" : "Если распознало неправильно, а ответ верный, нажми «Верно»: приложение запомнит твой почерк.";
+    document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = +b.dataset.r === r.verdict ? "· авто" : ""; });
+    if (grade === null) setGrade(r.verdict);
+  }, 30);
+}
+function renderTokens(tokens, status) {
+  let i = 0;
+  const seq = stop => {
+    let h = "";
+    while (i < tokens.length) {
+      const t = tokens[i];
+      if (t.s && stop.includes(t.s)) return h;
+      i++;
+      if (t.s === "FR(") { const a = seq(["FR|"]); i++; const b = seq(["FR)"]); i++; h += `<span class="fr"><span>${a || "&nbsp;"}</span><span>${b || "&nbsp;"}</span></span>`; }
+      else if (t.s === "SQ(") { const a = seq(["SQ)"]); i++; h += `<span class="sq"><span class="rs">√</span><span class="rad">${a || "&nbsp;"}</span></span>`; }
+      else if (!t.s) {
+        const st = status.get(t.k), bad = !st || st.c >= 0.6;
+        const ch = !bad && st.e ? st.e : t.cands[0].c;
+        const inner = LET.test(ch) && ch !== "Δ" ? `<i>${esc(ch)}</i>` : esc(ch);
+        h += bad ? `<span class="miss">${inner}</span>` : inner;
+      }
+    }
+    return h;
+  };
+  return seq([]) || "—";
 }
 function commit() {
   if (grade === null) return;
+  if (grade === 2 && lastCheck && lastCheck.verdict < 2 && Recog.learnFrom(lastCheck)) saveInk();
   record(current.id, grade);
   sessionStats.n++; if (grade === 2) sessionStats.ok++; if (grade === 1) sessionStats.mid++;
   renderSession(); nextQuestion();
@@ -625,7 +597,6 @@ $("checkBtn").onclick = () => reveal(false);
 $("giveUp").onclick = () => reveal(true);
 $("nextBtn").onclick = commit;
 document.querySelectorAll(".g").forEach(b => b.onclick = () => setGrade(+b.dataset.r));
-$("aiToggle").onclick = () => { prefs.ai = prefs.ai === false; savePrefs(); $("aiToggle").setAttribute("aria-pressed", String(prefs.ai !== false)); };
 
 const secSel = $("secSel");
 secSel.innerHTML = `<option value="all">Все разделы</option>` + SECTIONS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
@@ -714,13 +685,23 @@ function renderStats() {
    <div class="card sec"><header><h2>Активность</h2><span>последние 14 дней</span></header>
      <svg class="chart" viewBox="0 0 ${14 * W + 2} ${H + 28}" role="img" aria-label="Число попыток по дням">${bars}</svg></div>
    <div class="card sec"><header><h2>Последние ошибки</h2></header><div class="weak">${mistHtml}</div></div>
+   <div class="card sec"><header><h2>Мой почерк</h2></header>
+     <p class="empty" id="inkInfo"></p></div>
    <div class="danger" id="danger"><button class="btn warn" id="resetBtn">Сбросить статистику</button></div>`;
+  renderInk();
   const dw = $("drillWeak"); if (dw) dw.onclick = () => { mode = "weak"; prefs.mode = mode; secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); syncMode(); recent = []; nextQuestion(); show("train"); };
   $("resetBtn").onclick = () => {
     $("danger").innerHTML = `<span>Удалить все ${tot} ${plural(tot,"попытку","попытки","попыток")} без возможности восстановить?</span><button class="btn warn" id="resetYes">Да, сбросить</button><button class="btn" id="resetNo">Отмена</button>`;
     $("resetYes").onclick = () => { state = blank(); persist(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
     $("resetNo").onclick = renderStats;
   };
+}
+
+function renderInk() {
+  const el = $("inkInfo"); if (!el) return;
+  const n = Recog.personalCount();
+  el.textContent = n ? `Запомнено образцов твоих символов: ${n}. Они помогают узнавать твой почерк.` : "Пока нет. Когда автопроверка ошибается, а ты отмечаешь «Верно», приложение запоминает, как ты пишешь эти символы.";
+  if (n) { const b = document.createElement("button"); b.className = "link"; b.textContent = "Забыть мой почерк"; b.onclick = () => { Recog.setPersonal({}); saveInk(); renderInk(); }; el.append(" ", b); }
 }
 
 /* ---------- Справочник ---------- */
