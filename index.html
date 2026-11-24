@@ -2165,19 +2165,46 @@ const MEDAL_METAL = ["", "Золото", "Серебро", "Бронза"];
 const medalId = m => m.k + "-" + m.d;
 const fmtDay = d => new Date(d + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 function medalTitle(m) {
+  const wk = d => { const e = new Date(d + "T12:00"); e.setDate(e.getDate() + 6); return `${fmtDay(d)} – ${fmtDay(dayKey(e))}`; };
   if (m.k === "d") return `${MEDAL_METAL[m.p]} дня · ${fmtDay(m.d)}`;
-  const e = new Date(m.d + "T12:00"); e.setDate(e.getDate() + 6);
-  return `${MEDAL_METAL[m.p]} недели · ${fmtDay(m.d)} – ${fmtDay(dayKey(e))}`;
+  if (m.k === "w") return `${MEDAL_METAL[m.p]} недели · ${wk(m.d)}`;
+  if (m.k === "h") return `Хет-трик · 3 золота подряд, по ${fmtDay(m.d)}`;
+  return `Доминатор · 5+ золотых дней, ${wk(m.d)}`;
 }
+// у каждой медали своя форма и значок
+const METALS = { 1: ["#FFE58A", "#F2B81F", "#A87708"], 2: ["#F4F7FB", "#B9C3D1", "#6F7B8C"], 3: ["#F6C08F", "#C77D3E", "#7D4718"] };
 function medalSVG(m, size = 34) {
-  const col = ["", "#F5C542", "#C9D1DC", "#D9965B"][m.p], dark = ["", "#B8891A", "#8C96A6", "#9C6232"][m.p];
-  const ring = m.k === "w" ? `<circle cx="20" cy="26" r="11.5" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.4"/>` : "";
-  return `<svg class="medal" width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true">
-    <path d="M12 2h7l4 12h-7z" fill="${m.k === "w" ? "#2A4FD0" : "#E0567F"}"/><path d="M28 2h-7l-4 12h7z" fill="${m.k === "w" ? "#4A6FF0" : "#F27A9B"}"/>
-    <circle cx="20" cy="26" r="13" fill="${col}" stroke="${dark}" stroke-width="2"/>${ring}
-    <text x="20" y="31" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="800" font-size="13" fill="${dark}">${m.p}</text></svg>`;
+  const id = "md" + m.k + m.p;
+  const [hi, mid, dk] = m.k === "h" || m.k === "x" ? METALS[1] : METALS[m.p];
+  const grad = `<defs><radialGradient id="${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="${hi}"/><stop offset=".55" stop-color="${mid}"/><stop offset="1" stop-color="${dk}"/></radialGradient></defs>`;
+  const ribbon = (a, b) => `<path d="M15 1h8l4 15h-8z" fill="${a}"/><path d="M33 1h-8l-4 15h8z" fill="${b}"/>`;
+  const fill = `fill="url(#${id})" stroke="${dk}" stroke-width="1.6"`;
+  let body = "";
+  if (m.k === "d" && m.p === 1) { // солнце с молнией
+    let rays = ""; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, x = 24 + Math.cos(a) * 17.5, y = 31 + Math.sin(a) * 17.5, x1 = 24 + Math.cos(a - .14) * 13, y1 = 31 + Math.sin(a - .14) * 13, x2 = 24 + Math.cos(a + .14) * 13, y2 = 31 + Math.sin(a + .14) * 13; rays += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x.toFixed(1)} ${y.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}z" fill="${mid}"/>`; }
+    body = ribbon("#E23B3B", "#FF6A5C") + rays + `<circle cx="24" cy="31" r="12" ${fill}/><path d="M25.5 23.5 19 32.5h4.5l-1.5 6 7-9.5h-4.6z" fill="${dk}"/>`;
+  } else if (m.k === "d" && m.p === 2) { // атом
+    body = ribbon("#3B6FE2", "#5C8CFF") + `<circle cx="24" cy="31" r="14" ${fill}/>` +
+      [0, 60, 120].map(r => `<ellipse cx="24" cy="31" rx="10" ry="4" fill="none" stroke="${dk}" stroke-width="1.4" transform="rotate(${r} 24 31)"/>`).join("") + `<circle cx="24" cy="31" r="2.2" fill="${dk}"/>`;
+  } else if (m.k === "d" && m.p === 3) { // магнит
+    body = ribbon("#2E9E6A", "#45C489") + `<circle cx="24" cy="31" r="14" ${fill}/><path d="M17.5 24v8a6.5 6.5 0 0 0 13 0v-8h-4v8a2.5 2.5 0 0 1-5 0v-8z" fill="${dk}"/><path d="M17.5 24h4v3h-4zM26.5 24h4v3h-4z" fill="#F4F7FB"/>`;
+  } else if (m.k === "w" && m.p === 1) { // звезда
+    const pts = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 7.5 : 16.5; pts.push(`${(24 + Math.cos(a) * r).toFixed(1)},${(31 + Math.sin(a) * r).toFixed(1)}`); }
+    body = ribbon("#2A4FD0", "#E23B3B") + `<polygon points="${pts.join(" ")}" ${fill} stroke-linejoin="round"/><text x="24" y="35" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="10" fill="${dk}">1</text>`;
+  } else if (m.k === "w" && m.p === 2) { // шестиугольник с пламенем
+    const pts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; pts.push(`${(24 + Math.cos(a) * 15).toFixed(1)},${(31 + Math.sin(a) * 15).toFixed(1)}`); }
+    body = ribbon("#2A4FD0", "#5C8CFF") + `<polygon points="${pts.join(" ")}" ${fill} stroke-linejoin="round"/><path d="M24 22c1 4-3 5-3 9a3.5 3.5 0 0 0 7 0c0-2-1-3-1-4 2 1.5 3 3.5 3 5.5a6 6 0 0 1-12 0c0-5 5-6.5 6-10.5z" fill="${dk}"/>`;
+  } else if (m.k === "w" && m.p === 3) { // щит
+    body = ribbon("#2A4FD0", "#7A93E8") + `<path d="M24 16.5l12 4v9c0 8-5.5 12.5-12 15-6.5-2.5-12-7-12-15v-9z" ${fill} stroke-linejoin="round"/><text x="24" y="35" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="11" fill="${dk}">3</text>`;
+  } else if (m.k === "h") { // хет-трик: три звезды
+    const star = (cx, cy, r) => { const q = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; q.push(`${(cx + Math.cos(a) * rr).toFixed(1)},${(cy + Math.sin(a) * rr).toFixed(1)}`); } return `<polygon points="${q.join(" ")}" fill="${dk}"/>`; };
+    body = ribbon("#8B5CFF", "#FF5EA8") + `<circle cx="24" cy="31" r="14.5" ${fill}/>` + star(17.5, 32, 4.6) + star(24, 27, 5.6) + star(30.5, 32, 4.6);
+  } else { // доминатор: корона
+    body = ribbon("#111827", "#F5C542") + `<circle cx="24" cy="31" r="14.5" ${fill}/><path d="M15.5 36.5h17l1.5-10-5 3.5-5-7-5 7-5-3.5z" fill="${dk}"/><circle cx="24" cy="21.8" r="1.6" fill="${dk}"/>`;
+  }
+  return `<svg class="medal" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${grad}${body}</svg>`;
 }
-const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0 }; for (const m of list) c[m.k + "gsb"[m.p - 1]]++; return c; };
+const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
 let medalsBusy = false;
 async function updateMedals(force) {
   if (!lbOn() || !me.name || medalsBusy) return;
@@ -2205,6 +2232,15 @@ async function updateMedals(force) {
     };
     for (const [d, m] of byDay) place(m, "d", d);
     for (const [w, m] of byWeek) place(m, "w", w);
+    const golds = fresh.filter(m => m.k === "d" && m.p === 1).map(m => m.d).sort();
+    let run = 0;
+    golds.forEach((d, i) => {
+      const prev = i ? new Date(golds[i - 1] + "T12:00") : null; if (prev) prev.setDate(prev.getDate() + 1);
+      run = prev && dayKey(prev) === d ? run + 1 : 1;
+      if (run % 3 === 0) fresh.push({ k: "h", p: 1, d });
+    });
+    const perWeek = new Map(); for (const d of golds) { const w = dayKey(weekStart(new Date(d + "T12:00"))); if (w < curWeek) perWeek.set(w, (perWeek.get(w) || 0) + 1); }
+    for (const [w, n] of perWeek) if (n >= 5) fresh.push({ k: "x", p: 1, d: w });
     // старше окна пересчёта — оставляем как было
     state.medals = [...(state.medals || []).filter(m => m.d < from), ...fresh].sort((a, b) => b.d.localeCompare(a.d) || a.k.localeCompare(b.k));
     state.pinned = (state.pinned || []).filter(id => state.medals.some(m => medalId(m) === id));
@@ -2222,8 +2258,8 @@ function togglePin(id) {
 }
 function medalsSectionHTML(st, mine) {
   const c = st.med, total = Object.values(c).reduce((a, b) => a + b, 0);
-  const counts = [["d", 1, "dg"], ["d", 2, "ds"], ["d", 3, "db"], ["w", 1, "wg"], ["w", 2, "ws"], ["w", 3, "wb"]]
-    .filter(x => c[x[2]]).map(([k, p, key]) => `<span class="mcount">${medalSVG({ k, p }, 26)}<b>×${c[key]}</b><small>${k === "d" ? "дня" : "недели"}</small></span>`).join("");
+  const counts = [["x", 1, "x", "доминатор"], ["h", 1, "h", "хет-трик"], ["w", 1, "wg", "недели"], ["w", 2, "ws", "недели"], ["w", 3, "wb", "недели"], ["d", 1, "dg", "дня"], ["d", 2, "ds", "дня"], ["d", 3, "db", "дня"]]
+    .filter(x => c[x[2]]).map(([k, p, key, cap]) => `<span class="mcount">${medalSVG({ k, p }, 30)}<b>×${c[key]}</b><small>${cap}</small></span>`).join("");
   const list = mine ? state.medals || [] : st.recent;
   const pins = mine ? state.pinned || [] : st.pin.map(medalId);
   const grid = list.map(m => { const id = medalId(m), on = pins.includes(id);
@@ -2264,7 +2300,7 @@ async function syncProfile() {
 }
 // значения из чужого профиля — только числа и известные ключи
 const num = (x, max = 1e7) => Number.isFinite(+x) ? Math.max(0, Math.min(max, Math.round(+x))) : 0;
-const validMedal = m => m && (m.k === "d" || m.k === "w") && [1, 2, 3].includes(m.p) && /^\d{4}-\d{2}-\d{2}$/.test(m.d);
+const validMedal = m => m && ["d", "w", "h", "x"].includes(m.k) && [1, 2, 3].includes(m.p) && /^\d{4}-\d{2}-\d{2}$/.test(m.d);
 function cleanStats(x) {
   if (!x || typeof x !== "object") return null;
   const sec = {};
@@ -2273,7 +2309,7 @@ function cleanStats(x) {
     since: /^\d{4}-\d{2}-\d{2}$/.test(x.since) ? x.since : null, n: num(x.n), ok: num(x.ok), mid: num(x.mid), pts: num(x.pts), active: num(x.active),
     streak: num(x.streak), bestStreak: num(x.bestStreak), bestCombo: num(x.bestCombo), learned: num(x.learned), seen: num(x.seen), duelWins: num(x.duelWins),
     ach: Array.isArray(x.ach) ? x.ach.filter(id => ACH.some(a => a.id === id)) : [], sec,
-    med: Object.fromEntries(["dg", "ds", "db", "wg", "ws", "wb"].map(k => [k, num(x.med && x.med[k], 1e5)])),
+    med: Object.fromEntries(["dg", "ds", "db", "wg", "ws", "wb", "h", "x"].map(k => [k, num(x.med && x.med[k], 1e5)])),
     pin: Array.isArray(x.pin) ? x.pin.filter(validMedal).slice(0, 3).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
     recent: Array.isArray(x.recent) ? x.recent.filter(validMedal).slice(0, 12).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
     week: Array.isArray(x.week) ? x.week.slice(-7).map(v => num(v)) : []
