@@ -233,6 +233,12 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .ri .t{font-size:.86rem;color:var(--muted);min-width:0}
 .ri .fx{font-size:1.3rem;grid-column:1/-1}
 .ri .go{grid-row:1;grid-column:2}
+.tagd{display:inline-block;font:600 .66rem var(--f-body);padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);vertical-align:.1em;white-space:nowrap}
+.drv{grid-column:1/-1;font-size:.78rem;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.drvl{border:1px dashed var(--accent);background:none;border-radius:8px;padding:1px 8px;cursor:pointer;color:var(--ink)}
+.drvl .fx{font-size:.95rem}
+.ri.hl{animation:rihl 1.6s ease-out}
+@keyframes rihl{0%,30%{background:var(--accent-soft)}100%{background:transparent}}
 
 /* ---------- Темы оформления (выбираются в настройках; атрибут data-skin на <html>) ---------- */
 :root[data-skin="neon"][data-skin]{--bg:#07080F;--surface:#10122A;--sunk:#0B0D1F;--line:#262A55;--grid:#191C3A;--ink:#ECEEFF;--muted:#8C91C7;--accent:#2EF2D0;--accent-soft:#0C3536;--ok:#2EF2D0;--ok-soft:#0C3536;--mid:#FFD23F;--mid-soft:#3A3212;--bad:#FF3D9A;--bad-soft:#3A1030;--flame:#FF3D9A;--flame-core:#FFD23F;--gold:#FFD23F;--silver:#B8C0E0;--bronze:#E0A070;color-scheme:dark}
@@ -860,6 +866,31 @@ const SEC_NAME = Object.fromEntries(SECTIONS);
 const F = [];
 for (const [sec] of SECTIONS) RAW[sec].forEach((x, i) => { if (x) F.push({ id: sec + "-" + i, sec, q: x[0], src: x[1], lg: x[2] || "" }); });
 const BY_ID = Object.fromEntries(F.map(f => [f.id, f]));
+/* Выведенные формулы: из каких формул списка получаются. Остальные — основные (определения и законы). */
+const DERIV = {
+  "kin-2": ["kin-1"], "kin-3": ["kin-1", "kin-2"], "kin-4": ["kin-1"], "kin-7": ["kin-6"], "kin-9": ["kin-2"],
+  "kin-10": ["kin-9", "kin-0"], "kin-12": ["kin-14", "kin-0"], "kin-13": ["kin-3"], "kin-14": ["kin-1"], "kin-16": ["kin-5", "kin-7"],
+  "dyn-5": ["dyn-0"], "dyn-9": ["dyn-0"], "dyn-6": ["dyn-0", "kin-5"], "dyn-7": ["dyn-2"], "dyn-10": ["dyn-0", "kin-5"],
+  "dyn-11": ["dyn-2", "dyn-1"], "dyn-12": ["dyn-2", "dyn-10"], "dyn-13": ["dyn-4", "dyn-1"],
+  "cons-1": ["dyn-0", "cons-0"], "cons-3": ["cons-5", "dyn-1"], "cons-4": ["dyn-3", "cons-5"], "cons-7": ["cons-6", "cons-5"],
+  "cons-9": ["cons-5", "cons-2"], "cons-10": ["cons-0"], "cons-12": ["cons-5", "dyn-1"], "cons-13": ["cons-0", "cons-2"],
+  "stat-1": ["stat-0"], "stat-2": ["dyn-8", "stat-4", "dyn-1"], "stat-3": ["stat-2"], "stat-5": ["dyn-8"], "stat-6": ["stat-2"],
+  "stat-7": ["stat-2"], "stat-8": ["stat-3", "dyn-1"],
+  "mkt-1": ["mkt-16", "mkt-2"], "mkt-3": ["mkt-1", "mkt-0"], "mkt-4": ["mkt-2", "mkt-0"], "mkt-5": ["cons-5", "dyn-8"],
+  "mkt-11": ["mkt-24"], "mkt-15": ["mkt-14"], "mkt-17": ["mkt-2"], "mkt-18": ["mkt-3"], "mkt-19": ["mkt-3"], "mkt-20": ["mkt-3"],
+  "mkt-21": ["mkt-3"], "mkt-24": ["mkt-6"], "mkt-25": ["mkt-4"],
+  "es-2": ["es-0", "es-1"], "es-6": ["es-7", "es-1"], "es-9": ["es-8"], "es-10": ["es-5", "es-3"], "es-11": ["es-3"], "es-12": ["es-3"],
+  "dc-4": ["dc-1", "dc-13"], "dc-5": ["dc-1", "dc-14"], "dc-6": ["dc-10", "cons-6"], "dc-7": ["dc-10", "dc-1"], "dc-8": ["dc-6", "dc-1"],
+  "dc-9": ["dc-6", "dc-1"], "dc-10": ["es-7", "dc-0"], "dc-11": ["dc-3"], "dc-12": ["dc-3"],
+  "mag-4": ["mag-3", "mag-8"], "mag-5": ["mag-4"], "mag-6": ["mag-1", "dyn-10"], "mag-7": ["mag-3"], "mag-9": ["mag-0"], "mag-10": ["mag-6"],
+  "osc-3": ["kin-0"], "osc-4": ["osc-3", "kin-8"], "osc-6": ["kin-6", "kin-8"], "osc-7": ["osc-5"], "osc-8": ["cons-4"], "osc-9": ["osc-4"],
+  "osc-10": ["es-10", "mag-5"], "ac-5": ["mag-3"],
+  "opt-5": ["opt-0"], "opt-8": ["opt-1"], "opt-9": ["opt-1"], "opt-10": ["opt-2", "opt-3"],
+  "qnt-2": ["qnt-1"], "qnt-3": ["qnt-7"], "qnt-6": ["qnt-4"], "qnt-7": ["qnt-0", "osc-9"], "qnt-8": ["qnt-3", "cons-0"],
+  "qnt-12": ["es-7", "cons-2"], "qnt-13": ["qnt-2", "osc-9"]
+};
+const derivHTML = f => DERIV[f.id] ? `<div class="drv">↳ выводится из: ${DERIV[f.id].filter(id => BY_ID[id]).map(id =>
+  `<button class="drvl" data-goto-f="${id}" title="${esc(BY_ID[id].q)}"><span class="fx">${fx(BY_ID[id].src)}</span></button>`).map((x, i, all) => i ? (i === all.length - 1 ? " и " : ", ") + x : x).join("")}</div>` : "";
 /* ---------- Задачи (режим «Задачи») ----------
    Задания первой части из официальных демоверсий ЕГЭ по физике (ФИПИ). Нужно написать формулу, которая помогает решить; подходит любая из списка.
    [раздел, условие, id подходящих формул, как решать, ответ]. Новые задачи — только в конец (номер = id). */
@@ -1854,10 +1885,17 @@ function renderRef() {
     `<button class="chip" data-rs="${k}" aria-pressed="${refSec === k}">${name}${k === "all" ? "" : ` <small>${F.filter(f => f.sec === k).length}</small>`}</button>`).join("")}</div>`;
   $("view-ref").innerHTML = chips + SECTIONS.filter(([k]) => refSec === "all" || refSec === k).map(([k, name]) => `<div class="card"><h2>${name}</h2>${
     F.filter(f => f.sec === k).map(f => { const s = state.f[f.id];
-      return `<div class="ri"><div class="t">${esc(f.q)}</div><span class="go">${s ? `<span class="pill ${band(score(s))}">${s.ok}/${s.n}</span>` : `<span class="pill none">не было</span>`}</span><div class="fx">${fx(f.src)}</div>${legendHTML(f)}</div>`; }).join("")
+      return `<div class="ri" id="ri-${f.id}"><div class="t">${esc(f.q)}${DERIV[f.id] ? ` <span class="tagd">выводится</span>` : ""}</div><span class="go">${s ? `<span class="pill ${band(score(s))}">${s.ok}/${s.n}</span>` : `<span class="pill none">не было</span>`}</span><div class="fx">${fx(f.src)}</div>${derivHTML(f)}${legendHTML(f)}</div>`; }).join("")
   }</div>`).join("");
   const box = document.querySelector("#view-ref .refchips"), sx = renderRef.sx || 0;
   box.scrollLeft = sx;
+  document.querySelectorAll("#view-ref .drvl").forEach(b => b.onclick = () => {
+    const id = b.dataset.gotoF, f = BY_ID[id]; if (!f) return;
+    if (refSec !== "all" && refSec !== f.sec) { refSec = f.sec; prefs.refSec = refSec; savePrefs(); renderRef.sx = 0; renderRef(); }
+    const el = $("ri-" + id); if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.remove("hl"); void el.offsetWidth; el.classList.add("hl");
+  });
   document.querySelectorAll("#view-ref .chip[data-rs]").forEach(b => b.onclick = () => { renderRef.sx = box.scrollLeft; refSec = b.dataset.rs; prefs.refSec = refSec; savePrefs(); renderRef(); });
   if (!sx) { const on = box.querySelector('[aria-pressed="true"]'); if (on) box.scrollLeft = on.offsetLeft - 10; }
 }
