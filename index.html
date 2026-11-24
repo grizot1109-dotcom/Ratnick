@@ -507,6 +507,8 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
 .eyebrow .combo.hot{color:var(--flame)}
 .eyebrow .combo .fl{width:1.1em;height:1.1em}
 .quiz{display:grid;grid-template-columns:1fr;gap:8px}
+.skiprow{display:flex;justify-content:flex-end;margin-top:-4px}
+.skiprow .link{font-size:.9rem;padding:6px 2px}
 .opt{display:flex;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:500 .95rem var(--f-body);padding:13px 14px;border-radius:12px;cursor:pointer;line-height:1.3}
 .opt .on{flex:none;width:1.6em;height:1.6em;border-radius:50%;background:var(--sunk);color:var(--muted);display:grid;place-items:center;font:600 .78rem var(--f-mono)}
 .opt:disabled{cursor:default}
@@ -618,6 +620,7 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
       <button class="btn primary" id="checkBtn">Проверить<kbd>Enter</kbd></button>
       <button class="btn" id="giveUp">Не помню</button>
     </div>
+    <div class="skiprow" id="skipRow"><button class="link" id="skipBtn">Пропустить →</button></div>
 
     <div class="card reveal" id="reveal" hidden>
       <div class="answer"><span class="label" id="ansLabel">Правильно:</span><div class="fx" id="ansFx"></div></div>
@@ -1634,6 +1637,7 @@ function setTrainUI(st) {
   $("filters").hidden = !!duel;
   $("session").hidden = !!duel;
   $("duelCard").hidden = true;
+  $("skipRow").hidden = st === "done" || !!duel;
   renderCombo();
 }
 function nextQuestion() {
@@ -1766,7 +1770,7 @@ function reveal(gaveUp) {
   if (!gaveUp && r.verdict === 2) celebrate();
 }
 function showReveal() {
-  $("reveal").hidden = false;
+  $("reveal").hidden = false; $("skipRow").hidden = true;
   $("legend").innerHTML = current.task ? taskInfoHTML(current, lastTaskFid) : legendHTML(current);
   renderPts();
   $("nextBtn").disabled = false;
@@ -1818,6 +1822,8 @@ function renderSession() {
 }
 $("checkBtn").onclick = () => reveal(false);
 $("giveUp").onclick = () => reveal(true);
+// пропуск: без ответа, без джоулей, статистика и серия не меняются
+$("skipBtn").onclick = () => { if (phase === "draw" && !duel) nextQuestion(); };
 $("nextBtn").onclick = commit;
 document.querySelectorAll(".g").forEach(b => b.onclick = () => { const was = grade; setGrade(+b.dataset.r); if (grade === 2 && was !== 2 && phase === "reveal") celebrate(); });
 
