@@ -304,6 +304,13 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .tile .v .flamev{display:inline-flex;align-items:center;gap:4px}
 .board li[data-pid]{cursor:pointer}
 .board li[data-pid]:active{opacity:.7}
+/* задачи */
+.fx.multi{display:flex;flex-wrap:wrap;gap:4px 18px;white-space:normal}
+.fx.multi .one{white-space:nowrap}
+.taskinfo{color:var(--ink);font-size:.9rem;gap:6px}
+.qtext.task{font:500 1.02rem/1.5 var(--f-body);text-wrap:pretty}
+.taskinfo b{font-weight:600}
+.filters .seg2 button{padding:6px 11px}
 /* джоули */
 .bolt{width:1em;height:1em;flex:none;vertical-align:-.12em}
 .bolt path{fill:var(--mid)}
@@ -407,7 +414,7 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
     <div class="card duelbar" id="duelBar" hidden></div>
     <div class="card sec duelcard" id="duelCard" hidden></div>
     <div class="filters" id="filters">
-      <div class="seg2" role="group" aria-label="Тип заданий"><button id="kWrite" aria-pressed="true">Писать</button><button id="kQuiz" aria-pressed="false">Узнать</button></div>
+      <div class="seg2" role="group" aria-label="Тип заданий"><button id="kWrite" aria-pressed="true">Писать</button><button id="kQuiz" aria-pressed="false">Узнать</button><button id="kTask" aria-pressed="false">Задачи</button></div>
       <select class="sel" id="modeSel" aria-label="Порядок формул">
         <option value="srs">Повторение</option><option value="rand">Вперемешку</option><option value="weak">Сначала слабые</option>
       </select>
@@ -698,6 +705,67 @@ const SEC_NAME = Object.fromEntries(SECTIONS);
 const F = [];
 for (const [sec] of SECTIONS) RAW[sec].forEach((x, i) => { if (x) F.push({ id: sec + "-" + i, sec, q: x[0], src: x[1], lg: x[2] || "" }); });
 const BY_ID = Object.fromEntries(F.map(f => [f.id, f]));
+/* ---------- Задачи (режим «Задачи») ----------
+   Задачи в духе первой части ЕГЭ. Нужно написать формулу, которая помогает решить; подходит любая из списка.
+   [раздел, условие, id подходящих формул, как решать, ответ]. Новые задачи — только в конец (номер = id). */
+const TASKS_RAW = [
+ ["kin","Автомобиль, двигаясь равноускоренно из состояния покоя, за 5 с прошёл 50 м. Найдите ускорение автомобиля.",["kin-2"],"Начальная скорость равна нулю, поэтому s = at²/2, откуда a = 2s/t².","4 м/с²"],
+ ["kin","Камень падает без начальной скорости с высоты 45 м. Сколько времени длится падение? (g = 10 м/с²)",["kin-9","kin-2"],"h = gt²/2, откуда t = √(2h/g).","3 с"],
+ ["kin","Велосипедист за 10 с увеличил скорость с 2 до 7 м/с. С каким ускорением он двигался?",["kin-4","kin-1"],"a = (v − v₀)/t.","0,5 м/с²"],
+ ["kin","Тело движется по окружности радиусом 2 м со скоростью 4 м/с. Найдите его центростремительное ускорение.",["kin-5"],"a = v²/R.","8 м/с²"],
+ ["kin","Колесо делает полный оборот за 0,5 с. Найдите частоту вращения колеса.",["kin-8"],"ν = 1/T.","2 Гц"],
+ ["kin","Автомобиль, имея скорость 20 м/с, тормозит с ускорением 4 м/с² до полной остановки. Найдите тормозной путь.",["kin-3"],"Конечная скорость 0, поэтому s = v₀²/(2a).","50 м"],
+ ["dyn","На тело массой 2 кг действует равнодействующая сила 6 Н. С каким ускорением движется тело?",["dyn-0"],"a = F/m.","3 м/с²"],
+ ["dyn","Пружину жёсткостью 200 Н/м растянули на 5 см. Найдите силу упругости.",["dyn-3"],"F = kx, удлинение переводим в метры: 0,05 м.","10 Н"],
+ ["dyn","Брусок массой 3 кг скользит по горизонтальному столу. Коэффициент трения 0,2. Найдите силу трения скольжения. (g = 10 м/с²)",["dyn-13","dyn-4"],"На горизонтальной поверхности N = mg, поэтому F = μmg.","6 Н"],
+ ["dyn","Как изменится сила притяжения двух тел, если расстояние между ними увеличить в 2 раза?",["dyn-2"],"F = Gm₁m₂/r²: сила обратно пропорциональна квадрату расстояния.","уменьшится в 4 раза"],
+ ["dyn","Лифт движется вверх с ускорением 2 м/с². Найдите вес человека массой 60 кг. (g = 10 м/с²)",["dyn-5"],"P = m(g + a).","720 Н"],
+ ["cons","Мяч массой 0,5 кг летит со скоростью 6 м/с. Найдите его импульс.",["cons-0"],"p = mv.","3 кг·м/с"],
+ ["cons","Найдите кинетическую энергию тела массой 2 кг, движущегося со скоростью 3 м/с.",["cons-2"],"E = mv²/2.","9 Дж"],
+ ["cons","Тело массой 2 кг подняли на высоту 5 м. Найдите его потенциальную энергию относительно земли. (g = 10 м/с²)",["cons-3"],"E = mgh.","100 Дж"],
+ ["cons","Тело падает без начальной скорости с высоты 20 м. С какой скоростью оно упадёт на землю? Сопротивлением воздуха пренебречь. (g = 10 м/с²)",["cons-11","cons-3","cons-2","kin-3"],"mgh = mv²/2, откуда v = √(2gh).","20 м/с"],
+ ["cons","Двигатель мощностью 2 кВт работал 10 с. Какую работу он совершил?",["cons-6"],"A = Nt.","20 кДж"],
+ ["cons","Тележка массой 2 кг, движущаяся со скоростью 3 м/с, сцепляется с неподвижной тележкой массой 1 кг. Найдите скорость тележек после сцепки.",["cons-10"],"m₁v₁ = (m₁ + m₂)v.","2 м/с"],
+ ["stat","Найдите давление воды на глубине 2 м. Атмосферное давление не учитывайте. (ρ = 1000 кг/м³, g = 10 м/с²)",["stat-2"],"p = ρgh.","20 кПа"],
+ ["stat","Тело объёмом 0,002 м³ полностью погружено в воду. Найдите силу Архимеда. (ρ = 1000 кг/м³, g = 10 м/с²)",["stat-3"],"F = ρgV.","20 Н"],
+ ["stat","На рычаг действуют силы 4 Н и 12 Н, рычаг в равновесии. Плечо меньшей силы 30 см. Найдите плечо большей силы.",["stat-1"],"F₁l₁ = F₂l₂, откуда l₂ = F₁l₁/F₂.","10 см"],
+ ["mkt","Какое количество теплоты нужно, чтобы нагреть 2 кг воды на 10 °C? (c = 4200 Дж/(кг·°C))",["mkt-7"],"Q = cmΔt.","84 кДж"],
+ ["mkt","Газ при постоянной температуре сжали от 6 л до 2 л. Во сколько раз увеличилось давление?",["mkt-18"],"p₁V₁ = p₂V₂: объём уменьшился в 3 раза — давление выросло в 3 раза.","в 3 раза"],
+ ["mkt","Газ получил 500 Дж теплоты и совершил работу 200 Дж. Как изменилась его внутренняя энергия?",["mkt-6"],"ΔU = Q − A.","увеличилась на 300 Дж"],
+ ["mkt","Температура нагревателя идеальной тепловой машины 500 К, холодильника 300 К. Найдите КПД машины.",["mkt-12"],"η = (T₁ − T₂)/T₁.","40 %"],
+ ["mkt","Как изменится средняя кинетическая энергия теплового движения молекул идеального газа, если абсолютную температуру увеличить в 3 раза?",["mkt-2"],"E = 3/2·kT: энергия пропорциональна температуре.","увеличится в 3 раза"],
+ ["mkt","Газ при постоянном давлении 10⁵ Па расширился на 0,002 м³. Какую работу он совершил?",["mkt-5"],"A = pΔV.","200 Дж"],
+ ["mkt","Какое количество теплоты нужно, чтобы расплавить 2 кг льда, взятого при температуре плавления? (λ = 3,3·10⁵ Дж/кг)",["mkt-8"],"Q = λm.","660 кДж"],
+ ["es","Как изменится сила взаимодействия двух точечных зарядов, если каждый заряд увеличить в 2 раза, а расстояние между ними не менять?",["es-0"],"F = k|q₁||q₂|/r²: сила пропорциональна произведению зарядов.","увеличится в 4 раза"],
+ ["es","Конденсатору ёмкостью 2 мкФ сообщили заряд 10 мкКл. Найдите напряжение между его обкладками.",["es-3"],"C = q/U, откуда U = q/C.","5 В"],
+ ["es","Заряд 2 мкКл переместили между точками с разностью потенциалов 100 В. Какую работу совершило электрическое поле?",["es-7"],"A = qU.","2·10⁻⁴ Дж"],
+ ["es","Конденсатор ёмкостью 10 мкФ заряжен до напряжения 100 В. Найдите энергию конденсатора.",["es-5"],"W = CU²/2.","0,05 Дж"],
+ ["dc","Напряжение на резисторе 12 В, сила тока через него 3 А. Найдите сопротивление резистора.",["dc-1"],"I = U/R, откуда R = U/I.","4 Ом"],
+ ["dc","ЭДС источника 12 В, его внутреннее сопротивление 1 Ом, сопротивление внешней цепи 5 Ом. Найдите силу тока в цепи.",["dc-3"],"I = ℰ/(R + r).","2 А"],
+ ["dc","Сколько теплоты выделится в резисторе сопротивлением 10 Ом за 20 с при силе тока 2 А?",["dc-7"],"Q = I²Rt.","800 Дж"],
+ ["dc","Два резистора по 6 Ом соединены параллельно. Найдите их общее сопротивление.",["dc-5"],"1/R = 1/R₁ + 1/R₂.","3 Ом"],
+ ["dc","Электроплитка рассчитана на напряжение 220 В и силу тока 5 А. Найдите её мощность.",["dc-6"],"P = UI.","1100 Вт"],
+ ["dc","Как изменится сопротивление проводника, если его длину увеличить в 2 раза, а площадь сечения уменьшить в 2 раза?",["dc-2"],"R = ρl/S: длина ×2 и площадь ÷2 — сопротивление ×4.","увеличится в 4 раза"],
+ ["mag","Проводник длиной 0,5 м с током 4 А расположен перпендикулярно линиям магнитного поля с индукцией 0,2 Тл. Найдите силу Ампера.",["mag-0"],"F = IBl·sin α, sin 90° = 1.","0,4 Н"],
+ ["mag","Магнитный поток через контур за 0,1 с равномерно уменьшился с 0,5 до 0,1 Вб. Найдите модуль ЭДС индукции.",["mag-3"],"|ℰ| = ΔΦ/Δt.","4 В"],
+ ["mag","Сила тока в катушке индуктивностью 0,4 Гн равна 5 А. Найдите энергию магнитного поля катушки.",["mag-5"],"W = LI²/2.","5 Дж"],
+ ["mag","Как изменится радиус окружности, по которой движется заряженная частица в магнитном поле, если её скорость увеличить в 2 раза?",["mag-6"],"R = mv/(|q|B): радиус пропорционален скорости.","увеличится в 2 раза"],
+ ["osc","Как изменится период колебаний пружинного маятника, если массу груза увеличить в 4 раза?",["osc-0"],"T = 2π√(m/k): период пропорционален корню из массы.","увеличится в 2 раза"],
+ ["osc","Волна частотой 5 Гц распространяется со скоростью 20 м/с. Найдите длину волны.",["osc-4","osc-3"],"v = λν, откуда λ = v/ν.","4 м"],
+ ["osc","Как изменится период колебаний математического маятника, если длину нити уменьшить в 9 раз?",["osc-1"],"T = 2π√(l/g): период пропорционален корню из длины.","уменьшится в 3 раза"],
+ ["osc","Как изменится период свободных колебаний в контуре, если ёмкость конденсатора увеличить в 4 раза?",["osc-2"],"T = 2π√(LC).","увеличится в 2 раза"],
+ ["ac","Трансформатор повышает напряжение с 220 В до 1100 В. Во сколько раз число витков вторичной обмотки больше, чем первичной?",["ac-5","ac-4"],"U₁/U₂ = N₁/N₂.","в 5 раз"],
+ ["opt","Предмет находится на расстоянии 30 см от собирающей линзы с фокусным расстоянием 10 см. На каком расстоянии от линзы получится изображение?",["opt-2"],"1/F = 1/d + 1/f, откуда 1/f = 1/10 − 1/30 = 1/15.","15 см"],
+ ["opt","Оптическая сила линзы 5 дптр. Найдите её фокусное расстояние.",["opt-3"],"D = 1/F, откуда F = 1/D.","0,2 м"],
+ ["opt","Скорость света в стекле 2·10⁸ м/с. Найдите показатель преломления стекла. (c = 3·10⁸ м/с)",["opt-1","opt-8"],"n = c/v.","1,5"],
+ ["opt","Угол падения луча на зеркало 30°. Найдите угол между падающим и отражённым лучами.",["opt-7"],"Угол отражения равен углу падения, поэтому угол между лучами 2·30°.","60°"],
+ ["qnt","Найдите энергию фотона с частотой 5·10¹⁴ Гц. (h = 6,6·10⁻³⁴ Дж·с)",["qnt-0"],"E = hν.","3,3·10⁻¹⁹ Дж"],
+ ["qnt","Сколько нейтронов содержит ядро урана ²³⁸₉₂U?",["qnt-10"],"N = A − Z.","146"],
+ ["qnt","Период полураспада изотопа 2 суток. Какая доля ядер останется нераспавшейся через 6 суток?",["qnt-5"],"N = N₀·2^(−t/T): прошло 3 периода, 1/2³.","1/8"],
+ ["qnt","Работа выхода электрона из металла 2 эВ, энергия падающего фотона 5 эВ. Найдите максимальную кинетическую энергию фотоэлектронов.",["qnt-1"],"hν = A + E, откуда E = hν − A.","3 эВ"]
+];
+const TASKS = TASKS_RAW.map(([sec, q, fids, how, ans], i) => ({ id: "t-" + i, sec, q, fids: fids.filter(id => BY_ID[id]), how, ans, task: true }));
+
 
 /* ---------- Рендер мини-разметки ---------- */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -769,7 +837,7 @@ const score = s => s && s.n ? (s.ok + s.mid * 0.5) / s.n : null;
 /* ---------- Выбор вопроса ---------- */
 let duel = null; // идущая дуэль: { code, ids, i, start, correct, points }
 let mode = ["srs", "rand", "weak"].includes(prefs.mode) ? prefs.mode : "srs", secFilter = SEC_NAME[prefs.sec] ? prefs.sec : "all";
-let kind = prefs.kind === "quiz" ? "quiz" : "write";
+let kind = ["quiz", "task"].includes(prefs.kind) ? prefs.kind : "write";
 let current = null, recent = [], sessionStats = { n: 0, ok: 0, mid: 0 };
 // Колода: формулы раздела в случайном порядке без повторов, пока колода не кончится.
 // В режиме «Сначала слабые» формулы с ошибками попадают в колоду лишний раз.
@@ -834,8 +902,19 @@ function pickSrs() {
   if (due.length) return due[Math.floor(Math.random() * due.length)];
   return null;
 }
+let taskDeck = [];
+function pickTask() {
+  if (!taskDeck.length) {
+    let pool = TASKS.filter(t => t.fids.length && inSection(t));
+    if (!pool.length) pool = TASKS.filter(t => t.fids.length);
+    taskDeck = shuffle(pool.map(t => t.id));
+  }
+  let k = taskDeck.findIndex(id => !recent.includes(id)); if (k < 0) k = 0;
+  return TASKS.find(t => t.id === taskDeck.splice(k, 1)[0]);
+}
 function pick() {
   if (duel) return BY_ID[duel.ids[duel.i]];
+  if (kind === "task") return pickTask();
   if (mode === "srs" && kind === "write") return pickSrs();
   for (let guard = 0; guard < 3; guard++) {
     if (!deck.length) buildDeck();
@@ -1180,8 +1259,9 @@ function nextQuestion() {
   current = pick();
   if (!current) { renderDone(); renderSession(); return; }
   recent.push(current.id); if (recent.length > 4) recent.shift();
-  $("qSec").textContent = SEC_NAME[current.sec];
-  $("qHist").textContent = duel || k === "quiz" ? "" : histText(current.id);
+  $("qSec").textContent = (current.task ? "Задача · " : "") + SEC_NAME[current.sec];
+  $("qText").classList.toggle("task", !!current.task);
+  $("qHist").textContent = current.task ? "напиши формулу, которая поможет решить" : duel || k === "quiz" ? "" : histText(current.id);
   document.querySelectorAll(".g").forEach(b => { b.setAttribute("aria-pressed", "false"); b.querySelector(".sug").textContent = ""; });
   $("nextBtn").disabled = true;
   $("gradeBox").hidden = k === "quiz" || !!duel;
@@ -1230,18 +1310,42 @@ function answerQuiz(i) {
 }
 $("quiz").addEventListener("click", e => { const b = e.target.closest(".opt"); if (b) answerQuiz(+b.dataset.i); });
 
+let lastTaskFid = null;
+// задача: подходит любая формула из списка; берём лучший результат
+function checkTask(user, t) {
+  let best = { verdict: 0, diff: Infinity };
+  for (const id of t.fids) {
+    const r = checkTyped(user, BY_ID[id].src);
+    if (r.verdict > best.verdict || (r.verdict === best.verdict && (r.diff ?? 99) < (best.diff ?? 99))) best = { ...r, fid: id };
+  }
+  return best;
+}
+function taskInfoHTML(t, fid) {
+  return `<div class="lgd taskinfo"><span><b>Как решать:</b> ${esc(t.how)}</span><span><b>Ответ:</b> ${esc(t.ans)}</span></div>` + (fid ? legendHTML(BY_ID[fid]) : "");
+}
+function recordTask(id, r, pts) {
+  dayAdd(r, pts);
+  state.tasks = state.tasks || {};
+  const s = state.tasks[id] || (state.tasks[id] = { n: 0, ok: 0 });
+  s.n++; if (r === 2) s.ok++;
+  state.taskOk = (state.taskOk || 0) + (r === 2 ? 1 : 0);
+  persist();
+}
 function reveal(gaveUp) {
   if (phase !== "draw" || !current) return;
   phase = "reveal";
-  $("ansLabel").textContent = "Правильно:"; $("ansFx").className = "fx"; $("ansFx").innerHTML = fx(current.src);
+  $("ansLabel").textContent = current.task ? (current.fids.length > 1 ? "Подойдёт любая:" : "Подойдёт:") : "Правильно:";
+  $("ansFx").className = "fx" + (current.task && current.fids.length > 1 ? " multi" : "");
+  $("ansFx").innerHTML = current.task ? current.fids.map(id => `<span class="one">${fx(BY_ID[id].src)}</span>`).join("") : fx(current.src);
   $("preActions").hidden = true; $("kbWrap").hidden = true;
   document.querySelectorAll(".g .sug").forEach(x => x.textContent = "");
-  const r = gaveUp ? { verdict: 0 } : checkTyped(eroot, current.src);
+  const r = gaveUp ? { verdict: 0 } : current.task ? checkTask(eroot, current) : checkTyped(eroot, current.src);
+  lastTaskFid = r.fid || (current.task ? current.fids[0] : null);
   lastAuto = r.verdict; ptsBase = 10;
   const box = $("ai");
   box.hidden = !!gaveUp; box.className = "ai " + ["bad", "mid", "ok"][r.verdict];
   $("aiRecRow").hidden = false;
-  $("aiText").textContent = r.verdict === 2 ? "Верно!" : r.verdict === 1
+  $("aiText").textContent = current.task && r.verdict === 2 ? "Верно, эта формула помогает решить!" : current.task && r.verdict === 0 && eroot.length ? "Эта формула здесь не поможет." : r.verdict === 2 ? "Верно!" : r.verdict === 1
     ? (r.note === "sub" ? "Почти: не тот индекс (или его нет)." : `Почти: ${r.diff} ${plural(r.diff, "символ отличается", "символа отличаются", "символов отличаются")}.`)
     : (eroot.length ? "Не совпадает с правильной формулой." : "Ответ пустой.");
   $("aiRec").innerHTML = treeHTML(eroot, false) || "—";
@@ -1252,7 +1356,7 @@ function reveal(gaveUp) {
 }
 function showReveal() {
   $("reveal").hidden = false;
-  $("legend").innerHTML = legendHTML(current);
+  $("legend").innerHTML = current.task ? taskInfoHTML(current, lastTaskFid) : legendHTML(current);
   renderPts();
   $("nextBtn").disabled = false;
   $("nextBtn").firstChild.textContent = duel && duel.i + 1 >= duel.ids.length ? "Завершить дуэль" : "Дальше";
@@ -1277,7 +1381,8 @@ function commit() {
   if (grade === null || phase !== "reveal") return;
   const k = duel ? "write" : kind;
   award(grade);
-  if (k === "quiz") recordQuiz(grade === 2, lastPts);
+  if (current.task) recordTask(current.id, grade, lastPts);
+  else if (k === "quiz") recordQuiz(grade === 2, lastPts);
   else record(current.id, grade, lastPts);
   renderFlame(); scheduleSync();
   sessionStats.n++; if (grade === 2) sessionStats.ok++; if (grade === 1) sessionStats.mid++;
@@ -1308,16 +1413,18 @@ document.querySelectorAll(".g").forEach(b => b.onclick = () => setGrade(+b.datas
 const secSel = $("secSel");
 secSel.innerHTML = `<option value="all">Все разделы</option>` + SECTIONS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
 secSel.value = secFilter;
-secSel.onchange = () => { secFilter = secSel.value; prefs.sec = secFilter; savePrefs(); recent = []; deck = []; nextQuestion(); };
+secSel.onchange = () => { secFilter = secSel.value; prefs.sec = secFilter; savePrefs(); recent = []; deck = []; taskDeck = []; nextQuestion(); };
 function setMode(m) { mode = m; prefs.mode = m; savePrefs(); $("modeSel").value = m; deck = []; }
 $("modeSel").value = mode;
 $("modeSel").onchange = () => { setMode($("modeSel").value); recent = []; nextQuestion(); };
 function syncKind() {
-  $("kWrite").setAttribute("aria-pressed", String(kind === "write")); $("kQuiz").setAttribute("aria-pressed", String(kind === "quiz"));
-  $("modeSel").querySelector('[value="srs"]').disabled = kind === "quiz";
-  if (kind === "quiz" && mode === "srs") $("modeSel").value = "rand"; else $("modeSel").value = mode;
+  $("kWrite").setAttribute("aria-pressed", String(kind === "write")); $("kQuiz").setAttribute("aria-pressed", String(kind === "quiz")); $("kTask").setAttribute("aria-pressed", String(kind === "task"));
+  $("modeSel").querySelector('[value="srs"]').disabled = kind !== "write";
+  $("modeSel").hidden = kind === "task";
+  if (kind !== "write" && mode === "srs") $("modeSel").value = "rand"; else $("modeSel").value = mode;
 }
-function setKind(k) { kind = k; prefs.kind = k; savePrefs(); syncKind(); deck = []; recent = []; nextQuestion(); }
+function setKind(k) { kind = k; prefs.kind = k; savePrefs(); syncKind(); deck = []; taskDeck = []; recent = []; nextQuestion(); }
+$("kTask").onclick = () => setKind("task");
 $("kWrite").onclick = () => setKind("write");
 $("kQuiz").onclick = () => setKind("quiz");
 syncKind();
@@ -1326,14 +1433,14 @@ document.addEventListener("keydown", e => {
   if (activeView !== "train" || /SELECT|INPUT|TEXTAREA/.test(e.target.tagName)) return;
   const k0 = duel ? "write" : kind;
   if (phase === "draw" && k0 === "quiz" && ["1", "2", "3", "4"].includes(e.key)) { answerQuiz(+e.key - 1); return; }
-  if (phase === "draw" && k0 === "write" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+  if (phase === "draw" && (k0 === "write" || k0 === "task") && !e.ctrlKey && !e.metaKey && !e.altKey) {
     const k = e.key, map = { "/": () => eIns({ t: "frac", a: [], b: [] }), "_": () => eIns({ t: "sub", a: [] }), "^": () => eIns({ t: "sup", a: [] }),
       "ArrowLeft": eLeft, "ArrowRight": eRight, "ArrowUp": () => eVert("up"), "ArrowDown": () => eVert("down"), "Backspace": eBack, "Tab": eRight };
     if (map[k]) { e.preventDefault(); map[k](); return; }
     if (k.length === 1 && /[\p{L}\d()+=|%*-]/u.test(k)) { e.preventDefault(); eIns({ t: "c", c: k === "-" ? "−" : k === "*" ? "·" : k }); return; }
   }
-  if (e.key === "Enter") { e.preventDefault(); if (phase === "draw") { if (k0 === "write") reveal(false); } else commit(); }
-  if (phase === "reveal" && !duel && k0 === "write" && ["1", "2", "3"].includes(e.key)) setGrade({ "1": 2, "2": 1, "3": 0 }[e.key]);
+  if (e.key === "Enter") { e.preventDefault(); if (phase === "draw") { if (k0 !== "quiz") reveal(false); } else commit(); }
+  if (phase === "reveal" && !duel && k0 !== "quiz" && ["1", "2", "3"].includes(e.key)) setGrade({ "1": 2, "2": 1, "3": 0 }[e.key]);
 });
 
 /* ---------- Статистика ---------- */
@@ -1739,6 +1846,7 @@ const ACH = [
   { id: "c25", icon: "25", name: "Неудержимый", desc: "25 верных подряд", goal: 25, val: () => state.bestCombo || 0 },
   { id: "d100", icon: "★", name: "Сотня за день", desc: "100 Дж за один день", goal: 100, val: bestDayPts },
   { id: "d300", icon: "★★", name: "Марафон", desc: "300 Дж за один день", goal: 300, val: bestDayPts },
+  { id: "task25", icon: "Σ?", name: "Практик", desc: "25 задач с верной формулой", goal: 25, val: () => state.taskOk || 0 },
   { id: "q50", icon: "?", name: "Глаз-алмаз", desc: "50 верных в режиме «Узнать»", goal: 50, val: () => state.quizOk || 0 },
   { id: "mem20", icon: "∞", name: "Долгая память", desc: "20 формул с повтором через неделю и дольше", goal: 20, val: () => Object.values(state.f).filter(s => boxOf(s) >= 3).length },
   { id: "duel1", icon: "⚔", name: "Дуэлянт", desc: "Выиграй дуэль", goal: 1, val: () => (state.duelWins || []).length },
