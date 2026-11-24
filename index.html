@@ -945,8 +945,13 @@ function parseSrc(src, withOpt) {
 }
 // похожие по виду кириллические буквы в индексах принимаем и латиницей
 // ν и v в шрифте не отличить; путь в школе часто пишут как S
-const NORM = { "ν": "v", "S": "s", "а": "a", "е": "e", "к": "k", "м": "m", "о": "o", "р": "p", "с": "c", "т": "t", "х": "x", "у": "y", "п": "n", "н": "H", "ℰ": "E", "−": "-", "-": "-" };
-const nc = c => NORM[c] || c;
+const NORM = { "ν": "v", "а": "a", "е": "e", "к": "k", "м": "m", "о": "o", "р": "p", "с": "c", "т": "t", "х": "x", "у": "y", "п": "n", "н": "H", "ℰ": "E", "−": "-", "-": "-" };
+let caseKeep = null; // буквы, у которых в эталоне есть и строчная, и заглавная — у них регистр важен
+const nc = c => {
+  c = NORM[c] || c;
+  if (caseKeep && c.toLowerCase() !== c.toUpperCase() && !caseKeep.has(c.toLowerCase())) c = c.toLowerCase();
+  return c;
+};
 const isOp = (n, ops) => n.t === "c" && ops.includes(nc(n.c));
 function sidesOf(list) {
   const out = [[]];
@@ -1017,30 +1022,48 @@ function swapTop(list) {
   const k = list.findIndex(n => isOp(n, "="));
   return k < 0 ? null : [...list.slice(k + 1), list[k], ...list.slice(0, k)];
 }
+const stripSubs = list => list.filter(n => n.t !== "sub").map(n => n.t === "c" ? n : { ...n, a: stripSubs(n.a), ...(n.b ? { b: stripSubs(n.b) } : {}) });
 function checkTyped(user, src) {
   if (!user.length) return { verdict: 0, diff: null };
   const variants = [parseSrc(src, true), parseSrc(src, false)];
-  if (variants.some(v => sameExpr(user, v))) return { verdict: 2, diff: 0 };
-  const us = [user, swapTop(user)].filter(Boolean).map(u => flat(u));
-  let best = Infinity, W = 1;
-  for (const v of variants) { const f = flat(v); for (const u of us) { const d = editDist(u, f); if (d < best) { best = d; W = f.filter(t => !t.endsWith("{") && t !== "}").length; } } }
-  return { verdict: best <= Math.max(1, Math.round(W * 0.2)) ? 1 : 0, diff: best };
+  caseKeep = null;
+  const letters = new Set(flat(variants[0]).filter(t => t.length === 1));
+  caseKeep = new Set([...letters].filter(c => c !== c.toLowerCase() && letters.has(c.toLowerCase())).map(c => c.toLowerCase()));
+  try {
+    if (variants.some(v => sameExpr(user, v))) return { verdict: 2, diff: 0 };
+    // верно всё, кроме индексов (например, F вместо F_тр)
+    if (variants.some(v => sameExpr(stripSubs(user), stripSubs(v)))) return { verdict: 1, diff: 1, note: "sub" };
+    const us = [user, swapTop(user)].filter(Boolean);
+    let best = Infinity, W = 1;
+    for (const v of variants) {
+      const f = flat(v), cv = [...canon(v)], w = f.filter(t => !t.endsWith("{") && t !== "}").length;
+      for (const u of us) {
+        // по записи как есть и по «упорядоченной» записи, чтобы перестановка множителей не считалась ошибкой
+        const d = Math.min(editDist(flat(u), f), editDist([...canon(u)], cv));
+        if (d < best) { best = d; W = w; }
+      }
+    }
+    return { verdict: best <= Math.max(1, Math.round(W * 0.2)) ? 1 : 0, diff: best };
+  } finally { caseKeep = null; }
 }
 
 /* ---------- Очки и комбо ----------
    Верно — 10 очков (в режиме «Узнать» — 5), с недочётом — половина, ошибка — 0.
-   После 5 верных подряд очки ×2, после 10 — ×3. Считается автопроверка. */
-let combo = 0, lastPts = 0, lastMult = 1;
+   После 5 верных подряд очки ×2, после 10 — ×3. Считается итоговая оценка (можно поправить вручную). */
+let combo = 0, lastPts = 0, lastMult = 1, ptsBase = 10;
 const multOf = c => c >= 10 ? 3 : c >= 5 ? 2 : 1;
-function award(r, base) {
-  const mult = multOf(combo);
-  let pts;
-  if (r === 2) { pts = base * mult; combo++; lastMult = mult; }
-  else { pts = r === 1 ? base / 2 : 0; combo = 0; lastMult = 1; }
+const ptsFor = r => r === 2 ? ptsBase * multOf(combo) : r === 1 ? ptsBase / 2 : 0;
+function renderPts() {
+  const pts = ptsFor(grade), m = grade === 2 ? multOf(combo) : 1;
+  $("ptsLine").innerHTML = pts ? `+${pts} ${plural(pts, "очко", "очка", "очков")}${m > 1 ? ` <span class="mult">комбо ×${m}</span>` : ""}` : "0 очков";
+}
+function award(r) {
+  // вызывается при переходе к следующей формуле
+  lastPts = ptsFor(r); lastMult = r === 2 ? multOf(combo) : 1;
+  combo = r === 2 ? combo + 1 : 0;
   if (combo > (state.bestCombo || 0)) state.bestCombo = combo;
-  lastPts = pts;
   renderCombo();
-  return pts;
+  return lastPts;
 }
 function renderCombo() {
   const el = $("combo"), m = multOf(combo);
@@ -1126,12 +1149,11 @@ function answerQuiz(i) {
   const ok = quizOpts[i] === current;
   phase = "reveal";
   document.querySelectorAll("#quiz .opt").forEach((x, j) => { x.disabled = true; if (quizOpts[j] === current) x.classList.add("right"); else if (j === i) x.classList.add("wrong"); });
-  lastAuto = ok ? 2 : 0; grade = lastAuto;
-  const pts = award(lastAuto, 5);
+  lastAuto = ok ? 2 : 0; grade = lastAuto; ptsBase = 5;
   $("ansLabel").textContent = "Это:"; $("ansFx").className = "fx plain"; $("ansFx").textContent = current.q;
   const box = $("ai"); box.hidden = false; box.className = "ai " + (ok ? "ok" : "bad");
   $("aiText").textContent = ok ? "Верно!" : "Неверно."; $("aiRecRow").hidden = true; $("aiNote").textContent = "";
-  showReveal(pts);
+  showReveal();
 }
 $("quiz").addEventListener("click", e => { const b = e.target.closest(".opt"); if (b) answerQuiz(+b.dataset.i); });
 
@@ -1142,24 +1164,23 @@ function reveal(gaveUp) {
   $("preActions").hidden = true; $("kbWrap").hidden = true;
   document.querySelectorAll(".g .sug").forEach(x => x.textContent = "");
   const r = gaveUp ? { verdict: 0 } : checkTyped(eroot, current.src);
-  lastAuto = r.verdict;
-  const pts = award(r.verdict, 10);
+  lastAuto = r.verdict; ptsBase = 10;
   const box = $("ai");
   box.hidden = !!gaveUp; box.className = "ai " + ["bad", "mid", "ok"][r.verdict];
   $("aiRecRow").hidden = false;
   $("aiText").textContent = r.verdict === 2 ? "Верно!" : r.verdict === 1
-    ? `Почти: ${r.diff} ${plural(r.diff, "символ отличается", "символа отличаются", "символов отличаются")}.`
+    ? (r.note === "sub" ? "Почти: не тот индекс (или его нет)." : `Почти: ${r.diff} ${plural(r.diff, "символ отличается", "символа отличаются", "символов отличаются")}.`)
     : (eroot.length ? "Не совпадает с правильной формулой." : "Ответ пустой.");
   $("aiRec").innerHTML = treeHTML(eroot, false) || "—";
-  $("aiNote").textContent = r.verdict === 2 || duel ? "" : "Если считаешь, что записал правильно (например, в другой форме), поменяй оценку. На очки это не влияет.";
+  $("aiNote").textContent = r.verdict === 2 || duel ? "" : "Если считаешь, что записал правильно (например, в другой форме), поменяй оценку — очки пересчитаются.";
   document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = !gaveUp && +b.dataset.r === r.verdict ? "· авто" : ""; });
   setGrade(r.verdict);
-  showReveal(pts);
+  showReveal();
 }
-function showReveal(pts) {
+function showReveal() {
   $("reveal").hidden = false;
   $("legend").innerHTML = legendHTML(current);
-  $("ptsLine").innerHTML = pts ? `+${pts} ${plural(pts, "очко", "очка", "очков")}${lastMult > 1 ? ` <span class="mult">комбо ×${lastMult}</span>` : ""}` : "0 очков";
+  renderPts();
   $("nextBtn").disabled = false;
   $("nextBtn").firstChild.textContent = duel && duel.i + 1 >= duel.ids.length ? "Завершить дуэль" : "Дальше";
   $("reveal").scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -1168,6 +1189,7 @@ function setGrade(r) {
   grade = r;
   document.querySelectorAll(".g").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.r === r)));
   $("nextBtn").disabled = false;
+  if (phase === "reveal") renderPts();
   // когда формула вернётся (режим «Повторение»)
   const note = $("srsNote");
   if (mode === "srs" && kind === "write" && !duel && current) {
@@ -1181,7 +1203,8 @@ function setGrade(r) {
 function commit() {
   if (grade === null || phase !== "reveal") return;
   const k = duel ? "write" : kind;
-  if (k === "quiz") recordQuiz(lastAuto === 2, lastPts);
+  award(grade);
+  if (k === "quiz") recordQuiz(grade === 2, lastPts);
   else record(current.id, grade, lastPts);
   renderFlame(); scheduleSync();
   sessionStats.n++; if (grade === 2) sessionStats.ok++; if (grade === 1) sessionStats.mid++;
@@ -1499,7 +1522,7 @@ function renderLb() {
         <div><span class="v">${dayPts(state.days[dayKey()])}</span><span class="k">очков сегодня</span></div>
         <div><span class="v">${myWeekPts()}</span><span class="k">очков за неделю</span></div>
       </div>
-      <p class="hintline">Верно — 10 очков, с недочётом — 5, в режиме «Узнать» — 5. После 5 верных подряд очки ×2, после 10 — ×3. Считается автопроверка.</p>
+      <p class="hintline">Верно — 10 очков, с недочётом — 5, в режиме «Узнать» — 5. После 5 верных подряд очки ×2, после 10 — ×3.</p>
     </div>
     <div class="card sec"><header><div class="seg2" role="group" aria-label="Период">
         <button id="lbDay" aria-pressed="${lbPeriod === "day"}">Сегодня</button><button id="lbWeek" aria-pressed="${lbPeriod === "week"}">Неделя</button></div>
