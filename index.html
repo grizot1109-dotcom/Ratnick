@@ -1921,6 +1921,10 @@ function syncScore() {
 }
 
 let renaming = false;
+// смайлики в нике запрещены (для этого есть статус)
+const EMOJI_RE = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{1F3FB}-\u{1F3FF}\uFE0F\u200D\u20E3]/gu;
+const hasEmoji = t => new RegExp(EMOJI_RE.source, "u").test(t);
+const stripEmoji = t => t.replace(EMOJI_RE, "");
 let lbPeriod = ["week", "month"].includes(prefs.lbPeriod) ? prefs.lbPeriod : "day", lbRows = null, lbErr = null, lbLoading = false;
 async function loadBoard() {
   if (!lbOn()) return;
@@ -1994,10 +1998,12 @@ function renderLb() {
     $("nameForm").onsubmit = e => {
       e.preventDefault();
       const v = $("lbName").value.trim().replace(/\s+/g, " ");
+      if (hasEmoji(v)) { $("nameErr").hidden = false; $("nameErr").textContent = "В нике нельзя использовать смайлики. Статус-эмодзи можно выбрать в настройках."; return; }
       if (v.length < 2) { $("nameErr").hidden = false; $("nameErr").textContent = "Ник должен быть от 2 до 20 символов."; return; }
       me.name = v; renaming = false; saveMe(); syncScore(); renderLb();
     };
-    if (renaming) $("lbName").value = me.name;
+    if (renaming) $("lbName").value = stripEmoji(me.name);
+    $("lbName").oninput = e => { const t = stripEmoji(e.target.value); if (t !== e.target.value) { e.target.value = t; $("nameErr").hidden = false; $("nameErr").textContent = "Смайлики в нике нельзя — выбери статус-эмодзи в настройках."; } };
     return;
   }
   const n = streak();
@@ -2143,7 +2149,7 @@ function renderDuelIntro() {
   if (mine) $("dShare").onclick = () => shareDuel(d.code);
   const go = () => {
     if (!me.name) {
-      const v = ($("dNameIn").value || "").trim().replace(/\s+/g, " ");
+      const v = stripEmoji($("dNameIn").value || "").trim().replace(/\s+/g, " ");
       if (v.length < 2) { $("dErr").hidden = false; $("dErr").textContent = "Введи ник от 2 до 20 символов."; return; }
       me.name = v; saveMe();
     }
