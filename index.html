@@ -64,16 +64,6 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outlin
 .eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;gap:10px;flex-wrap:wrap}
 .eyebrow .hist{letter-spacing:0;text-transform:none;font-weight:500}
 .qtext{font-family:var(--f-display);font-weight:500;font-size:1.15rem;line-height:1.35;text-wrap:balance;margin:0}
-.board{position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border-radius:var(--r);border:1px solid var(--line);overflow:hidden;
-  background-color:var(--surface);
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:24px 24px;background-position:-1px -1px}
-canvas{display:block;width:100%;height:clamp(240px,42vh,400px);touch-action:none;cursor:crosshair}
-.hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);pointer-events:none;font-size:.9rem;text-align:center;padding:20px}
-.tools{position:absolute;top:8px;right:8px;display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
-.tools button{width:34px;height:34px;border:0;border-radius:7px;background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center}
-.tools button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
-.tools svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 .92rem var(--f-body);padding:11px 18px;border-radius:10px;cursor:pointer}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
@@ -101,9 +91,6 @@ canvas{display:block;width:100%;height:clamp(240px,42vh,400px);touch-action:none
 .ai .note{font-size:.78rem;color:var(--muted)}
 .ai .note:empty{display:none}
 .fx.small{font-size:1.25rem}
-.seg{display:inline-flex;align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
-.seg button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-body);padding:6px 14px;border-radius:7px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
 .kbwrap{display:flex;flex-direction:column;gap:10px}
 .editor{min-height:96px;padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:text;overflow-x:auto}
 .editor .fx{font-size:1.65rem;line-height:1.5}
@@ -212,10 +199,6 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
       <p class="qtext" id="qText">Вопрос</p>
     </div>
 
-    <div class="seg" role="group" aria-label="Способ ввода">
-      <button id="inKb" aria-pressed="true">Клавиатура</button><button id="inHand" aria-pressed="false">От руки</button>
-    </div>
-
     <div id="kbWrap" class="kbwrap">
       <div class="card editor" id="editor" aria-label="Твой ответ"></div>
       <div class="kb" id="kb">
@@ -233,17 +216,6 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
           <button class="key nav" data-a="right" title="Вправо / выйти из дроби">▶</button>
           <button class="key nav" data-a="back" title="Стереть">⌫</button>
         </div>
-      </div>
-    </div>
-
-    <div class="board" id="board" hidden>
-      <canvas id="cv" aria-label="Поле для формулы"></canvas>
-      <div class="hint" id="hint">Напиши формулу по памяти,<br>потом нажми «Показать ответ» и оцени себя</div>
-      <div class="tools">
-        <button id="tPen" aria-pressed="true" title="Маркер"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></button>
-        <button id="tErase" aria-pressed="false" title="Ластик (стирает штрих)"><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M5 15l9-9 5 5-7 7H8z"/></svg></button>
-        <button id="tUndo" title="Отменить (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></button>
-        <button id="tClear" title="Очистить"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       </div>
     </div>
 
@@ -478,72 +450,9 @@ function pick() {
   return list[list.length - 1];
 }
 
-/* ---------- Холст ---------- */
-const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
-let strokes = [], cur = null, tool = "pen", penSeen = false, cw = 0, ch = 0;
-const inkColor = () => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#16223A";
-function sizeCanvas() {
-  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  cw = r.width; ch = r.height;
-  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); redraw();
-}
-function drawStroke(c, pts, color, scale = 1, ox = 0, oy = 0) {
-  c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 3.2 * scale; c.lineCap = "round"; c.lineJoin = "round";
-  const P = p => [(p[0] - ox) * scale, (p[1] - oy) * scale];
-  if (pts.length === 1) { const [x, y] = P(pts[0]); c.beginPath(); c.arc(x, y, 1.8 * scale, 0, 7); c.fill(); return; }
-  c.beginPath(); let [x0, y0] = P(pts[0]); c.moveTo(x0, y0);
-  for (let i = 1; i < pts.length - 1; i++) { const [x1, y1] = P(pts[i]), [x2, y2] = P(pts[i + 1]); c.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2); }
-  const [xl, yl] = P(pts[pts.length - 1]); c.lineTo(xl, yl); c.stroke();
-}
-function redraw() {
-  ctx.clearRect(0, 0, cw, ch); const col = inkColor();
-  for (const s of strokes) drawStroke(ctx, s, col);
-  if (cur) drawStroke(ctx, cur, col);
-  document.getElementById("hint").hidden = strokes.length > 0 || !!cur;
-}
-const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-function eraseAt(p) {
-  const before = strokes.length;
-  strokes = strokes.filter(s => !s.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 12));
-  if (strokes.length !== before) redraw();
-}
-cv.addEventListener("pointerdown", e => {
-  if (e.pointerType === "pen") penSeen = true;
-  if (penSeen && e.pointerType === "touch") return; // защита от ладони
-  if (e.button === 2 || e.buttons === 32) { tool = "erase"; syncTools(); }
-  cv.setPointerCapture(e.pointerId);
-  if (tool === "erase") { eraseAt(pos(e)); cur = "erasing"; return; }
-  cur = [pos(e)]; redraw();
-});
-cv.addEventListener("pointermove", e => {
-  if (!cur) return;
-  if (cur === "erasing") { eraseAt(pos(e)); return; }
-  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-  for (const ev of evs) cur.push(pos(ev));
-  redraw();
-});
-const endStroke = () => { if (cur && cur !== "erasing") strokes.push(cur); cur = null; redraw(); };
-cv.addEventListener("pointerup", endStroke); cv.addEventListener("pointercancel", endStroke);
-cv.addEventListener("contextmenu", e => e.preventDefault());
-// iOS: не даём странице прокручиваться и масштабироваться, пока пишем
-for (const t of ["touchstart","touchmove"]) cv.addEventListener(t, e => e.preventDefault(), { passive: false });
-function syncTools() {
-  document.getElementById("tPen").setAttribute("aria-pressed", tool === "pen");
-  document.getElementById("tErase").setAttribute("aria-pressed", tool === "erase");
-}
-document.getElementById("tPen").onclick = () => { tool = "pen"; syncTools(); };
-document.getElementById("tErase").onclick = () => { tool = "erase"; syncTools(); };
-document.getElementById("tUndo").onclick = () => { strokes.pop(); redraw(); };
-document.getElementById("tClear").onclick = () => { strokes = []; redraw(); };
-new ResizeObserver(sizeCanvas).observe(cv);
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
-new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-
 /* ---------- Ход тренировки ---------- */
 const $ = id => document.getElementById(id);
 let phase = "draw", grade = null;
-let inputMode = prefs.input === "hand" ? "hand" : "kb";
 /* ---------- Редактор формулы (клавиатура) ---------- */
 const SLOTS = { frac: ["a", "b"], sqrt: ["a"], sub: ["a"], sup: ["a"] };
 let eroot = [], ecur = { list: eroot, i: 0 }, ereg = [];
@@ -771,9 +680,8 @@ function nextQuestion() {
   $("qSec").textContent = SEC_NAME[current.sec];
   $("qHist").textContent = histText(current.id);
   $("qText").textContent = current.q;
-  strokes = []; cur = null; redraw();
   phase = "draw"; grade = null;
-  eClear(); $("kbWrap").hidden = inputMode !== "kb";
+  eClear(); $("kbWrap").hidden = false; keyset = "abc"; renderKeys();
   $("reveal").hidden = true; $("preActions").hidden = false; $("ai").hidden = true;
   document.querySelectorAll(".g").forEach(b => { b.setAttribute("aria-pressed", "false"); b.querySelector(".sug").textContent = ""; });
   $("nextBtn").disabled = true;
@@ -788,10 +696,7 @@ function reveal(gaveUp) {
   $("ansFx").innerHTML = fx(current.src);
   $("preActions").hidden = true; $("reveal").hidden = false;
   document.querySelectorAll(".g .sug").forEach(x => x.textContent = "");
-  if (inputMode === "hand") {
-    $("ai").hidden = true;
-    if (gaveUp || !strokes.length) setGrade(0);
-  } else {
+  {
     $("kbWrap").hidden = true;
     const r = gaveUp ? { verdict: 0 } : checkTyped(eroot, current.src);
     const box = $("ai");
@@ -818,15 +723,6 @@ function renderSession() {
   el.innerHTML = `<span>За сессию: <b>${s.n}</b></span><span>верно <b>${s.ok}</b></span><span>с недочётом <b>${s.mid}</b></span><span>неверно <b>${s.n - s.ok - s.mid}</b></span>`;
 }
 $("checkBtn").onclick = () => reveal(false);
-function setInput(m) {
-  inputMode = m; prefs.input = m; savePrefs();
-  $("inKb").setAttribute("aria-pressed", m === "kb"); $("inHand").setAttribute("aria-pressed", m === "hand");
-  $("kbWrap").hidden = m !== "kb"; $("board").hidden = m !== "hand";
-  $("checkBtn").firstChild.textContent = m === "kb" ? "Проверить" : "Показать ответ";
-  if (m === "hand") sizeCanvas();
-}
-$("inKb").onclick = () => setInput("kb");
-$("inHand").onclick = () => setInput("hand");
 $("giveUp").onclick = () => reveal(true);
 $("nextBtn").onclick = commit;
 document.querySelectorAll(".g").forEach(b => b.onclick = () => setGrade(+b.dataset.r));
@@ -842,8 +738,7 @@ syncMode();
 
 document.addEventListener("keydown", e => {
   if (activeView !== "train" || e.target.tagName === "SELECT") return;
-  if (inputMode === "hand" && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); strokes.pop(); redraw(); return; }
-  if (inputMode === "kb" && phase === "draw" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+  if (phase === "draw" && !e.ctrlKey && !e.metaKey && !e.altKey) {
     const k = e.key, map = { "/": () => eIns({ t: "frac", a: [], b: [] }), "_": () => eIns({ t: "sub", a: [] }), "^": () => eIns({ t: "sup", a: [] }),
       "ArrowLeft": eLeft, "ArrowRight": eRight, "Backspace": eBack, "Tab": eRight };
     if (map[k]) { e.preventDefault(); map[k](); return; }
@@ -948,13 +843,11 @@ function show(v) {
   activeView = v;
   for (const x of ["train", "stats", "ref"]) { $("view-" + x).hidden = x !== v; $("tab-" + x).setAttribute("aria-selected", String(x === v)); }
   if (v === "stats") renderStats(); if (v === "ref") renderRef();
-  if (v === "train") sizeCanvas();
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => show(b.dataset.view));
 function refreshAll() { if (activeView === "stats") renderStats(); if (activeView === "ref") renderRef(); if (current && phase === "draw") $("qHist").textContent = histText(current.id); }
 
 renderSession();
-setInput(inputMode);
 nextQuestion();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
