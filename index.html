@@ -304,6 +304,13 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .tile .v .flamev{display:inline-flex;align-items:center;gap:4px}
 .board li[data-pid]{cursor:pointer}
 .board li[data-pid]:active{opacity:.7}
+/* джоули */
+.bolt{width:1em;height:1em;flex:none;vertical-align:-.12em}
+.bolt path{fill:var(--mid)}
+.ptsline .bolt{width:1.1em;height:1.1em}
+.board .pt{display:inline-flex;align-items:baseline;justify-content:flex-end;gap:3px}
+.board .pt .bolt{align-self:center}
+.mestats .v .bolt,.tile .v .bolt{width:.8em;height:.8em}
 /* аватарки */
 .av{width:2.1em;height:2.1em;border-radius:50%;display:inline-grid;place-items:center;flex:none;font:700 .95rem/1 var(--f-body);color:#fff;overflow:hidden;user-select:none}
 .av.emo{font-size:1.15rem}
@@ -1111,15 +1118,15 @@ function checkTyped(user, src) {
 }
 
 /* ---------- Очки и комбо ----------
-   Верно — 10 очков, с недочётом — половина, ошибка — 0. После 5 верных подряд очки ×2, после 10 — ×3.
-   Режим «Узнать»: 3 очка за верный ответ, без комбо (и не сбрасывает комбо из «Писать»). Считается итоговая оценка (можно поправить вручную). */
+   Очки называются джоулями (Дж). Верно — 10 Дж, с недочётом — половина, ошибка — 0. После 5 верных подряд ×2, после 10 — ×3.
+   Режим «Узнать»: 3 Дж за верный ответ, без комбо (и не сбрасывает комбо из «Писать»). Считается итоговая оценка (можно поправить вручную). */
 let combo = 0, lastPts = 0, lastMult = 1, ptsBase = 10;
 const multOf = c => c >= 10 ? 3 : c >= 5 ? 2 : 1;
 const isQuizNow = () => !duel && kind === "quiz";
 const ptsFor = r => isQuizNow() ? (r === 2 ? 3 : 0) : r === 2 ? ptsBase * multOf(combo) : r === 1 ? ptsBase / 2 : 0;
 function renderPts() {
   const pts = ptsFor(grade), m = grade === 2 && !isQuizNow() ? multOf(combo) : 1;
-  $("ptsLine").innerHTML = pts ? `+${pts} ${plural(pts, "очко", "очка", "очков")}${m > 1 ? ` <span class="mult">комбо ×${m}</span>` : ""}` : "0 очков";
+  $("ptsLine").innerHTML = `${BOLT}${pts ? "+" : ""}${pts} Дж${m > 1 ? ` <span class="mult">комбо ×${m}</span>` : ""}`;
 }
 function award(r) {
   // вызывается при переходе к следующей формуле
@@ -1238,7 +1245,7 @@ function reveal(gaveUp) {
     ? (r.note === "sub" ? "Почти: не тот индекс (или его нет)." : `Почти: ${r.diff} ${plural(r.diff, "символ отличается", "символа отличаются", "символов отличаются")}.`)
     : (eroot.length ? "Не совпадает с правильной формулой." : "Ответ пустой.");
   $("aiRec").innerHTML = treeHTML(eroot, false) || "—";
-  $("aiNote").textContent = r.verdict === 2 || duel ? "" : "Если считаешь, что записал правильно (например, в другой форме), поменяй оценку — очки пересчитаются.";
+  $("aiNote").textContent = r.verdict === 2 || duel ? "" : "Если считаешь, что записал правильно (например, в другой форме), поменяй оценку — джоули пересчитаются.";
   document.querySelectorAll(".g").forEach(b => { b.querySelector(".sug").textContent = !gaveUp && +b.dataset.r === r.verdict ? "· авто" : ""; });
   setGrade(r.verdict);
   showReveal();
@@ -1570,6 +1577,7 @@ function weekDays() { const out = [], s = weekStart(), t = dayKey(); for (let i 
 const myWeekPts = () => weekDays().reduce((a, k) => a + dayPts(state.days[k]), 0);
 const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
 
+const BOLT = `<svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.6z"/></svg>`;
 const FLAME = `<svg class="fl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.3 2.2c.6 3.1-1.6 4.6-1.6 7 0 1.3.9 2.3 2.1 2.3 1.5 0 2.2-1.2 2.1-2.8 2.1 1.7 3.4 4.1 3.4 6.6A6.3 6.3 0 0 1 12 21.8a6.3 6.3 0 0 1-6.3-6.1c0-4.5 3.9-7.1 6.6-13.5z"/><path class="core" d="M12 21.8a3.3 3.3 0 0 1-3.3-3.3c0-2 1.5-3 2.6-4.9.4 1.4 1.2 2 2 2.5.9.6 2 1.3 2 2.6a3.3 3.3 0 0 1-3.3 3.1z"/></svg>`;
 function renderFlame() {
   const n = streak(), today = !!state.days[dayKey()], el = $("flame");
@@ -1666,14 +1674,14 @@ function renderLbList() {
       <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name, "", e.id)}
       <span class="nmc"><span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>${olHTML(e.id)}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
-      <span class="pt"><b>${e.pts}</b> ${plural(e.pts, "очко", "очка", "очков")}</span></li>`;
+      <span class="pt">${BOLT}<b>${e.pts}</b> Дж</span></li>`;
   }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
   ensurePhotos(list.filter(e => (parseAv(e.avatar) || {}).photo).map(e => e.id), renderLbList);
 }
 function renderLb() {
   const el = $("view-lb");
   if (!lbOn()) {
-    el.innerHTML = `<div class="card sec"><h2>Рейтинг ещё не подключён</h2><p class="empty">Для общего рейтинга нужен сервер, где хранятся очки всех игроков. Как только его подключат, здесь появятся рейтинги за день и за неделю.</p></div>`;
+    el.innerHTML = `<div class="card sec"><h2>Рейтинг ещё не подключён</h2><p class="empty">Для общего рейтинга нужен сервер, где хранятся джоули всех игроков. Как только его подключат, здесь появятся рейтинги за день и за неделю.</p></div>`;
     return;
   }
   if (!me.name || renaming) {
@@ -1694,10 +1702,10 @@ function renderLb() {
       <div class="who"><span id="meAv" title="Сменить аватарку">${avHTML(me.avatar, me.name, "big")}</span><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button><button class="btn" id="myProf">Мой профиль</button></div>
       <div class="mestats">
         <div><span class="v flamev${state.days[dayKey()] ? "" : " off"}">${FLAME}${n}</span><span class="k">${plural(n, "день", "дня", "дней")} подряд</span></div>
-        <div><span class="v">${dayPts(state.days[dayKey()])}</span><span class="k">очков сегодня</span></div>
-        <div><span class="v">${myWeekPts()}</span><span class="k">очков за неделю</span></div>
+        <div><span class="v">${BOLT}${dayPts(state.days[dayKey()])}</span><span class="k">Дж сегодня</span></div>
+        <div><span class="v">${BOLT}${myWeekPts()}</span><span class="k">Дж за неделю</span></div>
       </div>
-      <p class="hintline">Верно — 10 очков, с недочётом — 5. После 5 верных подряд очки ×2, после 10 — ×3. В режиме «Узнать» — 3 очка за верный, без комбо.</p>
+      <p class="hintline">Очки — это джоули ⚡. Верно — 10 Дж, с недочётом — 5 Дж. После 5 верных подряд ×2, после 10 — ×3. В режиме «Узнать» — 3 Дж за верный, без комбо.</p>
     </div>
     <div class="card sec"><header><div class="seg2" role="group" aria-label="Период">
         <button id="lbDay" aria-pressed="${lbPeriod === "day"}">Сегодня</button><button id="lbWeek" aria-pressed="${lbPeriod === "week"}">Неделя</button></div>
@@ -1729,8 +1737,8 @@ const ACH = [
   { id: "c5", icon: "×2", name: "Комбо", desc: "5 верных подряд", goal: 5, val: () => state.bestCombo || 0 },
   { id: "c10", icon: "×3", name: "Супер-комбо", desc: "10 верных подряд", goal: 10, val: () => state.bestCombo || 0 },
   { id: "c25", icon: "25", name: "Неудержимый", desc: "25 верных подряд", goal: 25, val: () => state.bestCombo || 0 },
-  { id: "d100", icon: "★", name: "Сотня за день", desc: "100 очков за один день", goal: 100, val: bestDayPts },
-  { id: "d300", icon: "★★", name: "Марафон", desc: "300 очков за один день", goal: 300, val: bestDayPts },
+  { id: "d100", icon: "★", name: "Сотня за день", desc: "100 Дж за один день", goal: 100, val: bestDayPts },
+  { id: "d300", icon: "★★", name: "Марафон", desc: "300 Дж за один день", goal: 300, val: bestDayPts },
   { id: "q50", icon: "?", name: "Глаз-алмаз", desc: "50 верных в режиме «Узнать»", goal: 50, val: () => state.quizOk || 0 },
   { id: "mem20", icon: "∞", name: "Долгая память", desc: "20 формул с повтором через неделю и дольше", goal: 20, val: () => Object.values(state.f).filter(s => boxOf(s) >= 3).length },
   { id: "duel1", icon: "⚔", name: "Дуэлянт", desc: "Выиграй дуэль", goal: 1, val: () => (state.duelWins || []).length },
@@ -1973,7 +1981,7 @@ function renderProfile(st, name, avatar, id) {
   const tile = (v, k) => `<div class="card tile"><div class="v">${v}</div><div class="k">${k}</div></div>`;
   const tiles = `<div class="tiles">
     ${tile(`<span class="flamev${st.streak ? "" : " off"}">${FLAME}${st.streak}</span>`, `${plural(st.streak, "день", "дня", "дней")} подряд · рекорд ${st.bestStreak}`)}
-    ${tile(st.pts, `${plural(st.pts, "очко", "очка", "очков")} всего`)}
+    ${tile(`${BOLT}${st.pts}`, "Дж за всё время")}
     ${tile(acc === null ? "—" : acc + "%", `точность, ${st.n} ${plural(st.n, "ответ", "ответа", "ответов")}`)}
     ${tile(st.learned, `${plural(st.learned, "формула выучена", "формулы выучены", "формул выучено")} · видел ${st.seen}`)}
     ${tile(st.bestCombo, "лучшее комбо")}
@@ -1988,7 +1996,7 @@ function renderProfile(st, name, avatar, id) {
   const lbl = i => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toLocaleDateString("ru-RU", { weekday: "short" }); };
   const bars = st.week.map((v, i) => { const h = v / max * H, x = i * (W + 18) + 6; return `<rect x="${x}" y="${10 + H - h}" width="${W}" height="${Math.max(h, 1)}" rx="3" fill="${v ? "var(--accent)" : "var(--line)"}"/>${v ? `<text x="${x + W / 2}" y="${6 + H - h}" text-anchor="middle">${v}</text>` : ""}<text x="${x + W / 2}" y="${H + 24}" text-anchor="middle">${lbl(i)}</text>`; }).join("");
   el.innerHTML = back + head + tiles
-    + `<div class="card sec"><header><h2>Очки за неделю</h2><span>${st.week.reduce((a, b) => a + b, 0)}</span></header><svg class="chart" viewBox="0 0 ${7 * (W + 18)} ${H + 30}" role="img" aria-label="Очки по дням">${bars}</svg></div>`
+    + `<div class="card sec"><header><h2>Энергия за неделю</h2><span>${st.week.reduce((a, b) => a + b, 0)} Дж</span></header><svg class="chart" viewBox="0 0 ${7 * (W + 18)} ${H + 30}" role="img" aria-label="Джоули по дням">${bars}</svg></div>`
     + achs
     + (secRows ? `<div class="card sec"><header><h2>Разделы</h2><span>точность · ответов</span></header><div class="rows">${secRows}</div></div>` : "");
   wireProfile();
