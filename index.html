@@ -93,7 +93,7 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .board li{grid-template-columns:2.2em 2.1em auto 1fr auto;grid-template-areas:"rk av nm nm nm" "rk av ol st pt";row-gap:2px}
 .board .nmc{display:contents}
 .board .rk{grid-area:rk}.board .av{grid-area:av}.board .ol{grid-area:ol;justify-self:start}
-.board .nm{grid-area:nm;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+.board .nm{grid-area:nm}
 .board .st{grid-area:st;justify-self:start;margin-left:6px}.board .pt{grid-area:pt}
 .nameform{display:flex;gap:8px;flex-wrap:wrap}
 .nameform input{flex:1;min-width:0;font:400 16px var(--f-body);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
@@ -1992,14 +1992,14 @@ function renderLb() {
     return;
   }
   if (!me.name || renaming) {
-    el.innerHTML = `<div class="card sec"><h2>${renaming ? "Новый ник" : "Придумай ник"}</h2><p class="empty">Под этим именем тебя увидят в рейтинге. Его можно поменять позже.</p>
-      <form class="nameform" id="nameForm"><input id="lbName" maxlength="20" autocomplete="nickname" placeholder="Например, Ньютон2008" aria-label="Ник"><button class="btn primary">Сохранить</button></form>
+    el.innerHTML = `<div class="card sec"><h2>${renaming ? "Новый ник" : "Придумай ник"}</h2><p class="empty">Под этим именем тебя увидят в рейтинге. Его можно поменять позже. До 16 символов, без смайликов.</p>
+      <form class="nameform" id="nameForm"><input id="lbName" maxlength="16" autocomplete="nickname" placeholder="Например, Ньютон2008" aria-label="Ник"><button class="btn primary">Сохранить</button></form>
       <p class="err" id="nameErr" hidden></p></div>`;
     $("nameForm").onsubmit = e => {
       e.preventDefault();
       const v = $("lbName").value.trim().replace(/\s+/g, " ");
       if (hasEmoji(v)) { $("nameErr").hidden = false; $("nameErr").textContent = "В нике нельзя использовать смайлики. Статус-эмодзи можно выбрать в настройках."; return; }
-      if (v.length < 2) { $("nameErr").hidden = false; $("nameErr").textContent = "Ник должен быть от 2 до 20 символов."; return; }
+      if (v.length < 2 || v.length > 16) { $("nameErr").hidden = false; $("nameErr").textContent = "Ник должен быть от 2 до 16 символов."; return; }
       me.name = v; renaming = false; saveMe(); syncScore(); renderLb();
     };
     if (renaming) $("lbName").value = stripEmoji(me.name);
@@ -2142,7 +2142,7 @@ function renderDuelIntro() {
   duelMsg(`<span class="eyebrow">Дуэль</span>
     <h2>${mine ? "Твой вызов" : `Вызов от ${esc(d.creator_name)}`}</h2>
     <p class="empty">${d.formulas.length} формул, у всех одинаковые. Побеждает тот, у кого больше верных ответов, при равенстве — кто быстрее. Время идёт с момента старта, пройти дуэль можно один раз.${n ? ` Уже ${plural(n, "сыграл", "сыграли", "сыграли")}: ${n}.` : ""}</p>
-    ${me.name ? `<p class="empty">Играешь как <b>${esc(me.name)}</b>.</p>` : `<form class="nameform" id="dName"><input id="dNameIn" maxlength="20" placeholder="Твой ник" aria-label="Ник"></form>`}
+    ${me.name ? `<p class="empty">Играешь как <b>${esc(me.name)}</b>.</p>` : `<form class="nameform" id="dName"><input id="dNameIn" maxlength="16" placeholder="Твой ник" aria-label="Ник"></form>`}
     <p class="err" id="dErr" hidden></p>
     <div class="actions"><button class="btn primary" id="dStart">Начать дуэль</button>${mine ? `<button class="btn" id="dShare">Отправить вызов</button>` : ""}<button class="btn" id="dClose">Отмена</button></div>`);
   $("dClose").onclick = closeDuel;
@@ -2150,7 +2150,7 @@ function renderDuelIntro() {
   const go = () => {
     if (!me.name) {
       const v = stripEmoji($("dNameIn").value || "").trim().replace(/\s+/g, " ");
-      if (v.length < 2) { $("dErr").hidden = false; $("dErr").textContent = "Введи ник от 2 до 20 символов."; return; }
+      if (v.length < 2) { $("dErr").hidden = false; $("dErr").textContent = "Введи ник от 2 до 16 символов."; return; }
       me.name = v; saveMe();
     }
     startDuel();
