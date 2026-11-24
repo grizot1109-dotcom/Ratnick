@@ -566,7 +566,7 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
     <div class="filters" id="filters">
       <div class="seg2" role="group" aria-label="Тип заданий"><button id="kWrite" aria-pressed="true">Писать</button><button id="kQuiz" aria-pressed="false">Узнать</button><button id="kTask" aria-pressed="false">Задачи</button></div>
       <select class="sel" id="modeSel" aria-label="Порядок формул">
-        <option value="srs">Повторение</option><option value="rand">Вперемешку</option><option value="weak">Сначала слабые</option>
+        <option value="srs">Повторение</option><option value="rand">Вперемешку</option><option value="weak">Сначала слабые</option><option value="err">Мои ошибки</option>
       </select>
       <select class="sel" id="secSel" aria-label="Раздел"></select>
     </div>
@@ -1054,7 +1054,7 @@ function record(id, r, pts) {
   dayAdd(r, pts);
   state.total++;
   state.log.push({ id, r, t: Date.now() });
-  if (state.log.length > 300) state.log = state.log.slice(-300);
+  if (state.log.length > 1500) state.log = state.log.slice(-1500);
   persist();
 }
 function recordQuiz(ok, pts) {
@@ -1066,7 +1066,7 @@ const score = s => s && s.n ? (s.ok + s.mid * 0.5) / s.n : null;
 
 /* ---------- Выбор вопроса ---------- */
 let duel = null; // идущая дуэль: { code, ids, i, start, correct, points }
-let mode = ["srs", "rand", "weak"].includes(prefs.mode) ? prefs.mode : "srs", secFilter = SEC_NAME[prefs.sec] ? prefs.sec : "all";
+let mode = ["srs", "rand", "weak", "err"].includes(prefs.mode) ? prefs.mode : "srs", secFilter = SEC_NAME[prefs.sec] ? prefs.sec : "all";
 let kind = ["quiz", "task"].includes(prefs.kind) ? prefs.kind : "write";
 let current = null, recent = [], sessionStats = { n: 0, ok: 0, mid: 0 };
 // Колода: формулы раздела в случайном порядке без повторов, пока колода не кончится.
@@ -1143,9 +1143,31 @@ function pickTask() {
   const id = taskDeck.splice(k, 1)[0];
   return TASKS.find(t => t.id === id);
 }
+/* Режим «Мои ошибки»: формулы с ошибкой или недочётом за последние 7 дней.
+   Формула уходит из списка, когда после последней ошибки её дважды написали верно. */
+function errIds() {
+  const since = Date.now() - 7 * 864e5, st = new Map();
+  for (const l of state.log) {
+    if (!BY_ID[l.id]) continue;
+    if (l.r < 2) { if (l.t >= since) st.set(l.id, 0); }
+    else if (st.has(l.id)) st.set(l.id, st.get(l.id) + 1);
+  }
+  return [...st].filter(([id, fixed]) => fixed < 2 && inSection(BY_ID[id])).map(([id]) => id);
+}
+function updErrLabel() {
+  const o = document.querySelector('#modeSel option[value="err"]'); if (!o) return;
+  const n = errIds().length; o.textContent = `Мои ошибки${n ? ` (${n})` : ""}`;
+}
+function pickErr() {
+  const pool = errIds(); if (!pool.length) return null;
+  const fresh = pool.filter(id => !recent.includes(id));
+  const from = fresh.length ? fresh : pool.filter(id => !current || id !== current.id);
+  return BY_ID[(from.length ? from : pool)[Math.floor(Math.random() * (from.length || pool.length))]];
+}
 function pick() {
   if (duel) return BY_ID[duel.ids[duel.i]];
   if (kind === "task") return pickTask();
+  if (mode === "err") return pickErr();
   if (mode === "srs" && kind === "write") return pickSrs();
   for (let guard = 0; guard < 3; guard++) {
     if (!deck.length) buildDeck();
@@ -1514,7 +1536,7 @@ function nextQuestion() {
   $("reveal").hidden = true; $("ai").hidden = true; $("srsNote").hidden = true;
   phase = "draw"; grade = null;
   const k = duel ? "write" : kind;
-  current = pick();
+  current = pick(); updErrLabel();
   if (!current) { renderDone(); renderSession(); return; }
   recent.push(current.id); if (recent.length > 4) recent.shift();
   $("qSec").textContent = (current.task ? (current.src ? "Задача ФИПИ · " : "Задача · ") : "") + SEC_NAME[current.sec];
@@ -1537,6 +1559,15 @@ function nextQuestion() {
 }
 function renderDone() {
   setTrainUI("done");
+  if (mode === "err") {
+    const had = state.log.some(l => l.r < 2 && l.t >= Date.now() - 7 * 864e5);
+    $("doneCard").innerHTML = `<h2>${had ? "Все ошибки исправлены!" : "Ошибок за неделю нет"}</h2>
+      <p class="empty">${had ? "Каждую формулу, где ты ошибался за последние 7 дней, ты уже дважды написал верно." : "Здесь появятся формулы, в которых ты ошибёшься или сделаешь недочёт."}${secFilter !== "all" ? " Смотрю только выбранный раздел." : ""}</p>
+      <div class="actions"><button class="btn primary" id="goSrs">Повторение</button><button class="btn" id="goRand">Вперемешку</button></div>`;
+    $("goSrs").onclick = () => { setMode("srs"); nextQuestion(); };
+    $("goRand").onclick = () => { setMode("rand"); nextQuestion(); };
+    return;
+  }
   const c = srsCounts();
   $("doneCard").innerHTML = `<h2>На сегодня всё повторено</h2>
     <p class="empty">Выученные формулы вернутся сами, когда начнут забываться.${c.tomorrow ? ` Завтра на повторение: ${c.tomorrow} ${plural(c.tomorrow, "формула", "формулы", "формул")}.` : ""}${c.fresh ? ` Новых формул ещё не решал: ${c.fresh}.` : ""}</p>
@@ -1775,10 +1806,12 @@ function renderStats() {
      ${weak.length ? `<div><button class="btn" id="drillWeak">Тренировать слабые</button></div>` : ""}</div>
    <div class="card sec"><header><h2>Активность</h2><span>последние 14 дней</span></header>
      <svg class="chart" viewBox="0 0 ${14 * W + 2} ${H + 28}" role="img" aria-label="Число попыток по дням">${bars}</svg></div>
-   <div class="card sec"><header><h2>Последние ошибки</h2></header><div class="weak">${mistHtml}</div></div>
+   <div class="card sec"><header><h2>Последние ошибки</h2></header><div class="weak">${mistHtml}</div>
+     ${errIds().length ? `<div><button class="btn" id="drillErr">Тренировать ошибки за неделю (${errIds().length})</button></div>` : ""}</div>
    <div class="danger" id="danger"><button class="btn warn" id="resetBtn">Сбросить статистику</button></div>`;
 
   $("openCheat").onclick = () => show("cheat");
+  const de = $("drillErr"); if (de) de.onclick = () => { if (kind === "task") { kind = "write"; prefs.kind = "write"; syncKind(); } setMode("err"); recent = []; nextQuestion(); show("train"); };
   const dw = $("drillWeak"); if (dw) dw.onclick = () => { if (kind !== "write") { kind = "write"; prefs.kind = "write"; syncKind(); } setMode("weak"); secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); recent = []; deck = shuffle(weak.map(x => x.f.id)); nextQuestion(); show("train"); };
   $("resetBtn").onclick = () => {
     $("danger").innerHTML = `<span>Удалить все ${tot} ${plural(tot,"попытку","попытки","попыток")} без возможности восстановить?</span><button class="btn warn" id="resetYes">Да, сбросить</button><button class="btn" id="resetNo">Отмена</button>`;
