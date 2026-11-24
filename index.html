@@ -77,6 +77,11 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .board .rk{font:600 .9rem var(--f-mono);color:var(--muted);text-align:center;width:1.9em;height:1.9em;border-radius:50%;display:grid;place-items:center}
 .board .top1 .rk{background:var(--gold);color:#3A2A00}.board .top2 .rk{background:var(--silver);color:#22262E}.board .top3 .rk{background:var(--bronze);color:#2E1A0C}
 .board .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.board .nmc{min-width:0;display:flex;flex-direction:column;gap:1px}
+.ol{font:600 .68rem var(--f-body);letter-spacing:.02em;display:inline-flex;align-items:center;gap:4px;color:var(--muted)}
+.ol::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line)}
+.ol.on{color:var(--ok)}
+.ol.on::before{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
 .board .nm small{font-size:.7rem;color:var(--accent);font-weight:600;margin-left:4px}
 .board .st{display:inline-flex;align-items:center;gap:2px;font-weight:600;font-size:.85rem}
 .board .st.off{color:var(--muted)}
@@ -1106,18 +1111,21 @@ function checkTyped(user, src) {
 }
 
 /* ---------- Очки и комбо ----------
-   Верно — 10 очков (в режиме «Узнать» — 5), с недочётом — половина, ошибка — 0.
-   После 5 верных подряд очки ×2, после 10 — ×3. Считается итоговая оценка (можно поправить вручную). */
+   Верно — 10 очков, с недочётом — половина, ошибка — 0. После 5 верных подряд очки ×2, после 10 — ×3.
+   Режим «Узнать»: 3 очка за верный ответ, без комбо (и не сбрасывает комбо из «Писать»). Считается итоговая оценка (можно поправить вручную). */
 let combo = 0, lastPts = 0, lastMult = 1, ptsBase = 10;
 const multOf = c => c >= 10 ? 3 : c >= 5 ? 2 : 1;
-const ptsFor = r => r === 2 ? ptsBase * multOf(combo) : r === 1 ? ptsBase / 2 : 0;
+const isQuizNow = () => !duel && kind === "quiz";
+const ptsFor = r => isQuizNow() ? (r === 2 ? 3 : 0) : r === 2 ? ptsBase * multOf(combo) : r === 1 ? ptsBase / 2 : 0;
 function renderPts() {
-  const pts = ptsFor(grade), m = grade === 2 ? multOf(combo) : 1;
+  const pts = ptsFor(grade), m = grade === 2 && !isQuizNow() ? multOf(combo) : 1;
   $("ptsLine").innerHTML = pts ? `+${pts} ${plural(pts, "очко", "очка", "очков")}${m > 1 ? ` <span class="mult">комбо ×${m}</span>` : ""}` : "0 очков";
 }
 function award(r) {
   // вызывается при переходе к следующей формуле
-  lastPts = ptsFor(r); lastMult = r === 2 ? multOf(combo) : 1;
+  lastPts = ptsFor(r);
+  if (isQuizNow()) { lastMult = 1; return lastPts; }
+  lastMult = r === 2 ? multOf(combo) : 1;
   combo = r === 2 ? combo + 1 : 0;
   if (combo > (state.bestCombo || 0)) state.bestCombo = combo;
   renderCombo();
@@ -1611,14 +1619,28 @@ async function loadBoard() {
     await syncing;
     const from = weekDays()[0];
     const q = cols => `scores?select=${cols}&day=gte.${from}&order=day.desc&limit=5000`;
-    try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges,avatar")); }
+    try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges,avatar,updated_at")); }
     catch (e) {
-      try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges")); }
-      catch (e2) { lbRows = await api(q("player_id,name,day,points,attempts,streak")); }
+      try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges,updated_at")); }
+      catch (e2) { lbRows = await api(q("player_id,name,day,points,attempts,streak,updated_at")); }
     }
+    lastSeen.clear();
+    for (const r of lbRows) { const t = Date.parse(r.updated_at) || 0; if (t > (lastSeen.get(r.player_id) || 0)) lastSeen.set(r.player_id, t); }
   } catch (e) { lbErr = e.message; }
   lbLoading = false; renderLbList();
 }
+/* online — если приложение у игрока отмечалось на сервере за последние 2,5 минуты */
+const lastSeen = new Map();
+const ONLINE_MS = 150000;
+const isOnline = id => id === me.id || Date.now() - (lastSeen.get(id) || 0) < ONLINE_MS;
+const olHTML = id => isOnline(id) ? `<span class="ol on">online</span>` : `<span class="ol">offline</span>`;
+// пока приложение открыто, раз в минуту отмечаемся (заодно сохраняем очки) и обновляем рейтинг
+setInterval(() => {
+  if (document.visibilityState !== "visible" || !lbOn() || !me.name) return;
+  syncScore();
+  if (activeView === "lb") loadBoard();
+}, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && lbOn() && me.name) syncScore(); });
 function boardEntries() {
   const today = dayKey(), yest = yesterdayKey(), by = new Map();
   for (const r of lbRows || []) {
@@ -1642,7 +1664,7 @@ function renderLbList() {
     const mine = e.id === me.id;
     return `<li data-pid="${esc(e.id)}" data-name="${esc(e.name)}" data-av="${esc(mine ? me.avatar || "" : e.avatar || "")}" class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
       <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name, "", e.id)}
-      <span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>
+      <span class="nmc"><span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>${olHTML(e.id)}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
       <span class="pt"><b>${e.pts}</b> ${plural(e.pts, "очко", "очка", "очков")}</span></li>`;
   }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
@@ -1675,7 +1697,7 @@ function renderLb() {
         <div><span class="v">${dayPts(state.days[dayKey()])}</span><span class="k">очков сегодня</span></div>
         <div><span class="v">${myWeekPts()}</span><span class="k">очков за неделю</span></div>
       </div>
-      <p class="hintline">Верно — 10 очков, с недочётом — 5, в режиме «Узнать» — 5. После 5 верных подряд очки ×2, после 10 — ×3.</p>
+      <p class="hintline">Верно — 10 очков, с недочётом — 5. После 5 верных подряд очки ×2, после 10 — ×3. В режиме «Узнать» — 3 очка за верный, без комбо.</p>
     </div>
     <div class="card sec"><header><div class="seg2" role="group" aria-label="Период">
         <button id="lbDay" aria-pressed="${lbPeriod === "day"}">Сегодня</button><button id="lbWeek" aria-pressed="${lbPeriod === "week"}">Неделя</button></div>
@@ -1934,12 +1956,13 @@ async function openProfile(id, name, avatar) {
   $("view-prof").innerHTML = `<div class="card sec"><p class="empty">Загружаю профиль…</p></div>`;
   let st = null;
   try { const r = await api(`profiles?select=stats&player_id=eq.${id}`); st = r && r[0] ? cleanStats(r[0].stats) : null; } catch (e) {}
+  try { const r = await api(`scores?select=updated_at&player_id=eq.${id}&order=updated_at.desc&limit=1`); const t = r && r[0] ? Date.parse(r[0].updated_at) || 0 : 0; if (t > (lastSeen.get(id) || 0)) lastSeen.set(id, t); } catch (e) {}
   if (profileOf && profileOf.id === id) renderProfile(st, name, avatar, id);
 }
 function renderProfile(st, name, avatar, id) {
   const el = $("view-prof"), mine = id === me.id;
   const back = `<div><button class="link" id="profBack">← Назад</button></div>`;
-  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}</span>
+  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}</span>${olHTML(id)}
     ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
     ${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}</div>`;
   if (!st) {
