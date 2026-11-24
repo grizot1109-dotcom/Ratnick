@@ -1813,6 +1813,7 @@ const saveMe = () => ls.set(ME_KEY, JSON.stringify(me));
 const dayPts = v => v ? (v.pts !== undefined ? v.pts : v.ok * 10 + v.mid * 5) : 0;
 function weekStart(d = new Date()) { const x = new Date(d); const k = (x.getDay() + 6) % 7; x.setDate(x.getDate() - k); return x; }
 function weekDays() { const out = [], s = weekStart(), t = dayKey(); for (let i = 0; i < 7; i++) { const d = new Date(s); d.setDate(s.getDate() + i); const k = dayKey(d); out.push(k); if (k === t) break; } return out; }
+const monthStart = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), 1, 12);
 const myWeekPts = () => weekDays().reduce((a, k) => a + dayPts(state.days[k]), 0);
 const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
 
@@ -1858,14 +1859,14 @@ function syncScore() {
 }
 
 let renaming = false;
-let lbPeriod = prefs.lbPeriod === "week" ? "week" : "day", lbRows = null, lbErr = null, lbLoading = false;
+let lbPeriod = ["week", "month"].includes(prefs.lbPeriod) ? prefs.lbPeriod : "day", lbRows = null, lbErr = null, lbLoading = false;
 async function loadBoard() {
   if (!lbOn()) return;
   lbLoading = true; lbErr = null; renderLbList();
   try {
     await syncing;
-    const from = weekDays()[0];
-    const q = cols => `scores?select=${cols}&day=gte.${from}&order=day.desc&limit=5000`;
+    const w0 = weekDays()[0], m0 = dayKey(monthStart()), from = w0 < m0 ? w0 : m0;
+    const q = cols => `scores?select=${cols}&day=gte.${from}&order=day.desc&limit=10000`;
     try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges,avatar,updated_at")); }
     catch (e) {
       try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges,updated_at")); }
@@ -1890,8 +1891,9 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && lbOn() && me.name) syncScore(); });
 function boardEntries() {
   const today = dayKey(), yest = yesterdayKey(), by = new Map();
+  const from = lbPeriod === "day" ? today : lbPeriod === "week" ? weekDays()[0] : dayKey(monthStart());
   for (const r of lbRows || []) {
-    if (lbPeriod === "day" && r.day !== today) continue;
+    if (r.day < from || r.day > today) continue;
     const e = by.get(r.player_id) || { id: r.player_id, name: r.name, pts: 0, n: 0, last: "", streak: 0, badges: 0, avatar: "" };
     e.pts += r.points; e.n += r.attempts;
     if (r.day > e.last) { e.last = r.day; e.name = r.name; e.streak = r.day >= yest ? r.streak : 0; e.badges = r.badges || 0; e.avatar = r.avatar || ""; }
@@ -1904,7 +1906,7 @@ function renderLbList() {
   if (lbErr) { el.innerHTML = `<p class="empty">Не удалось загрузить рейтинг. Проверь интернет и попробуй ещё раз.</p><div><button class="btn" id="lbRetry">Обновить</button></div>`; $("lbRetry").onclick = loadBoard; return; }
   if (!lbRows) { el.innerHTML = `<p class="empty">Загружаю рейтинг…</p>`; return; }
   const list = boardEntries();
-  if (!list.length) { el.innerHTML = `<p class="empty">${lbPeriod === "day" ? "Сегодня ещё никто не решал." : "На этой неделе ещё никто не решал."} Будь первым!</p>`; return; }
+  if (!list.length) { el.innerHTML = `<p class="empty">${{ day: "Сегодня ещё никто не решал.", week: "На этой неделе ещё никто не решал.", month: "В этом месяце ещё никто не решал." }[lbPeriod]} Будь первым!</p>`; return; }
   let rank = 0, prev = null;
   el.innerHTML = `<ol class="board">${list.map((e, i) => {
     if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
@@ -1920,7 +1922,7 @@ function renderLbList() {
 function renderLb() {
   const el = $("view-lb");
   if (!lbOn()) {
-    el.innerHTML = `<div class="card sec"><h2>Рейтинг ещё не подключён</h2><p class="empty">Для общего рейтинга нужен сервер, где хранятся джоули всех игроков. Как только его подключат, здесь появятся рейтинги за день и за неделю.</p></div>`;
+    el.innerHTML = `<div class="card sec"><h2>Рейтинг ещё не подключён</h2><p class="empty">Для общего рейтинга нужен сервер, где хранятся джоули всех игроков. Как только его подключат, здесь появятся рейтинги за день, неделю и месяц.</p></div>`;
     return;
   }
   if (!me.name || renaming) {
@@ -1947,14 +1949,18 @@ function renderLb() {
       <p class="hintline">Очки — это джоули ⚡. Верно — 10 Дж, с недочётом — 5 Дж. После 5 верных подряд ×2, после 10 — ×3. В режиме «Узнать» — 3 Дж за верный, без комбо.</p>
     </div>
     <div class="card sec"><header><div class="seg2" role="group" aria-label="Период">
-        <button id="lbDay" aria-pressed="${lbPeriod === "day"}">Сегодня</button><button id="lbWeek" aria-pressed="${lbPeriod === "week"}">Неделя</button></div>
+        <button id="lbDay" aria-pressed="${lbPeriod === "day"}">Сегодня</button><button id="lbWeek" aria-pressed="${lbPeriod === "week"}">Неделя</button><button id="lbMonth" aria-pressed="${lbPeriod === "month"}">Месяц</button></div>
         <button class="link" id="lbRefresh">Обновить</button></header>
       <div id="lbList"></div></div>` + duelLbHTML();
   $("renameBtn").onclick = () => { renaming = true; renderLb(); };
   $("meAv").onclick = () => show("set");
   $("myProf").onclick = () => { profileBack = "lb"; openProfile(me.id, me.name, myAv()); };
-  $("lbDay").onclick = () => { lbPeriod = "day"; prefs.lbPeriod = "day"; savePrefs(); $("lbDay").setAttribute("aria-pressed", "true"); $("lbWeek").setAttribute("aria-pressed", "false"); renderLbList(); };
-  $("lbWeek").onclick = () => { lbPeriod = "week"; prefs.lbPeriod = "week"; savePrefs(); $("lbWeek").setAttribute("aria-pressed", "true"); $("lbDay").setAttribute("aria-pressed", "false"); renderLbList(); };
+  const per = { day: "lbDay", week: "lbWeek", month: "lbMonth" };
+  for (const [k, id] of Object.entries(per)) $(id).onclick = () => {
+    lbPeriod = k; prefs.lbPeriod = k; savePrefs();
+    for (const [k2, id2] of Object.entries(per)) $(id2).setAttribute("aria-pressed", String(k2 === k));
+    renderLbList();
+  };
   $("lbRefresh").onclick = loadBoard;
   $("dNew").onclick = e => createDuel(e.currentTarget);
   renderLbList(); loadBoard(); updateMedals();
@@ -1983,6 +1989,7 @@ const ACH = [
   { id: "mem20", icon: "∞", name: "Долгая память", desc: "20 формул с повтором через неделю и дольше", goal: 20, val: () => Object.values(state.f).filter(s => boxOf(s) >= 3).length },
   { id: "champD", icon: "👑", name: "Чемпион дня", desc: "1 место в рейтинге за день", goal: 1, val: () => (state.medals || []).filter(m => m.k === "d" && m.p === 1).length },
   { id: "champW", icon: "👑", name: "Чемпион недели", desc: "1 место в рейтинге за неделю", goal: 1, val: () => (state.medals || []).filter(m => m.k === "w" && m.p === 1).length },
+  { id: "champM", icon: "🪐", name: "Чемпион месяца", desc: "1 место в рейтинге за месяц", goal: 1, val: () => (state.medals || []).filter(m => m.k === "m" && m.p === 1).length },
   { id: "duel1", icon: "⚔", name: "Дуэлянт", desc: "Выиграй дуэль", goal: 1, val: () => (state.duelWins || []).length },
   { id: "duel5", icon: "⚔5", name: "Гроза дуэлей", desc: "Выиграй 5 дуэлей", goal: 5, val: () => (state.duelWins || []).length },
   ...SECTIONS.map(([k, name]) => ({ id: "sec-" + k, icon: SEC_ICON[k] || "•", name: name, desc: "Все формулы раздела, последний ответ — верно", goal: F.filter(f => f.sec === k).length,
@@ -2160,7 +2167,7 @@ window.addEventListener("hashchange", route);
 
 /* ---------- Медали за рейтинг ----------
    За каждый законченный день и каждую законченную неделю: 1–3 места, если играли хотя бы двое.
-   Медаль: { k: "d" | "w", p: 1 | 2 | 3, d: "ГГГГ-ММ-ДД" (день или понедельник недели) }. */
+   Медаль: { k: "d" | "w" | "m", p: 1 | 2 | 3, d: "ГГГГ-ММ-ДД" (день, понедельник недели или 1-е число месяца) }. */
 const MEDAL_METAL = ["", "Золото", "Серебро", "Бронза"];
 const medalId = m => m.k + "-" + m.d;
 const fmtDay = d => new Date(d + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
@@ -2168,6 +2175,7 @@ function medalTitle(m) {
   const wk = d => { const e = new Date(d + "T12:00"); e.setDate(e.getDate() + 6); return `${fmtDay(d)} – ${fmtDay(dayKey(e))}`; };
   if (m.k === "d") return `${MEDAL_METAL[m.p]} дня · ${fmtDay(m.d)}`;
   if (m.k === "w") return `${MEDAL_METAL[m.p]} недели · ${wk(m.d)}`;
+  if (m.k === "m") return `${MEDAL_METAL[m.p]} месяца · ${new Date(m.d + "T12:00").toLocaleDateString("ru-RU", { month: "long", year: "numeric" })}`;
   if (m.k === "h") return `Хет-трик · 3 золота подряд, по ${fmtDay(m.d)}`;
   return `Доминатор · 5+ золотых дней, ${wk(m.d)}`;
 }
@@ -2196,6 +2204,14 @@ function medalSVG(m, size = 34) {
     body = ribbon("#2A4FD0", "#5C8CFF") + `<polygon points="${pts.join(" ")}" ${fill} stroke-linejoin="round"/><path d="M24 22c1 4-3 5-3 9a3.5 3.5 0 0 0 7 0c0-2-1-3-1-4 2 1.5 3 3.5 3 5.5a6 6 0 0 1-12 0c0-5 5-6.5 6-10.5z" fill="${dk}"/>`;
   } else if (m.k === "w" && m.p === 3) { // щит
     body = ribbon("#2A4FD0", "#7A93E8") + `<path d="M24 16.5l12 4v9c0 8-5.5 12.5-12 15-6.5-2.5-12-7-12-15v-9z" ${fill} stroke-linejoin="round"/><text x="24" y="35" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="11" fill="${dk}">3</text>`;
+  } else if (m.k === "m") { // месяц: розетка с зубчиками и космосом
+    let q = []; for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16, r = i % 2 ? 14 : 16.8; q.push(`${(24 + Math.cos(a) * r).toFixed(1)},${(31 + Math.sin(a) * r).toFixed(1)}`); }
+    const ic = m.p === 1 // Сатурн
+      ? `<circle cx="24" cy="31" r="5.6" fill="${dk}"/><ellipse cx="24" cy="31" rx="11" ry="3.4" fill="none" stroke="${dk}" stroke-width="1.8" transform="rotate(-20 24 31)"/><path d="M18.9 29.6a5.6 5.6 0 0 1 10.2-3.6" fill="none" stroke="${mid}" stroke-width="1.6" transform="rotate(-20 24 31)"/>`
+      : m.p === 2 // комета
+      ? `<circle cx="28.5" cy="27" r="3.6" fill="${dk}"/><path d="M26 29.6 16 38M27.2 30.6 19 39.5M25 28.3 15.5 35" stroke="${dk}" stroke-width="1.6" stroke-linecap="round"/>`
+      : `<path d="M27.5 22.5a9 9 0 1 0 3.5 14.5 7.2 7.2 0 0 1-3.5-14.5z" fill="${dk}"/><circle cx="31" cy="25" r="1.2" fill="${dk}"/>`; // луна
+    body = ribbon("#6B2FD6", "#F5C542") + `<polygon points="${q.join(" ")}" ${fill} stroke-linejoin="round"/><circle cx="24" cy="31" r="11.5" fill="none" stroke="${dk}" stroke-opacity=".45" stroke-width="1"/>` + ic;
   } else if (m.k === "h") { // хет-трик: три звезды
     const star = (cx, cy, r) => { const q = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; q.push(`${(cx + Math.cos(a) * rr).toFixed(1)},${(cy + Math.sin(a) * rr).toFixed(1)}`); } return `<polygon points="${q.join(" ")}" fill="${dk}"/>`; };
     body = ribbon("#8B5CFF", "#FF5EA8") + `<circle cx="24" cy="31" r="14.5" ${fill}/>` + star(17.5, 32, 4.6) + star(24, 27, 5.6) + star(30.5, 32, 4.6);
@@ -2204,7 +2220,7 @@ function medalSVG(m, size = 34) {
   }
   return `<svg class="medal" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${grad}${body}</svg>`;
 }
-const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
+const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, mg: 0, ms: 0, mb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
 let medalsBusy = false;
 async function updateMedals(force) {
   if (!lbOn() || !me.name || medalsBusy) return;
@@ -2213,13 +2229,15 @@ async function updateMedals(force) {
   medalsBusy = true;
   try {
     const f = new Date(); f.setDate(f.getDate() - 63);
-    const from = dayKey(weekStart(f));
+    const from = dayKey(weekStart(monthStart(f))); // целые недели и целые месяцы
     const rows = await api(`scores?select=player_id,day,points,attempts&day=gte.${from}&day=lt.${today}&limit=20000`);
-    const curWeek = dayKey(weekStart());
-    const byDay = new Map(), byWeek = new Map();
+    const curWeek = dayKey(weekStart()), curMonth = dayKey(monthStart());
+    const byDay = new Map(), byWeek = new Map(), byMonth = new Map();
     for (const r of rows || []) {
       if (!(r.attempts > 0) || !(r.points > 0)) continue;
       const d = byDay.get(r.day) || new Map(); d.set(r.player_id, (d.get(r.player_id) || 0) + r.points); byDay.set(r.day, d);
+      const mo = dayKey(monthStart(new Date(r.day + "T12:00")));
+      if (mo >= from && mo < curMonth) { const mm = byMonth.get(mo) || new Map(); mm.set(r.player_id, (mm.get(r.player_id) || 0) + r.points); byMonth.set(mo, mm); }
       const w = dayKey(weekStart(new Date(r.day + "T12:00")));
       if (w >= curWeek) continue;
       const wk = byWeek.get(w) || new Map(); wk.set(r.player_id, (wk.get(r.player_id) || 0) + r.points); byWeek.set(w, wk);
@@ -2232,6 +2250,7 @@ async function updateMedals(force) {
     };
     for (const [d, m] of byDay) place(m, "d", d);
     for (const [w, m] of byWeek) place(m, "w", w);
+    for (const [mo, m] of byMonth) place(m, "m", mo);
     const golds = fresh.filter(m => m.k === "d" && m.p === 1).map(m => m.d).sort();
     let run = 0;
     golds.forEach((d, i) => {
@@ -2258,14 +2277,14 @@ function togglePin(id) {
 }
 function medalsSectionHTML(st, mine) {
   const c = st.med, total = Object.values(c).reduce((a, b) => a + b, 0);
-  const counts = [["x", 1, "x", "доминатор"], ["h", 1, "h", "хет-трик"], ["w", 1, "wg", "недели"], ["w", 2, "ws", "недели"], ["w", 3, "wb", "недели"], ["d", 1, "dg", "дня"], ["d", 2, "ds", "дня"], ["d", 3, "db", "дня"]]
+  const counts = [["x", 1, "x", "доминатор"], ["h", 1, "h", "хет-трик"], ["m", 1, "mg", "месяца"], ["m", 2, "ms", "месяца"], ["m", 3, "mb", "месяца"], ["w", 1, "wg", "недели"], ["w", 2, "ws", "недели"], ["w", 3, "wb", "недели"], ["d", 1, "dg", "дня"], ["d", 2, "ds", "дня"], ["d", 3, "db", "дня"]]
     .filter(x => c[x[2]]).map(([k, p, key, cap]) => `<span class="mcount">${medalSVG({ k, p }, 30)}<b>×${c[key]}</b><small>${cap}</small></span>`).join("");
   const list = mine ? state.medals || [] : st.recent;
   const pins = mine ? state.pinned || [] : st.pin.map(medalId);
   const grid = list.map(m => { const id = medalId(m), on = pins.includes(id);
     return `<${mine ? "button" : "div"} class="mitem${on ? " pinned" : ""}" ${mine ? `data-mid="${esc(id)}" aria-pressed="${on}"` : ""}>${medalSVG(m, 40)}<span>${esc(medalTitle(m))}</span>${on ? `<small>выставлена</small>` : ""}</${mine ? "button" : "div"}>`; }).join("");
   return `<div class="card sec"><header><h2>Медали</h2><span>${total ? `всего ${total}` : ""}</span></header>
-    ${total ? `<div class="mcounts">${counts}</div>` : `<p class="empty">${mine ? "Займи 1–3 место в рейтинге за день или неделю — медаль появится здесь на следующий день." : "Пока нет медалей."}</p>`}
+    ${total ? `<div class="mcounts">${counts}</div>` : `<p class="empty">${mine ? "Займи 1–3 место в рейтинге за день, неделю или месяц — медаль появится здесь на следующий день." : "Пока нет медалей."}</p>`}
     ${mine && list.length ? `<p class="hintline">Нажми на медаль, чтобы выставить её в профиле (до 3 штук).</p>` : ""}
     ${grid ? `<div class="mgrid">${grid}</div>` : ""}</div>`;
 }
@@ -2300,7 +2319,7 @@ async function syncProfile() {
 }
 // значения из чужого профиля — только числа и известные ключи
 const num = (x, max = 1e7) => Number.isFinite(+x) ? Math.max(0, Math.min(max, Math.round(+x))) : 0;
-const validMedal = m => m && ["d", "w", "h", "x"].includes(m.k) && [1, 2, 3].includes(m.p) && /^\d{4}-\d{2}-\d{2}$/.test(m.d);
+const validMedal = m => m && ["d", "w", "m", "h", "x"].includes(m.k) && [1, 2, 3].includes(m.p) && /^\d{4}-\d{2}-\d{2}$/.test(m.d);
 function cleanStats(x) {
   if (!x || typeof x !== "object") return null;
   const sec = {};
@@ -2309,7 +2328,7 @@ function cleanStats(x) {
     since: /^\d{4}-\d{2}-\d{2}$/.test(x.since) ? x.since : null, n: num(x.n), ok: num(x.ok), mid: num(x.mid), pts: num(x.pts), active: num(x.active),
     streak: num(x.streak), bestStreak: num(x.bestStreak), bestCombo: num(x.bestCombo), learned: num(x.learned), seen: num(x.seen), duelWins: num(x.duelWins),
     ach: Array.isArray(x.ach) ? x.ach.filter(id => ACH.some(a => a.id === id)) : [], sec,
-    med: Object.fromEntries(["dg", "ds", "db", "wg", "ws", "wb", "h", "x"].map(k => [k, num(x.med && x.med[k], 1e5)])),
+    med: Object.fromEntries(["dg", "ds", "db", "wg", "ws", "wb", "mg", "ms", "mb", "h", "x"].map(k => [k, num(x.med && x.med[k], 1e5)])),
     pin: Array.isArray(x.pin) ? x.pin.filter(validMedal).slice(0, 3).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
     recent: Array.isArray(x.recent) ? x.recent.filter(validMedal).slice(0, 12).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
     week: Array.isArray(x.week) ? x.week.slice(-7).map(v => num(v)) : []
