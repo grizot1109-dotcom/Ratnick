@@ -22,6 +22,7 @@
   --bg:#E9EDF2; --surface:#FFFFFF; --sunk:#F3F5F8; --line:#D3DAE3; --grid:#E2E8F0;
   --ink:#16223A; --muted:#5D6A80; --accent:#2A4FD0; --accent-soft:#E2E8FB;
   --ok:#1E8A55; --ok-soft:#DDF2E7; --mid:#B9770E; --mid-soft:#FBEFD6; --bad:#C23B32; --bad-soft:#F8E0DE;
+  --flame:#F2611D; --flame-core:#FFC233; --gold:#F5C542; --silver:#C9D1DC; --bronze:#D9965B;
   --f-display:"Unbounded","Onest",system-ui,sans-serif;
   --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-math:"PT Serif","Times New Roman",serif;
@@ -49,8 +50,42 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .brand{display:flex;align-items:baseline;gap:10px}
 h1{font-family:var(--f-display);font-weight:700;font-size:1.25rem;margin:0;letter-spacing:-.01em}
 .sync{font-size:.75rem;color:var(--muted)}
-nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
-nav button{border:0;background:none;color:var(--muted);font:500 .88rem var(--f-body);padding:7px 14px;border-radius:999px;cursor:pointer}
+nav{display:grid;grid-template-columns:repeat(4,auto);gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%}
+nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-body);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+@media (max-width:480px){nav{width:100%;grid-template-columns:repeat(4,1fr)}nav button{padding:7px 4px;font-size:.8rem}}
+.brand{align-items:center}
+.flame{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px 3px 6px;cursor:pointer;color:var(--ink);font:700 .95rem var(--f-body);font-variant-numeric:tabular-nums}
+.fl{width:1.15em;height:1.15em;flex:none}
+.fl path{fill:var(--flame)}.fl .core{fill:var(--flame-core)}
+.off .fl path{fill:var(--line)}.off .fl .core{fill:var(--muted);opacity:.35}
+.flame.off{color:var(--muted)}
+.mecard .who{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.nmbig{font-family:var(--f-display);font-size:1.15rem;font-weight:500;overflow-wrap:anywhere}
+.mestats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mestats>div{display:flex;flex-direction:column;background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
+.mestats .v{font-family:var(--f-display);font-size:1.35rem;font-weight:500;display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.mestats .k{font-size:.74rem;color:var(--muted)}
+.hintline{margin:0;font-size:.78rem;color:var(--muted)}
+.seg2{display:inline-flex;background:var(--sunk);border-radius:10px;padding:3px;gap:2px}
+.seg2 button{border:0;background:none;color:var(--muted);font:600 .85rem var(--f-body);padding:6px 14px;border-radius:7px;cursor:pointer}
+.seg2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.board{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.board li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.board li:first-child{border-top:0}
+.board .rk{font:600 .9rem var(--f-mono);color:var(--muted);text-align:center;width:1.9em;height:1.9em;border-radius:50%;display:grid;place-items:center}
+.board .top1 .rk{background:var(--gold);color:#3A2A00}.board .top2 .rk{background:var(--silver);color:#22262E}.board .top3 .rk{background:var(--bronze);color:#2E1A0C}
+.board .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.board .nm small{font-size:.7rem;color:var(--accent);font-weight:600;margin-left:4px}
+.board .st{display:inline-flex;align-items:center;gap:2px;font-weight:600;font-size:.85rem}
+.board .st.off{color:var(--muted)}
+.board .pt{font-size:.8rem;color:var(--muted);text-align:right;min-width:5.5em}
+.board .pt b{font-size:1rem;color:var(--ink)}
+.board li.me{background:var(--accent-soft);border-radius:10px;border-top-color:transparent}
+.board li.me+li{border-top-color:transparent}
+.nameform{display:flex;gap:8px;flex-wrap:wrap}
+.nameform input{flex:1;min-width:0;font:400 16px var(--f-body);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.nameform input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.err{color:var(--bad);font-size:.85rem;margin:0}
 nav button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
 button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .panel{display:flex;flex-direction:column;gap:14px}
@@ -184,10 +219,11 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 <body>
 
 <div class="wrap">
-  <header>
-    <div class="brand"><h1>Формулограф</h1><span class="sync">тренажёр формул по физике</span></div>
+  <header class="top">
+    <div class="brand"><h1>Формулограф</h1><button class="flame" id="flame" aria-label="Огонёк: дней подряд"></button></div>
     <nav role="tablist">
       <button role="tab" id="tab-train" aria-selected="true" data-view="train">Тренировка</button>
+      <button role="tab" id="tab-lb" aria-selected="false" data-view="lb">Рейтинг</button>
       <button role="tab" id="tab-stats" aria-selected="false" data-view="stats">Статистика</button>
       <button role="tab" id="tab-ref" aria-selected="false" data-view="ref">Формулы</button>
     </nav>
@@ -249,6 +285,7 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
     <div class="session" id="session"></div>
   </section>
 
+  <section class="panel" id="view-lb" hidden></section>
   <section class="panel" id="view-stats" hidden></section>
   <section class="ref" id="view-ref" hidden></section>
 </div>
@@ -426,11 +463,13 @@ const savePrefs = () => ls.set(LS_KEY + "-prefs", JSON.stringify(prefs));
 
 function persist() { ls.set(LS_KEY, JSON.stringify(state)); }
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-function record(id, r) {
+function record(id, r, auto) {
   const s = state.f[id] || (state.f[id] = { n: 0, ok: 0, mid: 0, bad: 0, last: 0, lastR: null });
   s.n++; s[r === 2 ? "ok" : r === 1 ? "mid" : "bad"]++; s.last = Date.now(); s.lastR = r;
   const d = state.days[dayKey()] || (state.days[dayKey()] = { n: 0, ok: 0, mid: 0 });
   d.n++; if (r === 2) d.ok++; if (r === 1) d.mid++;
+  if (d.pts === undefined) d.pts = (d.ok - (r === 2)) * 10 + (d.mid - (r === 1)) * 5;
+  d.pts += [0, 5, 10][Math.min(r, auto === undefined ? r : auto)];
   state.total++;
   state.log.push({ id, r, t: Date.now() });
   if (state.log.length > 300) state.log = state.log.slice(-300);
@@ -477,7 +516,7 @@ function pick() {
 
 /* ---------- Ход тренировки ---------- */
 const $ = id => document.getElementById(id);
-let phase = "draw", grade = null;
+let phase = "draw", grade = null, lastAuto = 0;
 /* ---------- Редактор формулы (клавиатура) ---------- */
 const SLOTS = { frac: ["a", "b"], sqrt: ["a"], sub: ["a"], sup: ["a"] };
 let eroot = [], ecur = { list: eroot, i: 0 }, ereg = [];
@@ -754,6 +793,7 @@ function reveal(gaveUp) {
   {
     $("kbWrap").hidden = true;
     const r = gaveUp ? { verdict: 0 } : checkTyped(eroot, current.src);
+    lastAuto = r.verdict;
     const box = $("ai");
     box.hidden = !!gaveUp; box.className = "ai " + ["bad", "mid", "ok"][r.verdict];
     $("aiText").textContent = r.verdict === 2 ? "Верно!" : r.verdict === 1
@@ -768,7 +808,8 @@ function reveal(gaveUp) {
 }
 function commit() {
   if (grade === null) return;
-  record(current.id, grade);
+  record(current.id, grade, lastAuto);
+  renderFlame(); scheduleSync();
   sessionStats.n++; if (grade === 2) sessionStats.ok++; if (grade === 1) sessionStats.mid++;
   renderSession(); nextQuestion();
 }
@@ -879,7 +920,7 @@ function renderStats() {
   const dw = $("drillWeak"); if (dw) dw.onclick = () => { mode = "weak"; prefs.mode = mode; secFilter = "all"; secSel.value = "all"; prefs.sec = "all"; savePrefs(); syncMode(); recent = []; deck = shuffle(weak.map(x => x.f.id)); nextQuestion(); show("train"); };
   $("resetBtn").onclick = () => {
     $("danger").innerHTML = `<span>Удалить все ${tot} ${plural(tot,"попытку","попытки","попыток")} без возможности восстановить?</span><button class="btn warn" id="resetYes">Да, сбросить</button><button class="btn" id="resetNo">Отмена</button>`;
-    $("resetYes").onclick = () => { state = blank(); persist(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
+    $("resetYes").onclick = () => { state = blank(); persist(); renderFlame(); syncScore(); sessionStats = { n: 0, ok: 0, mid: 0 }; renderSession(); renderStats(); };
     $("resetNo").onclick = renderStats;
   };
 }
@@ -896,13 +937,146 @@ function renderRef() {
 let activeView = "train";
 function show(v) {
   activeView = v;
-  for (const x of ["train", "stats", "ref"]) { $("view-" + x).hidden = x !== v; $("tab-" + x).setAttribute("aria-selected", String(x === v)); }
-  if (v === "stats") renderStats(); if (v === "ref") renderRef();
+  for (const x of ["train", "lb", "stats", "ref"]) { $("view-" + x).hidden = x !== v; $("tab-" + x).setAttribute("aria-selected", String(x === v)); }
+  if (v === "stats") renderStats(); if (v === "ref") renderRef(); if (v === "lb") renderLb();
 }
+$("flame").onclick = () => show("lb");
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => show(b.dataset.view));
 function refreshAll() { if (activeView === "stats") renderStats(); if (activeView === "ref") renderRef(); if (current && phase === "draw") $("qHist").textContent = histText(current.id); }
 
+/* ---------- Огонёк и рейтинг ---------- */
+// Supabase: адрес проекта и публичный ключ (anon / publishable). Таблицы — в supabase.sql.
+const LEADERBOARD = { url: "", key: "" };
+const lbOn = () => !!(LEADERBOARD.url && LEADERBOARD.key);
+const ME_KEY = LS_KEY + "-player";
+const randHex = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(x => x.toString(16).padStart(2, "0")).join(""); };
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : randHex(16).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-4$3-a$4-$5").slice(0, 36));
+let me = (() => { try { const m = JSON.parse(ls.get(ME_KEY) || "null"); if (m && m.id && m.secret) return m; } catch {} return null; })();
+if (!me) { me = { id: uuid(), secret: randHex(16), name: "" }; ls.set(ME_KEY, JSON.stringify(me)); }
+const saveMe = () => ls.set(ME_KEY, JSON.stringify(me));
+
+const dayPts = v => v ? (v.pts !== undefined ? v.pts : v.ok * 10 + v.mid * 5) : 0;
+function weekStart(d = new Date()) { const x = new Date(d); const k = (x.getDay() + 6) % 7; x.setDate(x.getDate() - k); return x; }
+function weekDays() { const out = [], s = weekStart(), t = dayKey(); for (let i = 0; i < 7; i++) { const d = new Date(s); d.setDate(s.getDate() + i); const k = dayKey(d); out.push(k); if (k === t) break; } return out; }
+const myWeekPts = () => weekDays().reduce((a, k) => a + dayPts(state.days[k]), 0);
+const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
+
+const FLAME = `<svg class="fl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.3 2.2c.6 3.1-1.6 4.6-1.6 7 0 1.3.9 2.3 2.1 2.3 1.5 0 2.2-1.2 2.1-2.8 2.1 1.7 3.4 4.1 3.4 6.6A6.3 6.3 0 0 1 12 21.8a6.3 6.3 0 0 1-6.3-6.1c0-4.5 3.9-7.1 6.6-13.5z"/><path class="core" d="M12 21.8a3.3 3.3 0 0 1-3.3-3.3c0-2 1.5-3 2.6-4.9.4 1.4 1.2 2 2 2.5.9.6 2 1.3 2 2.6a3.3 3.3 0 0 1-3.3 3.1z"/></svg>`;
+function renderFlame() {
+  const n = streak(), today = !!state.days[dayKey()], el = $("flame");
+  el.innerHTML = `${FLAME}<b>${n}</b>`;
+  el.classList.toggle("off", !today);
+  el.title = today ? `${n} ${plural(n, "день", "дня", "дней")} подряд` : n ? `Серия ${n} ${plural(n, "день", "дня", "дней")} — позанимайся сегодня, чтобы не прервать` : "Позанимайся сегодня, чтобы зажечь огонёк";
+}
+
+async function api(path, opts = {}) {
+  const r = await fetch(LEADERBOARD.url.replace(/\/$/, "") + "/rest/v1/" + path, {
+    ...opts, headers: { apikey: LEADERBOARD.key, "Content-Type": "application/json", ...(opts.headers || {}) }
+  });
+  if (!r.ok) throw new Error(r.status + " " + (await r.text()).slice(0, 200));
+  return r.status === 204 ? null : r.json().catch(() => null);
+}
+let syncTimer = null, syncing = Promise.resolve();
+function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(() => syncScore(), 1200); }
+function syncScore() {
+  if (!lbOn() || !me.name) return Promise.resolve();
+  syncing = syncing.then(async () => {
+    const st = streak();
+    for (const k of [yesterdayKey(), dayKey()]) {
+      const v = state.days[k];
+      if (!v && k !== dayKey()) continue;
+      await api("rpc/submit_score", { method: "POST", body: JSON.stringify({
+        p_id: me.id, p_secret: me.secret, p_name: me.name, p_day: k,
+        p_points: dayPts(v), p_correct: v ? v.ok : 0, p_attempts: v ? v.n : 0, p_streak: k === dayKey() ? st : (v ? st : 0)
+      }) });
+    }
+  }).catch(e => { console.warn("рейтинг:", e.message); });
+  return syncing;
+}
+
+let renaming = false;
+let lbPeriod = prefs.lbPeriod === "week" ? "week" : "day", lbRows = null, lbErr = null, lbLoading = false;
+async function loadBoard() {
+  if (!lbOn()) return;
+  lbLoading = true; lbErr = null; renderLbList();
+  try {
+    await syncing;
+    const from = weekDays()[0];
+    lbRows = await api(`scores?select=player_id,name,day,points,attempts,streak&day=gte.${from}&order=day.desc&limit=5000`);
+  } catch (e) { lbErr = e.message; }
+  lbLoading = false; renderLbList();
+}
+function boardEntries() {
+  const today = dayKey(), yest = yesterdayKey(), by = new Map();
+  for (const r of lbRows || []) {
+    if (lbPeriod === "day" && r.day !== today) continue;
+    const e = by.get(r.player_id) || { id: r.player_id, name: r.name, pts: 0, n: 0, last: "", streak: 0 };
+    e.pts += r.points; e.n += r.attempts;
+    if (r.day > e.last) { e.last = r.day; e.name = r.name; e.streak = r.day >= yest ? r.streak : 0; }
+    by.set(r.player_id, e);
+  }
+  return [...by.values()].filter(e => e.n > 0 || e.id === me.id).sort((a, b) => b.pts - a.pts || b.n - a.n || a.name.localeCompare(b.name));
+}
+function renderLbList() {
+  const el = $("lbList"); if (!el) return;
+  if (lbErr) { el.innerHTML = `<p class="empty">Не удалось загрузить рейтинг. Проверь интернет и попробуй ещё раз.</p><div><button class="btn" id="lbRetry">Обновить</button></div>`; $("lbRetry").onclick = loadBoard; return; }
+  if (!lbRows) { el.innerHTML = `<p class="empty">Загружаю рейтинг…</p>`; return; }
+  const list = boardEntries();
+  if (!list.length) { el.innerHTML = `<p class="empty">${lbPeriod === "day" ? "Сегодня ещё никто не решал." : "На этой неделе ещё никто не решал."} Будь первым!</p>`; return; }
+  let rank = 0, prev = null;
+  el.innerHTML = `<ol class="board">${list.map((e, i) => {
+    if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
+    const mine = e.id === me.id;
+    return `<li class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
+      <span class="rk">${rank}</span>
+      <span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}</span>
+      <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
+      <span class="pt"><b>${e.pts}</b> ${plural(e.pts, "очко", "очка", "очков")}</span></li>`;
+  }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
+}
+function renderLb() {
+  const el = $("view-lb");
+  if (!lbOn()) {
+    el.innerHTML = `<div class="card sec"><h2>Рейтинг ещё не подключён</h2><p class="empty">Для общего рейтинга нужен сервер, где хранятся очки всех игроков. Как только его подключат, здесь появятся рейтинги за день и за неделю.</p></div>`;
+    return;
+  }
+  if (!me.name || renaming) {
+    el.innerHTML = `<div class="card sec"><h2>${renaming ? "Новый ник" : "Придумай ник"}</h2><p class="empty">Под этим именем тебя увидят в рейтинге. Его можно поменять позже.</p>
+      <form class="nameform" id="nameForm"><input id="lbName" maxlength="20" autocomplete="nickname" placeholder="Например, Ньютон2008" aria-label="Ник"><button class="btn primary">Сохранить</button></form>
+      <p class="err" id="nameErr" hidden></p></div>`;
+    $("nameForm").onsubmit = e => {
+      e.preventDefault();
+      const v = $("lbName").value.trim().replace(/\s+/g, " ");
+      if (v.length < 2) { $("nameErr").hidden = false; $("nameErr").textContent = "Ник должен быть от 2 до 20 символов."; return; }
+      me.name = v; renaming = false; saveMe(); syncScore(); renderLb();
+    };
+    if (renaming) $("lbName").value = me.name;
+    return;
+  }
+  const n = streak();
+  el.innerHTML = `<div class="card sec mecard">
+      <div class="who"><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button></div>
+      <div class="mestats">
+        <div><span class="v flamev${state.days[dayKey()] ? "" : " off"}">${FLAME}${n}</span><span class="k">${plural(n, "день", "дня", "дней")} подряд</span></div>
+        <div><span class="v">${dayPts(state.days[dayKey()])}</span><span class="k">очков сегодня</span></div>
+        <div><span class="v">${myWeekPts()}</span><span class="k">очков за неделю</span></div>
+      </div>
+      <p class="hintline">Верно — 10 очков, с недочётом — 5. Считается автопроверка.</p>
+    </div>
+    <div class="card sec"><header><div class="seg2" role="group" aria-label="Период">
+        <button id="lbDay" aria-pressed="${lbPeriod === "day"}">Сегодня</button><button id="lbWeek" aria-pressed="${lbPeriod === "week"}">Неделя</button></div>
+        <button class="link" id="lbRefresh">Обновить</button></header>
+      <div id="lbList"></div></div>`;
+  $("renameBtn").onclick = () => { renaming = true; renderLb(); };
+  $("lbDay").onclick = () => { lbPeriod = "day"; prefs.lbPeriod = "day"; savePrefs(); $("lbDay").setAttribute("aria-pressed", "true"); $("lbWeek").setAttribute("aria-pressed", "false"); renderLbList(); };
+  $("lbWeek").onclick = () => { lbPeriod = "week"; prefs.lbPeriod = "week"; savePrefs(); $("lbWeek").setAttribute("aria-pressed", "true"); $("lbDay").setAttribute("aria-pressed", "false"); renderLbList(); };
+  $("lbRefresh").onclick = loadBoard;
+  renderLbList(); loadBoard();
+}
+
 renderSession();
+renderFlame();
+syncScore();
 nextQuestion();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
