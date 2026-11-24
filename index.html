@@ -2179,46 +2179,10 @@ function medalTitle(m) {
   if (m.k === "h") return `Хет-трик · 3 золота подряд, по ${fmtDay(m.d)}`;
   return `Доминатор · 5+ золотых дней, ${wk(m.d)}`;
 }
-// у каждой медали своя форма и значок
-const METALS = { 1: ["#FFE58A", "#F2B81F", "#A87708"], 2: ["#F4F7FB", "#B9C3D1", "#6F7B8C"], 3: ["#F6C08F", "#C77D3E", "#7D4718"] };
+// картинки медалей лежат в папке medals/
 function medalSVG(m, size = 34) {
-  const id = "md" + m.k + m.p;
-  const [hi, mid, dk] = m.k === "h" || m.k === "x" ? METALS[1] : METALS[m.p];
-  const grad = `<defs><radialGradient id="${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="${hi}"/><stop offset=".55" stop-color="${mid}"/><stop offset="1" stop-color="${dk}"/></radialGradient></defs>`;
-  const ribbon = (a, b) => `<path d="M15 1h8l4 15h-8z" fill="${a}"/><path d="M33 1h-8l-4 15h8z" fill="${b}"/>`;
-  const fill = `fill="url(#${id})" stroke="${dk}" stroke-width="1.6"`;
-  let body = "";
-  if (m.k === "d" && m.p === 1) { // солнце с молнией
-    let rays = ""; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, x = 24 + Math.cos(a) * 17.5, y = 31 + Math.sin(a) * 17.5, x1 = 24 + Math.cos(a - .14) * 13, y1 = 31 + Math.sin(a - .14) * 13, x2 = 24 + Math.cos(a + .14) * 13, y2 = 31 + Math.sin(a + .14) * 13; rays += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x.toFixed(1)} ${y.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}z" fill="${mid}"/>`; }
-    body = ribbon("#E23B3B", "#FF6A5C") + rays + `<circle cx="24" cy="31" r="12" ${fill}/><path d="M25.5 23.5 19 32.5h4.5l-1.5 6 7-9.5h-4.6z" fill="${dk}"/>`;
-  } else if (m.k === "d" && m.p === 2) { // атом
-    body = ribbon("#3B6FE2", "#5C8CFF") + `<circle cx="24" cy="31" r="14" ${fill}/>` +
-      [0, 60, 120].map(r => `<ellipse cx="24" cy="31" rx="10" ry="4" fill="none" stroke="${dk}" stroke-width="1.4" transform="rotate(${r} 24 31)"/>`).join("") + `<circle cx="24" cy="31" r="2.2" fill="${dk}"/>`;
-  } else if (m.k === "d" && m.p === 3) { // магнит
-    body = ribbon("#2E9E6A", "#45C489") + `<circle cx="24" cy="31" r="14" ${fill}/><path d="M17.5 24v8a6.5 6.5 0 0 0 13 0v-8h-4v8a2.5 2.5 0 0 1-5 0v-8z" fill="${dk}"/><path d="M17.5 24h4v3h-4zM26.5 24h4v3h-4z" fill="#F4F7FB"/>`;
-  } else if (m.k === "w" && m.p === 1) { // звезда
-    const pts = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 7.5 : 16.5; pts.push(`${(24 + Math.cos(a) * r).toFixed(1)},${(31 + Math.sin(a) * r).toFixed(1)}`); }
-    body = ribbon("#2A4FD0", "#E23B3B") + `<polygon points="${pts.join(" ")}" ${fill} stroke-linejoin="round"/><text x="24" y="35" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="10" fill="${dk}">1</text>`;
-  } else if (m.k === "w" && m.p === 2) { // шестиугольник с пламенем
-    const pts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; pts.push(`${(24 + Math.cos(a) * 15).toFixed(1)},${(31 + Math.sin(a) * 15).toFixed(1)}`); }
-    body = ribbon("#2A4FD0", "#5C8CFF") + `<polygon points="${pts.join(" ")}" ${fill} stroke-linejoin="round"/><path d="M24 22c1 4-3 5-3 9a3.5 3.5 0 0 0 7 0c0-2-1-3-1-4 2 1.5 3 3.5 3 5.5a6 6 0 0 1-12 0c0-5 5-6.5 6-10.5z" fill="${dk}"/>`;
-  } else if (m.k === "w" && m.p === 3) { // щит
-    body = ribbon("#2A4FD0", "#7A93E8") + `<path d="M24 16.5l12 4v9c0 8-5.5 12.5-12 15-6.5-2.5-12-7-12-15v-9z" ${fill} stroke-linejoin="round"/><text x="24" y="35" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="11" fill="${dk}">3</text>`;
-  } else if (m.k === "m") { // месяц: розетка с зубчиками и космосом
-    let q = []; for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16, r = i % 2 ? 14 : 16.8; q.push(`${(24 + Math.cos(a) * r).toFixed(1)},${(31 + Math.sin(a) * r).toFixed(1)}`); }
-    const ic = m.p === 1 // Сатурн
-      ? `<circle cx="24" cy="31" r="5.6" fill="${dk}"/><ellipse cx="24" cy="31" rx="11" ry="3.4" fill="none" stroke="${dk}" stroke-width="1.8" transform="rotate(-20 24 31)"/><path d="M18.9 29.6a5.6 5.6 0 0 1 10.2-3.6" fill="none" stroke="${mid}" stroke-width="1.6" transform="rotate(-20 24 31)"/>`
-      : m.p === 2 // комета
-      ? `<circle cx="28.5" cy="27" r="3.6" fill="${dk}"/><path d="M26 29.6 16 38M27.2 30.6 19 39.5M25 28.3 15.5 35" stroke="${dk}" stroke-width="1.6" stroke-linecap="round"/>`
-      : `<path d="M27.5 22.5a9 9 0 1 0 3.5 14.5 7.2 7.2 0 0 1-3.5-14.5z" fill="${dk}"/><circle cx="31" cy="25" r="1.2" fill="${dk}"/>`; // луна
-    body = ribbon("#6B2FD6", "#F5C542") + `<polygon points="${q.join(" ")}" ${fill} stroke-linejoin="round"/><circle cx="24" cy="31" r="11.5" fill="none" stroke="${dk}" stroke-opacity=".45" stroke-width="1"/>` + ic;
-  } else if (m.k === "h") { // хет-трик: три звезды
-    const star = (cx, cy, r) => { const q = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; q.push(`${(cx + Math.cos(a) * rr).toFixed(1)},${(cy + Math.sin(a) * rr).toFixed(1)}`); } return `<polygon points="${q.join(" ")}" fill="${dk}"/>`; };
-    body = ribbon("#8B5CFF", "#FF5EA8") + `<circle cx="24" cy="31" r="14.5" ${fill}/>` + star(17.5, 32, 4.6) + star(24, 27, 5.6) + star(30.5, 32, 4.6);
-  } else { // доминатор: корона
-    body = ribbon("#111827", "#F5C542") + `<circle cx="24" cy="31" r="14.5" ${fill}/><path d="M15.5 36.5h17l1.5-10-5 3.5-5-7-5 7-5-3.5z" fill="${dk}"/><circle cx="24" cy="21.8" r="1.6" fill="${dk}"/>`;
-  }
-  return `<svg class="medal" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${grad}${body}</svg>`;
+  const key = m.k === "h" || m.k === "x" ? m.k : m.k + m.p;
+  return `<img class="medal" src="medals/${key}.webp" width="${size}" height="${size}" alt="" decoding="async">`;
 }
 const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, mg: 0, ms: 0, mb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
 let medalsBusy = false;
@@ -2278,11 +2242,11 @@ function togglePin(id) {
 function medalsSectionHTML(st, mine) {
   const c = st.med, total = Object.values(c).reduce((a, b) => a + b, 0);
   const counts = [["x", 1, "x", "доминатор"], ["h", 1, "h", "хет-трик"], ["m", 1, "mg", "месяца"], ["m", 2, "ms", "месяца"], ["m", 3, "mb", "месяца"], ["w", 1, "wg", "недели"], ["w", 2, "ws", "недели"], ["w", 3, "wb", "недели"], ["d", 1, "dg", "дня"], ["d", 2, "ds", "дня"], ["d", 3, "db", "дня"]]
-    .filter(x => c[x[2]]).map(([k, p, key, cap]) => `<span class="mcount">${medalSVG({ k, p }, 30)}<b>×${c[key]}</b><small>${cap}</small></span>`).join("");
+    .filter(x => c[x[2]]).map(([k, p, key, cap]) => `<span class="mcount">${medalSVG({ k, p }, 36)}<b>×${c[key]}</b><small>${cap}</small></span>`).join("");
   const list = mine ? state.medals || [] : st.recent;
   const pins = mine ? state.pinned || [] : st.pin.map(medalId);
   const grid = list.map(m => { const id = medalId(m), on = pins.includes(id);
-    return `<${mine ? "button" : "div"} class="mitem${on ? " pinned" : ""}" ${mine ? `data-mid="${esc(id)}" aria-pressed="${on}"` : ""}>${medalSVG(m, 40)}<span>${esc(medalTitle(m))}</span>${on ? `<small>выставлена</small>` : ""}</${mine ? "button" : "div"}>`; }).join("");
+    return `<${mine ? "button" : "div"} class="mitem${on ? " pinned" : ""}" ${mine ? `data-mid="${esc(id)}" aria-pressed="${on}"` : ""}>${medalSVG(m, 56)}<span>${esc(medalTitle(m))}</span>${on ? `<small>выставлена</small>` : ""}</${mine ? "button" : "div"}>`; }).join("");
   return `<div class="card sec"><header><h2>Медали</h2><span>${total ? `всего ${total}` : ""}</span></header>
     ${total ? `<div class="mcounts">${counts}</div>` : `<p class="empty">${mine ? "Займи 1–3 место в рейтинге за день, неделю или месяц — медаль появится здесь на следующий день." : "Пока нет медалей."}</p>`}
     ${mine && list.length ? `<p class="hintline">Нажми на медаль, чтобы выставить её в профиле (до 3 штук).</p>` : ""}
@@ -2351,7 +2315,7 @@ function renderProfile(st, name, avatar, id) {
   const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}${statusHTML(avatar)}</span>${olHTML(id)}
     ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
     ${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}
-    ${st && st.pin.length ? `<div class="pins">${st.pin.map(m => `<span title="${esc(medalTitle(m))}">${medalSVG(m, 40)}</span>`).join("")}</div>` : ""}</div>`;
+    ${st && st.pin.length ? `<div class="pins">${st.pin.map(m => `<span title="${esc(medalTitle(m))}">${medalSVG(m, 48)}</span>`).join("")}</div>` : ""}</div>`;
   if (!st) {
     el.innerHTML = back + head + `<div class="card sec"><p class="empty">Профиль ещё не заполнился. Он появится, когда ${esc(name)} откроет обновлённое приложение.</p></div>`;
     wireProfile(); return;
