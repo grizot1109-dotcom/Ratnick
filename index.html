@@ -328,7 +328,22 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 @keyframes champ{to{box-shadow:inset 0 0 0 1.5px rgba(245,197,66,1),0 0 26px rgba(245,197,66,.65)}}
 @media (prefers-reduced-motion:reduce){.board li.champ{animation:none}}
 .crown{margin-right:4px;display:inline-block;transform:translateY(-1px)}
-.pins{display:flex;gap:6px;width:100%}
+.profbar{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap}
+.profbar .btn{padding-left:14px;padding-right:14px}
+.pins{display:flex;gap:3px;margin-left:auto}
+.pin{width:36px;height:36px;display:grid;place-items:center;flex:none}
+.pin.empty{border:1.5px dashed var(--line);border-radius:50%;background:none;color:var(--muted);font:500 1.1rem var(--f-body);cursor:pointer;width:30px;height:30px;margin:3px;padding:0}
+.mcat{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.mcat summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}
+.mcat summary::-webkit-details-marker{display:none}
+.mcat summary::after{content:" ▾"}.mcat[open] summary::after{content:" ▴"}
+.mkinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:8px}
+.mkind{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--sunk)}
+.mkind div{display:flex;flex-direction:column;gap:1px;font-size:.8rem;color:var(--muted)}
+.mkind b{color:var(--ink);font-size:.9rem}
+.mkind small{font-weight:600;color:#B8891A}
+.mkind.locked .medal{filter:grayscale(1);opacity:.45}
+.mkind.locked small{color:var(--muted)}
 .mcounts{display:flex;flex-wrap:wrap;gap:10px 16px}
 .mcount{display:inline-flex;align-items:center;gap:4px;font-size:.85rem}
 .mcount small{color:var(--muted);font-size:.72rem}
@@ -2186,6 +2201,7 @@ function medalSVG(m, size = 34) {
 }
 const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, mg: 0, ms: 0, mb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
 let medalsBusy = false;
+const MAX_PINS = 5;
 async function updateMedals(force) {
   if (!lbOn() || !me.name || medalsBusy) return;
   const today = dayKey();
@@ -2235,22 +2251,29 @@ async function updateMedals(force) {
 function togglePin(id) {
   state.pinned = state.pinned || [];
   if (state.pinned.includes(id)) state.pinned = state.pinned.filter(x => x !== id);
-  else if (state.pinned.length >= 3) { toast("<span>Выставить можно до 3 медалей — сначала убери одну</span>"); return; }
+  else if (state.pinned.length >= MAX_PINS) { toast(`<span>Выставить можно до ${MAX_PINS} медалей — сначала убери одну</span>`); return; }
   else state.pinned.push(id);
   persist(); syncProfile(); openProfile(me.id, me.name, myAv());
 }
-function medalsSectionHTML(st, mine) {
-  const c = st.med, total = Object.values(c).reduce((a, b) => a + b, 0);
-  const counts = [["x", 1, "x", "доминатор"], ["h", 1, "h", "хет-трик"], ["m", 1, "mg", "месяца"], ["m", 2, "ms", "месяца"], ["m", 3, "mb", "месяца"], ["w", 1, "wg", "недели"], ["w", 2, "ws", "недели"], ["w", 3, "wb", "недели"], ["d", 1, "dg", "дня"], ["d", 2, "ds", "дня"], ["d", 3, "db", "дня"]]
-    .filter(x => c[x[2]]).map(([k, p, key, cap]) => `<span class="mcount">${medalSVG({ k, p }, 36)}<b>×${c[key]}</b><small>${cap}</small></span>`).join("");
-  const list = mine ? state.medals || [] : st.recent;
-  const pins = mine ? state.pinned || [] : st.pin.map(medalId);
+// все виды медалей — для каталога «Какие медали бывают»
+const MEDAL_KINDS = [
+  ["d", 1, "Золото дня", "1 место в рейтинге за день"], ["d", 2, "Серебро дня", "2 место в рейтинге за день"], ["d", 3, "Бронза дня", "3 место в рейтинге за день"],
+  ["w", 1, "Золото недели", "1 место в рейтинге за неделю"], ["w", 2, "Серебро недели", "2 место в рейтинге за неделю"], ["w", 3, "Бронза недели", "3 место в рейтинге за неделю"],
+  ["m", 1, "Золото месяца", "1 место в рейтинге за месяц"], ["m", 2, "Серебро месяца", "2 место в рейтинге за месяц"], ["m", 3, "Бронза месяца", "3 место в рейтинге за месяц"],
+  ["h", 1, "Хет-трик", "1 место за день три дня подряд"], ["x", 1, "Доминатор", "1 место за день в 5 и больше днях одной недели"]];
+const medalKey = (k, p) => k === "h" || k === "x" ? k : k + "gsb"[p - 1];
+function medalsSectionHTML(st) {
+  const c = medalCounts(state.medals || []), total = Object.values(c).reduce((a, b) => a + b, 0);
+  const list = state.medals || [], pins = state.pinned || [];
   const grid = list.map(m => { const id = medalId(m), on = pins.includes(id);
-    return `<${mine ? "button" : "div"} class="mitem${on ? " pinned" : ""}" ${mine ? `data-mid="${esc(id)}" aria-pressed="${on}"` : ""}>${medalSVG(m, 56)}<span>${esc(medalTitle(m))}</span>${on ? `<small>выставлена</small>` : ""}</${mine ? "button" : "div"}>`; }).join("");
-  return `<div class="card sec"><header><h2>Медали</h2><span>${total ? `всего ${total}` : ""}</span></header>
-    ${total ? `<div class="mcounts">${counts}</div>` : `<p class="empty">${mine ? "Займи 1–3 место в рейтинге за день, неделю или месяц — медаль появится здесь на следующий день." : "Пока нет медалей."}</p>`}
-    ${mine && list.length ? `<p class="hintline">Нажми на медаль, чтобы выставить её в профиле (до 3 штук).</p>` : ""}
-    ${grid ? `<div class="mgrid">${grid}</div>` : ""}</div>`;
+    return `<button class="mitem${on ? " pinned" : ""}" data-mid="${esc(id)}" aria-pressed="${on}">${medalSVG(m, 56)}<span>${esc(medalTitle(m))}</span>${on ? `<small>выставлена</small>` : ""}</button>`; }).join("");
+  const cat = MEDAL_KINDS.map(([k, p, n, d]) => { const have = c[medalKey(k, p)];
+    return `<div class="mkind${have ? "" : " locked"}">${medalSVG({ k, p }, 52)}<div><b>${n}</b><span>${d}</span><small>${have ? `есть ×${have}` : "пока нет"}</small></div></div>`; }).join("");
+  return `<div class="card sec" id="medalsSec"><header><h2>Мои медали</h2><span>${total ? `всего ${total}` : ""}</span></header>
+    ${total ? `<p class="hintline">Нажми на медаль, чтобы выставить её в профиле (до ${MAX_PINS} штук). Другие игроки видят только выставленные.</p><div class="mgrid">${grid}</div>`
+      : `<p class="empty">Займи 1–3 место в рейтинге за день, неделю или месяц — медаль появится здесь на следующий день.</p>`}
+    <details class="mcat"><summary>Какие медали бывают (${MEDAL_KINDS.length})</summary>
+      <p class="hintline">Медали дают, только если в этот день, неделю или месяц играли хотя бы двое.</p><div class="mkinds">${cat}</div></details></div>`;
 }
 
 /* ---------- Профили ----------
@@ -2269,7 +2292,7 @@ function myProfileStats() {
     pts: Object.values(state.days).reduce((a, d) => a + dayPts(d), 0), active: days.length,
     streak: streak(), bestStreak: bestStreak(), bestCombo: state.bestCombo || 0,
     learned: Object.values(state.f).filter(s => boxOf(s) >= 3).length, seen: F.filter(f => state.f[f.id]).length,
-    med: medalCounts(state.medals || []), pin: (state.medals || []).filter(m => (state.pinned || []).includes(medalId(m))).slice(0, 3), recent: (state.medals || []).slice(0, 12),
+    pin: (state.medals || []).filter(m => (state.pinned || []).includes(medalId(m))).slice(0, MAX_PINS),
     duelWins: (state.duelWins || []).length, ach: Object.keys(state.ach || {}).filter(id => ACH.some(a => a.id === id)), sec, week
   };
 }
@@ -2292,9 +2315,7 @@ function cleanStats(x) {
     since: /^\d{4}-\d{2}-\d{2}$/.test(x.since) ? x.since : null, n: num(x.n), ok: num(x.ok), mid: num(x.mid), pts: num(x.pts), active: num(x.active),
     streak: num(x.streak), bestStreak: num(x.bestStreak), bestCombo: num(x.bestCombo), learned: num(x.learned), seen: num(x.seen), duelWins: num(x.duelWins),
     ach: Array.isArray(x.ach) ? x.ach.filter(id => ACH.some(a => a.id === id)) : [], sec,
-    med: Object.fromEntries(["dg", "ds", "db", "wg", "ws", "wb", "mg", "ms", "mb", "h", "x"].map(k => [k, num(x.med && x.med[k], 1e5)])),
-    pin: Array.isArray(x.pin) ? x.pin.filter(validMedal).slice(0, 3).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
-    recent: Array.isArray(x.recent) ? x.recent.filter(validMedal).slice(0, 12).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
+    pin: Array.isArray(x.pin) ? x.pin.filter(validMedal).slice(0, MAX_PINS).map(m => ({ k: m.k, p: m.p, d: m.d })) : [],
     week: Array.isArray(x.week) ? x.week.slice(-7).map(v => num(v)) : []
   };
 }
@@ -2309,13 +2330,19 @@ async function openProfile(id, name, avatar) {
   try { const r = await api(`scores?select=updated_at&player_id=eq.${id}&order=updated_at.desc&limit=1`); const t = r && r[0] ? Date.parse(r[0].updated_at) || 0 : 0; if (t > (lastSeen.get(id) || 0)) lastSeen.set(id, t); } catch (e) {}
   if (profileOf && profileOf.id === id) renderProfile(st, name, avatar, id);
 }
+// выставленные медали в шапке профиля; у себя — ещё и пустые места
+function pinsHTML(st, mine) {
+  const list = mine ? (state.medals || []).filter(m => (state.pinned || []).includes(medalId(m))) : st ? st.pin : [];
+  const items = list.slice(0, MAX_PINS).map(m => `<span class="pin" title="${esc(medalTitle(m))}">${medalSVG(m, 36)}</span>`);
+  if (mine) for (let i = items.length; i < MAX_PINS; i++) items.push(`<button class="pin empty" data-goto="medals" aria-label="Выставить медаль">+</button>`);
+  return items.length ? `<div class="pins">${items.join("")}</div>` : "";
+}
 function renderProfile(st, name, avatar, id) {
   const el = $("view-prof"), mine = id === me.id;
   const back = `<div><button class="link" id="profBack">← Назад</button></div>`;
   const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}${statusHTML(avatar)}</span>${olHTML(id)}
     ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
-    ${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}
-    ${st && st.pin.length ? `<div class="pins">${st.pin.map(m => `<span title="${esc(medalTitle(m))}">${medalSVG(m, 48)}</span>`).join("")}</div>` : ""}</div>`;
+    ${mine || (st && st.pin.length) ? `<div class="profbar">${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}${pinsHTML(st, mine)}</div>` : ""}</div>`;
   if (!st) {
     el.innerHTML = back + head + `<div class="card sec"><p class="empty">Профиль ещё не заполнился. Он появится, когда ${esc(name)} откроет обновлённое приложение.</p></div>`;
     wireProfile(); return;
@@ -2338,7 +2365,7 @@ function renderProfile(st, name, avatar, id) {
   const W = 20, H = 60, max = Math.max(20, ...st.week);
   const lbl = i => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toLocaleDateString("ru-RU", { weekday: "short" }); };
   const bars = st.week.map((v, i) => { const h = v / max * H, x = i * (W + 18) + 6; return `<rect x="${x}" y="${10 + H - h}" width="${W}" height="${Math.max(h, 1)}" rx="3" fill="${v ? "var(--accent)" : "var(--line)"}"/>${v ? `<text x="${x + W / 2}" y="${6 + H - h}" text-anchor="middle">${v}</text>` : ""}<text x="${x + W / 2}" y="${H + 24}" text-anchor="middle">${lbl(i)}</text>`; }).join("");
-  el.innerHTML = back + head + tiles + medalsSectionHTML(st, mine)
+  el.innerHTML = back + head + tiles + (mine ? medalsSectionHTML(st) : "")
     + `<div class="card sec"><header><h2>Энергия за неделю</h2><span>${st.week.reduce((a, b) => a + b, 0)} Дж</span></header><svg class="chart" viewBox="0 0 ${7 * (W + 18)} ${H + 30}" role="img" aria-label="Джоули по дням">${bars}</svg></div>`
     + achs
     + (secRows ? `<div class="card sec"><header><h2>Разделы</h2><span>точность · ответов</span></header><div class="rows">${secRows}</div></div>` : "");
@@ -2349,6 +2376,7 @@ function wireProfile() {
   $("profBack").onclick = () => show(profileBack || "lb");
   const e = $("profEdit"); if (e) e.onclick = () => show("set");
   document.querySelectorAll("#view-prof .mitem[data-mid]").forEach(b => b.onclick = () => togglePin(b.dataset.mid));
+  document.querySelectorAll("#view-prof .pin.empty").forEach(b => b.onclick = () => { const m = $("medalsSec"); if (m) m.scrollIntoView({ behavior: "smooth", block: "start" }); });
 }
 let profileBack = "lb";
 // нажатие на строку в рейтинге или в таблице дуэли открывает профиль
