@@ -60,7 +60,7 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .fl path{fill:var(--flame)}.fl .core{fill:var(--flame-core)}
 .off .fl path{fill:var(--line)}.off .fl .core{fill:var(--muted);opacity:.35}
 .flame.off{color:var(--muted)}
-.mecard .who{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mecard .who{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .nmbig{font-family:var(--f-display);font-size:1.15rem;font-weight:500;overflow-wrap:anywhere}
 .mestats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mestats>div{display:flex;flex-direction:column;background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
@@ -264,6 +264,9 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 /* аватарки */
 .av{width:2.1em;height:2.1em;border-radius:50%;display:inline-grid;place-items:center;flex:none;font:700 .95rem/1 var(--f-body);color:#fff;overflow:hidden;user-select:none}
 .av.emo{font-size:1.15rem}
+img.av{object-fit:cover;background:var(--sunk);display:inline-block}
+.avbtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.avbtns input{display:none}
 .av.big{width:64px;height:64px;font-size:2rem}
 .av.big.letter{font-size:1.6rem}
 .avpick{display:flex;flex-direction:column;gap:12px}
@@ -1399,22 +1402,67 @@ function applySkin(id) {
 /* ---------- Аватарки: эмодзи + цвет кружка, строка "🦊:3" ---------- */
 const AV_EMOJI = ["🦊","🐱","🐶","🐼","🐸","🐧","🦉","🐙","🦄","🐲","🐺","🦁","🐯","🐵","🐨","🐻","🚀","⚡","🔥","💡","🧲","🔭","⚛️","🧪","🌌","🪐","☄️","🌈","🎧","🎮","⚽","🏀","🎸","👾","🤖","😎","🧠","👑","💎","🍕"];
 const AV_COLORS = ["#2A4FD0","#E0567F","#F26A1B","#1E8A55","#8B5CFF","#14A3B8","#C8502D","#D4A017","#4A5568","#111827"];
+const photoCache = new Map(), photoPending = new Set();
+const validPhoto = x => typeof x === "string" && x.length <= 40000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(x);
 function parseAv(a) {
+  if (typeof a === "string" && /^photo:[a-z0-9]{1,12}$/.test(a)) return { photo: true };
   const m = typeof a === "string" ? a.match(/^(.+):(\d)$/u) : null;
   if (!m || !AV_EMOJI.includes(m[1])) return null; // только эмодзи из нашего списка
   return { e: m[1], c: AV_COLORS[+m[2]] || AV_COLORS[0], ci: +m[2] };
 }
 function nameColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
-function avHTML(a, name, cls = "") {
+function avHTML(a, name, cls = "", pid = null) {
   const v = parseAv(a);
-  if (v) return `<span class="av emo ${cls}" style="background:${v.c}" aria-hidden="true">${v.e}</span>`;
+  if (v && v.photo) {
+    const img = pid === me.id || pid === null ? me.photo : photoCache.get(pid);
+    if (validPhoto(img)) return `<img class="av ${cls}" src="${img}" alt="">`;
+  } else if (v) return `<span class="av emo ${cls}" style="background:${v.c}" aria-hidden="true">${v.e}</span>`;
   const letter = (String(name || "?").trim()[0] || "?").toUpperCase();
   return `<span class="av letter ${cls}" style="background:${nameColor(name)}" aria-hidden="true">${esc(letter)}</span>`;
+}
+// фото других игроков подгружаются отдельно и кэшируются до перезагрузки страницы
+async function ensurePhotos(ids, rerender) {
+  const need = [...new Set(ids)].filter(id => id !== me.id && !photoCache.has(id) && !photoPending.has(id) && /^[0-9a-f-]{36}$/.test(id));
+  if (!need.length || !lbOn()) return;
+  need.forEach(id => photoPending.add(id));
+  try {
+    const rows = await api(`avatars?select=player_id,img&player_id=in.(${need.join(",")})`);
+    for (const r of rows || []) if (validPhoto(r.img)) photoCache.set(r.player_id, r.img);
+    rerender();
+  } catch (e) { /* база ещё без фото — остаются буквы */ }
+  need.forEach(id => { photoPending.delete(id); if (!photoCache.has(id)) photoCache.set(id, null); });
+}
+async function uploadPhoto(file) {
+  if (!me.name) { toast("<span>Сначала придумай ник во вкладке «Рейтинг»</span>"); return; }
+  if (!lbOn()) return;
+  const st = $("avStatus"); if (st) st.textContent = "Загружаю…";
+  try {
+    const url = URL.createObjectURL(file), img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const S = 128, c = document.createElement("canvas"); c.width = c.height = S;
+    const g = c.getContext("2d"), m = Math.min(img.naturalWidth, img.naturalHeight);
+    g.drawImage(img, (img.naturalWidth - m) / 2, (img.naturalHeight - m) / 2, m, m, 0, 0, S, S);
+    URL.revokeObjectURL(url);
+    let q = 0.82, data = c.toDataURL("image/jpeg", q);
+    while (data.length > 38000 && q > 0.35) { q -= 0.1; data = c.toDataURL("image/jpeg", q); }
+    await api("rpc/set_avatar", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name, p_img: data }) });
+    me.photo = data; me.avatar = "photo:" + Date.now().toString(36); saveMe(); syncScore(); renderSettings();
+    toast("<span>Фото обновлено</span>");
+  } catch (e) {
+    if (st) st.textContent = "";
+    toast("<span>Не получилось загрузить фото. Проверь интернет и попробуй другое фото.</span>");
+  }
+}
+async function removePhoto() {
+  try { await api("rpc/set_avatar", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name, p_img: "" }) }); } catch (e) {}
+  me.photo = ""; setAvatar("");
 }
 function avatarCardHTML() {
   const v = parseAv(me.avatar) || { e: null, ci: 0 };
   return `<div class="card sec avpick"><header><h2>Аватарка</h2><span>видна в рейтинге и дуэлях</span></header>
-    <div class="avnow">${avHTML(me.avatar, me.name || "?", "big")}<div class="t"><b>${esc(me.name || "Без ника")}</b><small>${v.e ? "Выбери другую картинку или цвет" : "Пока стоит первая буква ника"}</small></div></div>
+    <div class="avnow">${avHTML(me.avatar, me.name || "?", "big")}<div class="t"><b>${esc(me.name || "Без ника")}</b><small>${v.photo ? "Стоит твоё фото" : v.e ? "Выбери другую картинку или цвет" : "Пока стоит первая буква ника"}</small></div></div>
+    ${lbOn() ? `<div class="avbtns"><label class="btn primary" for="avFile">Загрузить фото</label><input type="file" id="avFile" accept="image/*">${v.photo ? `<button class="btn" id="avDel">Убрать фото</button>` : ""}<span class="empty" id="avStatus"></span></div>
+    <p class="hintline">Фото увидят все в рейтинге и дуэлях. Не ставь то, что не хотел бы показывать другим.</p>` : ""}
     <div class="emojis">${AV_EMOJI.map(e => `<button data-e="${e}" aria-pressed="${e === v.e}" aria-label="${e}">${e}</button>`).join("")}</div>
     <div class="colors">${AV_COLORS.map((c, i) => `<button data-c="${i}" style="background:${c}" aria-pressed="${i === v.ci}" aria-label="Цвет ${i + 1}"></button>`).join("")}</div>
     ${v.e ? `<div><button class="link" id="avReset">Вернуть букву ника</button></div>` : ""}</div>`;
@@ -1434,7 +1482,10 @@ function renderSettings() {
   const av = parseAv(me.avatar) || { e: null, ci: 0 };
   $("view-set").querySelectorAll(".emojis button").forEach(b => b.onclick = () => setAvatar(`${b.dataset.e}:${av.ci}`));
   $("view-set").querySelectorAll(".colors button").forEach(b => b.onclick = () => setAvatar(`${av.e || AV_EMOJI[0]}:${b.dataset.c}`));
+  if (av.photo) av.ci = 0;
   const ar = $("avReset"); if (ar) ar.onclick = () => setAvatar("");
+  const af = $("avFile"); if (af) af.onchange = () => { if (af.files && af.files[0]) uploadPhoto(af.files[0]); };
+  const ad = $("avDel"); if (ad) ad.onclick = removePhoto;
   $("view-set").querySelectorAll(".skin").forEach(b => b.onclick = () => {
     prefs.skin = b.dataset.k; savePrefs(); applySkin(prefs.skin); renderSettings();
   });
@@ -1538,11 +1589,12 @@ function renderLbList() {
     if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
     const mine = e.id === me.id;
     return `<li class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
-      <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name)}
+      <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name, "", e.id)}
       <span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
       <span class="pt"><b>${e.pts}</b> ${plural(e.pts, "очко", "очка", "очков")}</span></li>`;
   }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
+  ensurePhotos(list.filter(e => (parseAv(e.avatar) || {}).photo).map(e => e.id), renderLbList);
 }
 function renderLb() {
   const el = $("view-lb");
@@ -1747,9 +1799,10 @@ function renderDuelResults() {
   duelMsg(`<span class="eyebrow">Дуэль · ${esc(d.creator_name)}</span><h2>${head}</h2>
     ${list.length < 2 ? `<p class="empty">Отправь ссылку друзьям: как только кто-то сыграет, здесь появится таблица.</p>` : ""}
     <ol class="board">${list.map((r, i) => `<li class="${r.player_id === me.id ? "me" : ""}${i < 3 && list.length > 1 ? " top" + (i + 1) : ""}">
-      <span class="rk">${i + 1}</span>${avHTML(r.player_id === me.id ? me.avatar : r.avatar, r.name)}<span class="nm">${esc(r.name)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
+      <span class="rk">${i + 1}</span>${avHTML(r.player_id === me.id ? me.avatar : r.avatar, r.name, "", r.player_id)}<span class="nm">${esc(r.name)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
       <span class="st">${fmtTime(r.time_ms)}</span><span class="pt"><b>${r.correct}</b> из ${d.formulas.length}</span></li>`).join("")}</ol>
     <div class="actions"><button class="btn primary" id="dShare">Позвать друзей</button><button class="btn" id="dRefresh">Обновить</button><button class="btn" id="dClose">К тренировке</button></div>`);
+  ensurePhotos(list.filter(r => (parseAv(r.avatar) || {}).photo).map(r => r.player_id), renderDuelResults);
   $("dShare").onclick = () => shareDuel(d.code);
   $("dRefresh").onclick = () => { duelData = null; openDuel(d.code); };
   $("dClose").onclick = closeDuel;

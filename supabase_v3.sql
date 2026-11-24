@@ -47,3 +47,27 @@ begin
 end $$;
 revoke all on function public.submit_duel(text, uuid, text, text, int, int, int, text) from public;
 grant execute on function public.submit_duel(text, uuid, text, text, int, int, int, text) to anon, authenticated;
+
+-- Фото-аватарки: маленькая JPEG-картинка (128×128), которую приложение сжимает само.
+create table if not exists public.avatars (
+  player_id uuid primary key references public.players(id) on delete cascade,
+  img text not null check (char_length(img) <= 40000 and img like 'data:image/jpeg;base64,%'),
+  updated_at timestamptz not null default now()
+);
+alter table public.avatars enable row level security;
+drop policy if exists "avatars are public" on public.avatars;
+create policy "avatars are public" on public.avatars for select using (true);
+revoke insert, update, delete on public.avatars from anon, authenticated;
+grant select on public.avatars to anon, authenticated;
+
+create or replace function public.set_avatar(p_id uuid, p_secret text, p_name text, p_img text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform _auth_player(p_id, p_secret, p_name);
+  if p_img is null or p_img = '' then delete from avatars where player_id = p_id; return; end if;
+  if char_length(p_img) > 40000 or p_img !~ '^data:image/jpeg;base64,[A-Za-z0-9+/=]+$' then raise exception 'bad image'; end if;
+  insert into avatars (player_id, img) values (p_id, p_img)
+  on conflict (player_id) do update set img = excluded.img, updated_at = now();
+end $$;
+revoke all on function public.set_avatar(uuid, text, text, text) from public;
+grant execute on function public.set_avatar(uuid, text, text, text) to anon, authenticated;
