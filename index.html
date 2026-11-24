@@ -71,7 +71,7 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .seg2 button{border:0;background:none;color:var(--muted);font:600 .85rem var(--f-body);padding:6px 14px;border-radius:7px;cursor:pointer}
 .seg2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .board{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.board li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.board li{display:grid;grid-template-columns:2.2em 2.1em minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 8px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
 .board li:first-child{border-top:0}
 .board .rk{font:600 .9rem var(--f-mono);color:var(--muted);text-align:center;width:1.9em;height:1.9em;border-radius:50%;display:grid;place-items:center}
 .board .top1 .rk{background:var(--gold);color:#3A2A00}.board .top2 .rk{background:var(--silver);color:#22262E}.board .top3 .rk{background:var(--bronze);color:#2E1A0C}
@@ -261,6 +261,22 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="sakura"] .btn,[data-skin="sakura"] .g,[data-skin="sakura"] .opt{border-radius:14px}
 [data-skin="sakura"] nav button[aria-selected="true"],[data-skin="sakura"] .btn.primary{background:#E0567F;color:#fff;border-color:#E0567F}
 
+/* аватарки */
+.av{width:2.1em;height:2.1em;border-radius:50%;display:inline-grid;place-items:center;flex:none;font:700 .95rem/1 var(--f-body);color:#fff;overflow:hidden;user-select:none}
+.av.emo{font-size:1.15rem}
+.av.big{width:64px;height:64px;font-size:2rem}
+.av.big.letter{font-size:1.6rem}
+.avpick{display:flex;flex-direction:column;gap:12px}
+.avnow{display:flex;align-items:center;gap:14px}
+.avnow .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.avnow .t small{color:var(--muted);font-size:.78rem}
+.emojis{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+.emojis button{aspect-ratio:1;border:1.5px solid var(--line);background:var(--sunk);border-radius:10px;font-size:1.35rem;cursor:pointer;padding:0;display:grid;place-items:center}
+.emojis button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.colors{display:flex;flex-wrap:wrap;gap:8px}
+.colors button{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.colors button[aria-pressed="true"]{border-color:var(--ink)}
+.who .av{cursor:pointer}
 /* настройки */
 .gear{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;padding:0}
 .gear svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -1380,9 +1396,33 @@ function applySkin(id) {
   if (k.id === "note") document.documentElement.removeAttribute("data-skin"); else document.documentElement.setAttribute("data-skin", k.id);
   document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => m.setAttribute("content", k.id === "note" ? (i ? "#0F141D" : "#E9EDF2") : k.bg));
 }
+/* ---------- Аватарки: эмодзи + цвет кружка, строка "🦊:3" ---------- */
+const AV_EMOJI = ["🦊","🐱","🐶","🐼","🐸","🐧","🦉","🐙","🦄","🐲","🐺","🦁","🐯","🐵","🐨","🐻","🚀","⚡","🔥","💡","🧲","🔭","⚛️","🧪","🌌","🪐","☄️","🌈","🎧","🎮","⚽","🏀","🎸","👾","🤖","😎","🧠","👑","💎","🍕"];
+const AV_COLORS = ["#2A4FD0","#E0567F","#F26A1B","#1E8A55","#8B5CFF","#14A3B8","#C8502D","#D4A017","#4A5568","#111827"];
+function parseAv(a) {
+  const m = typeof a === "string" ? a.match(/^(.+):(\d)$/u) : null;
+  if (!m || !AV_EMOJI.includes(m[1])) return null; // только эмодзи из нашего списка
+  return { e: m[1], c: AV_COLORS[+m[2]] || AV_COLORS[0], ci: +m[2] };
+}
+function nameColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
+function avHTML(a, name, cls = "") {
+  const v = parseAv(a);
+  if (v) return `<span class="av emo ${cls}" style="background:${v.c}" aria-hidden="true">${v.e}</span>`;
+  const letter = (String(name || "?").trim()[0] || "?").toUpperCase();
+  return `<span class="av letter ${cls}" style="background:${nameColor(name)}" aria-hidden="true">${esc(letter)}</span>`;
+}
+function avatarCardHTML() {
+  const v = parseAv(me.avatar) || { e: null, ci: 0 };
+  return `<div class="card sec avpick"><header><h2>Аватарка</h2><span>видна в рейтинге и дуэлях</span></header>
+    <div class="avnow">${avHTML(me.avatar, me.name || "?", "big")}<div class="t"><b>${esc(me.name || "Без ника")}</b><small>${v.e ? "Выбери другую картинку или цвет" : "Пока стоит первая буква ника"}</small></div></div>
+    <div class="emojis">${AV_EMOJI.map(e => `<button data-e="${e}" aria-pressed="${e === v.e}" aria-label="${e}">${e}</button>`).join("")}</div>
+    <div class="colors">${AV_COLORS.map((c, i) => `<button data-c="${i}" style="background:${c}" aria-pressed="${i === v.ci}" aria-label="Цвет ${i + 1}"></button>`).join("")}</div>
+    ${v.e ? `<div><button class="link" id="avReset">Вернуть букву ника</button></div>` : ""}</div>`;
+}
+function setAvatar(a) { me.avatar = a; saveMe(); syncScore(); renderSettings(); }
 function renderSettings() {
   const cur = skinNow();
-  $("view-set").innerHTML = `<div class="card sec"><header><h2>Тема оформления</h2><span>сохраняется на этом телефоне</span></header>
+  $("view-set").innerHTML = avatarCardHTML() + `<div class="card sec"><header><h2>Тема оформления</h2><span>сохраняется на этом телефоне</span></header>
     <div class="skins">${SKINS.map(k => {
       const grad = k.accent2 ? `linear-gradient(90deg,${k.accent},${k.accent2})` : k.accent;
       const bg = k.grid ? `${k.bg} linear-gradient(rgba(200,80,45,.18) 1px,transparent 1px) 0 0/10px 10px` : k.bg;
@@ -1391,6 +1431,10 @@ function renderSettings() {
         <span class="nm2">${k.name}<small>${k.note}</small></span></button>`;
     }).join("")}</div></div>
     <div class="card sec"><h2>Что ещё</h2><p class="empty">Ник меняется во вкладке «Рейтинг», статистику можно сбросить во вкладке «Статистика».</p></div>`;
+  const av = parseAv(me.avatar) || { e: null, ci: 0 };
+  $("view-set").querySelectorAll(".emojis button").forEach(b => b.onclick = () => setAvatar(`${b.dataset.e}:${av.ci}`));
+  $("view-set").querySelectorAll(".colors button").forEach(b => b.onclick = () => setAvatar(`${av.e || AV_EMOJI[0]}:${b.dataset.c}`));
+  const ar = $("avReset"); if (ar) ar.onclick = () => setAvatar("");
   $("view-set").querySelectorAll(".skin").forEach(b => b.onclick = () => {
     prefs.skin = b.dataset.k; savePrefs(); applySkin(prefs.skin); renderSettings();
   });
@@ -1441,12 +1485,14 @@ function syncScore() {
       const v = state.days[k];
       if (!v && k !== dayKey()) continue;
       const body = { p_id: me.id, p_secret: me.secret, p_name: me.name, p_day: k,
-        p_points: dayPts(v), p_correct: v ? v.ok : 0, p_attempts: v ? v.n : 0, p_streak: k === dayKey() ? st : (v ? st : 0), p_badges: badgeCount() };
-      try { await api("rpc/submit_score", { method: "POST", body: JSON.stringify(body) }); }
+        p_points: dayPts(v), p_correct: v ? v.ok : 0, p_attempts: v ? v.n : 0, p_streak: k === dayKey() ? st : (v ? st : 0), p_badges: badgeCount(), p_avatar: parseAv(me.avatar) ? me.avatar : "" };
+      const send = () => api("rpc/submit_score", { method: "POST", body: JSON.stringify(body) });
+      try { await send(); }
       catch (e) {
-        // старая версия базы: без ачивок и с лимитом 10 очков за ответ
-        delete body.p_badges; body.p_points = Math.min(body.p_points, body.p_attempts * 10);
-        await api("rpc/submit_score", { method: "POST", body: JSON.stringify(body) });
+        // база без аватарок → без ачивок и с лимитом 10 очков за ответ
+        delete body.p_avatar;
+        try { await send(); }
+        catch (e2) { delete body.p_badges; body.p_points = Math.min(body.p_points, body.p_attempts * 10); await send(); }
       }
     }
   }).catch(e => { console.warn("рейтинг:", e.message); });
@@ -1462,8 +1508,11 @@ async function loadBoard() {
     await syncing;
     const from = weekDays()[0];
     const q = cols => `scores?select=${cols}&day=gte.${from}&order=day.desc&limit=5000`;
-    try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges")); }
-    catch (e) { lbRows = await api(q("player_id,name,day,points,attempts,streak")); }
+    try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges,avatar")); }
+    catch (e) {
+      try { lbRows = await api(q("player_id,name,day,points,attempts,streak,badges")); }
+      catch (e2) { lbRows = await api(q("player_id,name,day,points,attempts,streak")); }
+    }
   } catch (e) { lbErr = e.message; }
   lbLoading = false; renderLbList();
 }
@@ -1471,9 +1520,9 @@ function boardEntries() {
   const today = dayKey(), yest = yesterdayKey(), by = new Map();
   for (const r of lbRows || []) {
     if (lbPeriod === "day" && r.day !== today) continue;
-    const e = by.get(r.player_id) || { id: r.player_id, name: r.name, pts: 0, n: 0, last: "", streak: 0, badges: 0 };
+    const e = by.get(r.player_id) || { id: r.player_id, name: r.name, pts: 0, n: 0, last: "", streak: 0, badges: 0, avatar: "" };
     e.pts += r.points; e.n += r.attempts;
-    if (r.day > e.last) { e.last = r.day; e.name = r.name; e.streak = r.day >= yest ? r.streak : 0; e.badges = r.badges || 0; }
+    if (r.day > e.last) { e.last = r.day; e.name = r.name; e.streak = r.day >= yest ? r.streak : 0; e.badges = r.badges || 0; e.avatar = r.avatar || ""; }
     by.set(r.player_id, e);
   }
   return [...by.values()].filter(e => e.n > 0 || e.id === me.id).sort((a, b) => b.pts - a.pts || b.n - a.n || a.name.localeCompare(b.name));
@@ -1489,7 +1538,7 @@ function renderLbList() {
     if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
     const mine = e.id === me.id;
     return `<li class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}">
-      <span class="rk">${rank}</span>
+      <span class="rk">${rank}</span>${avHTML(mine ? me.avatar : e.avatar, e.name)}
       <span class="nm">${esc(e.name)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
       <span class="pt"><b>${e.pts}</b> ${plural(e.pts, "очко", "очка", "очков")}</span></li>`;
@@ -1516,7 +1565,7 @@ function renderLb() {
   }
   const n = streak();
   el.innerHTML = `<div class="card sec mecard">
-      <div class="who"><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button></div>
+      <div class="who"><span id="meAv" title="Сменить аватарку">${avHTML(me.avatar, me.name, "big")}</span><span class="nmbig">${esc(me.name)}</span><button class="link" id="renameBtn">изменить ник</button></div>
       <div class="mestats">
         <div><span class="v flamev${state.days[dayKey()] ? "" : " off"}">${FLAME}${n}</span><span class="k">${plural(n, "день", "дня", "дней")} подряд</span></div>
         <div><span class="v">${dayPts(state.days[dayKey()])}</span><span class="k">очков сегодня</span></div>
@@ -1529,6 +1578,7 @@ function renderLb() {
         <button class="link" id="lbRefresh">Обновить</button></header>
       <div id="lbList"></div></div>` + duelLbHTML();
   $("renameBtn").onclick = () => { renaming = true; renderLb(); };
+  $("meAv").onclick = () => show("set");
   $("lbDay").onclick = () => { lbPeriod = "day"; prefs.lbPeriod = "day"; savePrefs(); $("lbDay").setAttribute("aria-pressed", "true"); $("lbWeek").setAttribute("aria-pressed", "false"); renderLbList(); };
   $("lbWeek").onclick = () => { lbPeriod = "week"; prefs.lbPeriod = "week"; savePrefs(); $("lbWeek").setAttribute("aria-pressed", "true"); $("lbDay").setAttribute("aria-pressed", "false"); renderLbList(); };
   $("lbRefresh").onclick = loadBoard;
@@ -1627,7 +1677,7 @@ async function openDuel(code) {
     const d = (await api(`duels?select=code,creator_id,creator_name,formulas&code=eq.${code}`))[0];
     if (!d) { duelMsg(`<h2>Дуэль не найдена</h2><p class="empty">Проверь ссылку: возможно, в ней опечатка.</p><div class="actions"><button class="btn" id="dClose">К тренировке</button></div>`); $("dClose").onclick = closeDuel; return; }
     d.formulas = d.formulas.filter(id => BY_ID[id]);
-    const results = await api(`duel_results?select=player_id,name,correct,points,time_ms&code=eq.${code}`);
+    const results = await api(`duel_results?select=player_id,name,correct,points,time_ms,avatar&code=eq.${code}`).catch(() => api(`duel_results?select=player_id,name,correct,points,time_ms&code=eq.${code}`));
     duelData = { ...d, results };
     if (results.some(r => r.player_id === me.id)) renderDuelResults(); else renderDuelIntro();
   } catch (e) {
@@ -1674,7 +1724,9 @@ async function finishDuel() {
   duelMsg(`<p class="empty">Отправляю результат…</p>`);
   try {
     await syncing;
-    await api("rpc/submit_duel", { method: "POST", body: JSON.stringify({ p_code: d.code, p_id: me.id, p_secret: me.secret, p_name: me.name, p_correct: d.correct, p_points: d.points, p_time_ms: time }) });
+    const body = { p_code: d.code, p_id: me.id, p_secret: me.secret, p_name: me.name, p_correct: d.correct, p_points: d.points, p_time_ms: time, p_avatar: parseAv(me.avatar) ? me.avatar : "" };
+    try { await api("rpc/submit_duel", { method: "POST", body: JSON.stringify(body) }); }
+    catch (e) { delete body.p_avatar; await api("rpc/submit_duel", { method: "POST", body: JSON.stringify(body) }); }
     state.activeDuel = null; persist();
     await openDuel(d.code);
   } catch (e) {
@@ -1695,7 +1747,7 @@ function renderDuelResults() {
   duelMsg(`<span class="eyebrow">Дуэль · ${esc(d.creator_name)}</span><h2>${head}</h2>
     ${list.length < 2 ? `<p class="empty">Отправь ссылку друзьям: как только кто-то сыграет, здесь появится таблица.</p>` : ""}
     <ol class="board">${list.map((r, i) => `<li class="${r.player_id === me.id ? "me" : ""}${i < 3 && list.length > 1 ? " top" + (i + 1) : ""}">
-      <span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
+      <span class="rk">${i + 1}</span>${avHTML(r.player_id === me.id ? me.avatar : r.avatar, r.name)}<span class="nm">${esc(r.name)}${r.player_id === me.id ? " <small>ты</small>" : ""}</span>
       <span class="st">${fmtTime(r.time_ms)}</span><span class="pt"><b>${r.correct}</b> из ${d.formulas.length}</span></li>`).join("")}</ol>
     <div class="actions"><button class="btn primary" id="dShare">Позвать друзей</button><button class="btn" id="dRefresh">Обновить</button><button class="btn" id="dClose">К тренировке</button></div>`);
   $("dShare").onclick = () => shareDuel(d.code);
