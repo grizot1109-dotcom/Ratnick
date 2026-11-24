@@ -89,6 +89,12 @@ nav button{border:0;background:none;color:var(--muted);font:500 .85rem var(--f-b
 .board .pt b{font-size:1rem;color:var(--ink)}
 .board li.me{background:var(--accent-soft);border-radius:10px;border-top-color:transparent}
 .board li.me+li{border-top-color:transparent}
+/* ник целиком на первой строке; online, огонёк и джоули — строкой ниже */
+.board li{grid-template-columns:2.2em 2.1em auto 1fr auto;grid-template-areas:"rk av nm nm nm" "rk av ol st pt";row-gap:2px}
+.board .nmc{display:contents}
+.board .rk{grid-area:rk}.board .av{grid-area:av}.board .ol{grid-area:ol;justify-self:start}
+.board .nm{grid-area:nm;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+.board .st{grid-area:st;justify-self:start;margin-left:6px}.board .pt{grid-area:pt}
 .nameform{display:flex;gap:8px;flex-wrap:wrap}
 .nameform input{flex:1;min-width:0;font:400 16px var(--f-body);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
 .nameform input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
