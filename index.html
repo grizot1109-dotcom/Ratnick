@@ -1,5 +1,18 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Формулограф">
+<meta name="theme-color" content="#E9EDF2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F141D" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>Формулограф</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=PT+Serif:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@500&display=swap">
@@ -27,8 +40,10 @@
   color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:env(safe-area-inset-top,0px) calc(40px + env(safe-area-inset-bottom,0px))}
+button,select{touch-action:manipulation}
 .wrap{max-width:860px;margin:0 auto}
 header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:18px 14px}
 .brand{display:flex;align-items:baseline;gap:10px}
@@ -49,7 +64,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outlin
 .eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;gap:10px;flex-wrap:wrap}
 .eyebrow .hist{letter-spacing:0;text-transform:none;font-weight:500}
 .qtext{font-family:var(--f-display);font-weight:500;font-size:1.15rem;line-height:1.35;text-wrap:balance;margin:0}
-.board{position:relative;border-radius:var(--r);border:1px solid var(--line);overflow:hidden;
+.board{position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border-radius:var(--r);border:1px solid var(--line);overflow:hidden;
   background-color:var(--surface);
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:24px 24px;background-position:-1px -1px}
@@ -64,6 +79,7 @@ canvas{display:block;width:100%;height:clamp(240px,42vh,400px);touch-action:none
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
 .btn:disabled{opacity:.45;cursor:default}
 .btn kbd{font:500 .7rem var(--f-mono);opacity:.6;margin-left:6px}
+@media (hover:none){.btn kbd{display:none}}
 .reveal{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
 .answer{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
 .answer .label{font-size:.78rem;color:var(--muted)}
@@ -139,6 +155,8 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .ri .go{grid-row:1;grid-column:2}
 .link{border:0;background:none;color:var(--accent);font:500 .8rem var(--f-body);cursor:pointer;padding:2px 0}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <header>
@@ -495,6 +513,8 @@ cv.addEventListener("pointermove", e => {
 const endStroke = () => { if (cur && cur !== "erasing") strokes.push(cur); cur = null; redraw(); };
 cv.addEventListener("pointerup", endStroke); cv.addEventListener("pointercancel", endStroke);
 cv.addEventListener("contextmenu", e => e.preventDefault());
+// iOS: не даём странице прокручиваться и масштабироваться, пока пишем
+for (const t of ["touchstart","touchmove"]) cv.addEventListener(t, e => e.preventDefault(), { passive: false });
 function syncTools() {
   document.getElementById("tPen").setAttribute("aria-pressed", tool === "pen");
   document.getElementById("tErase").setAttribute("aria-pressed", tool === "erase");
@@ -724,4 +744,7 @@ function refreshAll() { if (activeView === "stats") renderStats(); if (activeVie
 
 renderSession();
 nextQuestion();
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
+</body>
+</html>
