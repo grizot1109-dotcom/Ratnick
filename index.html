@@ -1755,7 +1755,7 @@ function applySkin(id) {
   document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => m.setAttribute("content", k.id === "note" ? (i ? "#0F141D" : "#E9EDF2") : k.meta || k.bg));
 }
 /* ---------- Аватарки: эмодзи + цвет кружка, строка "🦊:3" ---------- */
-const AV_EMOJI = ["🦊","🐱","🐶","🐼","🐸","🐧","🦉","🐙","🦄","🐲","🐺","🦁","🐯","🐵","🐨","🐻","🚀","⚡","🔥","💡","🧲","🔭","⚛️","🧪","🌌","🪐","☄️","🌈","🎧","🎮","⚽","🏀","🎸","👾","🤖","😎","🧠","👑","💎","🍕"];
+const AV_EMOJI = ["⚽️", "🥊", "☕️", "🍌", "🌈", "🍄‍🟫", "🐖", "🐓", "🐁", "🐺", "🦅", "🦄", "🙉", "🐷", "🖕", "💪", "🤙", "👌", "🤡", "💩", "😈", "☠️", "😵", "🥱", "🤤", "🤔", "🥶", "🥵", "🤬", "🤓", "🧌", "🏳️‍🌈", "🏴‍☠️", "🇺🇦", "🇷🇺"];
 const AV_COLORS = ["#2A4FD0","#E0567F","#F26A1B","#1E8A55","#8B5CFF","#14A3B8","#C8502D","#D4A017","#4A5568","#111827"];
 const photoCache = new Map(), photoPending = new Set();
 const validPhoto = x => typeof x === "string" && x.length <= 40000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(x);
