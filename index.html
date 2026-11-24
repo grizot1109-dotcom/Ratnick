@@ -102,7 +102,10 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outlin
 .fx sub .slot,.fx sup .slot{height:.8em}
 .fx sub,.fx sup{line-height:1}
 .kb{display:flex;flex-direction:column;gap:6px;user-select:none;-webkit-user-select:none}
-.kbtabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.kbtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.key.caps{grid-column:span 4;font:500 1.15rem var(--f-body);background:var(--sunk);color:var(--muted)}
+.key.caps[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.key.caps.lock{background:var(--accent);color:var(--surface)}
 .kt{border:1px solid var(--line);background:var(--sunk);color:var(--muted);font:600 .82rem var(--f-body);padding:7px 0;border-radius:8px;cursor:pointer}
 .kt[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .keys{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
@@ -580,21 +583,34 @@ $("editor").addEventListener("click", e => {
 
 const KEYSETS = {
   abc: "qwertyuiopasdfghjklzxcvbnm".split(""),
-  ABC: "QWERTYUIOPASDFGHJKLZXCVBNM".split(""),
   gr: ["α", "β", "γ", "ε", "η", "θ", "λ", "μ", "ν", "π", "ρ", "σ", "τ", "φ", "ω", "Δ", "Φ", "Γ", "Ω", "ℰ"],
   ru: ["т", "р", "ж", "п", "з", "н", "к", "в", "ы", "х", "с", "ц", "и", "м", "о", "а", "е", "у", "л", "Л"],
   num: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "(", ")", "|", "·", "%", "sin", "cos", "tg"]
 };
-const KEYTABS = [["abc", "abc"], ["ABC", "ABC"], ["gr", "αβγ"], ["ru", "абв"], ["num", "123"]];
+const KEYTABS = [["abc", "abc"], ["gr", "αβγ"], ["ru", "абв"], ["num", "123"]];
 let keyset = "abc";
+// ⇧: одно нажатие — следующая буква заглавная, двойное — Caps Lock
+let shift = "off", lastShiftTap = 0;
 function renderKeys() {
   $("kbTabs").innerHTML = KEYTABS.map(([k, n]) => `<button class="kt" data-set="${k}" aria-pressed="${k === keyset}">${n}</button>`).join("");
-  $("kbKeys").innerHTML = KEYSETS[keyset].map(c => `<button class="key${c.length > 1 ? " word" : ""}" data-c="${esc(c)}">${c.length > 1 ? c : glyphHTML(c)}</button>`).join("");
+  const up = keyset === "abc" && shift !== "off";
+  $("kbKeys").innerHTML = KEYSETS[keyset].map(c0 => { const c = up ? c0.toUpperCase() : c0;
+    return `<button class="key${c.length > 1 ? " word" : ""}" data-c="${esc(c)}">${c.length > 1 ? c : glyphHTML(c)}</button>`; }).join("")
+    + (keyset === "abc" ? `<button class="key caps${shift === "lock" ? " lock" : ""}" data-a="caps" aria-pressed="${shift !== "off"}" title="Заглавные (двойное нажатие — Caps Lock)">⇧</button>` : "");
 }
 $("kb").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || phase !== "draw") return;
   if (b.dataset.set) { keyset = b.dataset.set; renderKeys(); return; }
-  if (b.dataset.c) { for (const ch of b.dataset.c) eIns({ t: "c", c: ch }); return; }
+  if (b.dataset.a === "caps") {
+    const now = Date.now();
+    shift = shift === "lock" ? "off" : shift === "once" && now - lastShiftTap < 400 ? "lock" : shift === "once" ? "off" : "once";
+    lastShiftTap = now; renderKeys(); return;
+  }
+  if (b.dataset.c) {
+    for (const ch of b.dataset.c) eIns({ t: "c", c: ch });
+    if (shift === "once" && keyset === "abc") { shift = "off"; renderKeys(); }
+    return;
+  }
   const a = b.dataset.a;
   if (a === "frac") eIns({ t: "frac", a: [], b: [] });
   else if (a === "sqrt" || a === "sub" || a === "sup") eIns({ t: a, a: [] });
@@ -720,7 +736,7 @@ function nextQuestion() {
   $("qHist").textContent = histText(current.id);
   $("qText").textContent = current.q;
   phase = "draw"; grade = null;
-  eClear(); $("kbWrap").hidden = false; keyset = "abc"; renderKeys();
+  eClear(); $("kbWrap").hidden = false; keyset = "abc"; shift = "off"; renderKeys();
   $("reveal").hidden = true; $("preActions").hidden = false; $("ai").hidden = true;
   document.querySelectorAll(".g").forEach(b => { b.setAttribute("aria-pressed", "false"); b.querySelector(".sug").textContent = ""; });
   $("nextBtn").disabled = true;
