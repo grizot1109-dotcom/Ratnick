@@ -334,6 +334,9 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 @keyframes champ{to{box-shadow:inset 0 0 0 1.5px rgba(245,197,66,1),0 0 26px rgba(245,197,66,.65)}}
 @media (prefers-reduced-motion:reduce){.board li.champ{animation:none}}
 .crown{margin-right:4px;display:inline-block;transform:translateY(-1px)}
+.gname{background:linear-gradient(100deg,#D99A0B 0%,#F2B81F 30%,#FFE58A 50%,#E0A21A 70%,#C48A08 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 6px rgba(245,197,66,.45));font-weight:700;animation:gshine 3s linear infinite}
+@keyframes gshine{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.gname{animation:none}}
 .profbar{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap}
 .profbar .btn{padding-left:14px;padding-right:14px}
 .pins{display:flex;gap:3px;margin-left:auto}
@@ -1967,6 +1970,12 @@ function boardEntries() {
   }
   return [...by.values()].filter(e => e.n > 0 || e.id === me.id).sort((a, b) => b.pts - a.pts || b.n - a.n || a.name.localeCompare(b.name));
 }
+// кто сейчас первый в рейтинге (за выбранный период) — у него золотой ник и корона
+function champIds() {
+  if (!lbRows) return new Set();
+  const l = boardEntries(), top = l.length ? l[0].pts : 0;
+  return new Set(top > 0 ? l.filter(e => e.pts === top).map(e => e.id) : []);
+}
 function renderLbList() {
   const el = $("lbList"); if (!el) return;
   if (lbErr) { el.innerHTML = `<p class="empty">Не удалось загрузить рейтинг. Проверь интернет и попробуй ещё раз.</p><div><button class="btn" id="lbRetry">Обновить</button></div>`; $("lbRetry").onclick = loadBoard; return; }
@@ -1979,7 +1988,7 @@ function renderLbList() {
     const mine = e.id === me.id;
     return `<li data-pid="${esc(e.id)}" data-name="${esc(e.name)}" data-av="${esc(mine ? myAv() : e.avatar || "")}" class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}${rank === 1 && e.pts > 0 ? " champ" : ""}">
       <span class="rk">${rank}</span>${avHTML(mine ? myAv() : e.avatar, e.name, "", e.id)}
-      <span class="nmc"><span class="nm">${rank === 1 && e.pts > 0 ? `<span class="crown" title="Первое место">👑</span>` : ""}${esc(e.name)}${statusHTML(mine ? myAv() : e.avatar)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>${olHTML(e.id)}</span>
+      <span class="nmc"><span class="nm">${rank === 1 && e.pts > 0 ? `<span class="crown" title="Первое место">👑</span>` : ""}${rank === 1 && e.pts > 0 ? `<span class="gname">${esc(e.name)}</span>` : esc(e.name)}${statusHTML(mine ? myAv() : e.avatar)}${mine ? ' <small>ты</small>' : ""}${e.badges ? `<span class="bd" title="Достижений: ${e.badges}">★${e.badges}</span>` : ""}</span>${olHTML(e.id)}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
       <span class="pt">${BOLT}<b>${e.pts}</b> Дж</span></li>`;
   }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
@@ -2393,7 +2402,7 @@ function pinsHTML(st, mine) {
 function renderProfile(st, name, avatar, id) {
   const el = $("view-prof"), mine = id === me.id;
   const back = `<div><button class="link" id="profBack">← Назад</button></div>`;
-  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${esc(name)}${statusHTML(avatar)}</span>${olHTML(id)}
+  const head = `<div class="card sec profhead">${avHTML(avatar, name, "big", id)}<div class="t"><span class="nmbig">${champIds().has(id) ? `<span class="crown" title="Первое место в рейтинге">👑</span><span class="gname">${esc(name)}</span>` : esc(name)}${statusHTML(avatar)}</span>${olHTML(id)}
     ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
     ${mine || (st && st.pin.length) ? `<div class="profbar">${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}${pinsHTML(st, mine)}</div>` : ""}</div>`;
   if (!st) {
