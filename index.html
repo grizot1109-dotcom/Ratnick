@@ -272,10 +272,6 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="sunset"] nav button[aria-selected="true"],[data-skin="sunset"] .btn.primary{background:linear-gradient(90deg,#FF5E7E,#FF9A3C);border-color:transparent;color:#1E0F1C}
 [data-skin="sunset"] h1{background:linear-gradient(90deg,#FFB36B,#FF5E7E);-webkit-background-clip:text;background-clip:text;color:transparent}
 
-:root[data-skin="ice"][data-skin]{--bg:#E8F3F8;--surface:#FAFDFF;--sunk:#EEF6FA;--line:#C9E0EA;--grid:#DCEBF2;--ink:#0E2A3A;--muted:#5C7C8C;--accent:#1592C9;--accent-soft:#D6EEF8;--ok:#13906A;--ok-soft:#D6F2E8;--mid:#C98A0B;--mid-soft:#FBEFD6;--bad:#D23B54;--bad-soft:#F8DDE3;--flame:#FF7A3D;--flame-core:#FFC233;color-scheme:light}
-[data-skin="ice"] body{background:linear-gradient(180deg,#DFF0F7 0%,#F2F8FB 60%) fixed}
-[data-skin="ice"] .card{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-color:#CFE4EE;box-shadow:0 4px 18px rgba(21,146,201,.08)}
-[data-skin="ice"] nav button[aria-selected="true"],[data-skin="ice"] .btn.primary{background:linear-gradient(90deg,#1592C9,#3CC4E6);border-color:transparent;color:#fff}
 
 :root[data-skin="sakura"][data-skin]{--bg:#FBEFF2;--surface:#FFFAFB;--sunk:#FCEEF2;--line:#F1D3DC;--grid:#F6E1E7;--ink:#4A2633;--muted:#9A6B7A;--accent:#E0567F;--accent-soft:#FCDDE6;--ok:#3E9A6A;--ok-soft:#DCF1E4;--mid:#C98A2B;--mid-soft:#F9EBD5;--bad:#C9364F;--bad-soft:#F8D9DF;--flame:#E0567F;--flame-core:#FFB3C6;color-scheme:light}
 [data-skin="sakura"] body{background-image:radial-gradient(circle at 15% 8%,rgba(255,182,203,.35) 0 60px,transparent 61px),radial-gradient(circle at 90% 40%,rgba(255,182,203,.25) 0 90px,transparent 91px);background-attachment:fixed}
@@ -387,18 +383,11 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin^="g-"] .ach.got .ic{color:var(--on-accent)}
 :root[data-skin="g-black"] .btn.primary,:root[data-skin="g-black"] .kt[aria-pressed="true"]{color:#fff}
 /* дополнительные однотонные темы */
-:root[data-skin="graphite"][data-skin]{--bg:#17191C;--surface:#212429;--sunk:#1B1E22;--line:#33373E;--grid:#2A2E34;--ink:#E8EAED;--muted:#9AA0A8;--accent:#C9CED6;--accent-soft:#30343B;--ok:#7BD88F;--ok-soft:#203528;--mid:#E8C468;--mid-soft:#3A3322;--bad:#F07F7F;--bad-soft:#3E2526;--flame:#FF9F43;--flame-core:#FFD58A;--on-accent:#17191C;color-scheme:dark}
-:root[data-skin="forest"][data-skin]{--bg:#0F1F17;--surface:#162B20;--sunk:#12241A;--line:#2A4535;--grid:#1D3527;--ink:#E6F2E9;--muted:#93B39F;--accent:#5DD39E;--accent-soft:#1E3D2C;--ok:#5DD39E;--ok-soft:#1E3D2C;--mid:#E9C46A;--mid-soft:#3B3520;--bad:#EF8A80;--bad-soft:#40251F;--flame:#F4A259;--flame-core:#FFE29A;--on-accent:#0F1F17;color-scheme:dark}
 :root[data-skin="ocean"][data-skin]{--bg:#0A1A2F;--surface:#10243F;--sunk:#0C1E36;--line:#22395A;--grid:#172C4A;--ink:#E3EEFB;--muted:#8FA8C8;--accent:#4DA3FF;--accent-soft:#16345A;--ok:#4FD1C5;--ok-soft:#123A3C;--mid:#F6C35B;--mid-soft:#3A3220;--bad:#FF7B8A;--bad-soft:#3F1F2C;--flame:#FF9F43;--flame-core:#FFD58A;--on-accent:#0A1A2F;color-scheme:dark}
 :root[data-skin="cherry"][data-skin]{--bg:#1E0C10;--surface:#2B1218;--sunk:#240F14;--line:#4A2028;--grid:#33161C;--ink:#FCE8EC;--muted:#C79AA3;--accent:#FF4D6D;--accent-soft:#4A1622;--ok:#7BD88F;--ok-soft:#1F3A28;--mid:#FFC857;--mid-soft:#40331C;--bad:#FF8FA3;--bad-soft:#4A1622;--flame:#FF6B35;--flame-core:#FFD166;--on-accent:#1E0C10;color-scheme:dark}
 :root[data-skin="lemon"][data-skin]{--bg:#FBF7E1;--surface:#FFFDF2;--sunk:#F6F0D2;--line:#E8DFAE;--grid:#F0E8C2;--ink:#2E2A12;--muted:#7D7448;--accent:#E0B400;--accent-soft:#FBF0B8;--ok:#3F8F3A;--ok-soft:#E2F0D6;--mid:#C27C0E;--mid-soft:#F8E7C6;--bad:#C2410C;--bad-soft:#F9DDCF;--flame:#F97316;--flame-core:#FDE047;--on-accent:#2E2A12;color-scheme:light}
-:root[data-skin="lavender"][data-skin]{--bg:#F1EEFB;--surface:#FBFAFF;--sunk:#EEEAFA;--line:#DAD3F2;--grid:#E6E0F7;--ink:#2B2345;--muted:#7A6F9E;--accent:#7C5CE0;--accent-soft:#E7E0FB;--ok:#2F8F6A;--ok-soft:#DBF0E6;--mid:#B7791F;--mid-soft:#F6EAD2;--bad:#C53A5A;--bad-soft:#F7DCE3;--flame:#F0663A;--flame-core:#FFC233;--on-accent:#FFFFFF;color-scheme:light}
 :root[data-skin="mint"][data-skin]{--bg:#E6F6F1;--surface:#F8FDFB;--sunk:#E9F7F2;--line:#C4E6DA;--grid:#D6EFE6;--ink:#11322A;--muted:#5D8478;--accent:#14A07A;--accent-soft:#D3F0E6;--ok:#14A07A;--ok-soft:#D3F0E6;--mid:#C98A0B;--mid-soft:#FBEFD6;--bad:#D23B54;--bad-soft:#F8DDE3;--flame:#FF7A3D;--flame-core:#FFC233;--on-accent:#FFFFFF;color-scheme:light}
-[data-skin="graphite"] nav button[aria-selected="true"],[data-skin="graphite"] .btn.primary,[data-skin="forest"] nav button[aria-selected="true"],[data-skin="forest"] .btn.primary,[data-skin="ocean"] nav button[aria-selected="true"],[data-skin="ocean"] .btn.primary,[data-skin="cherry"] nav button[aria-selected="true"],[data-skin="cherry"] .btn.primary,[data-skin="lemon"] nav button[aria-selected="true"],[data-skin="lemon"] .btn.primary,[data-skin="lavender"] nav button[aria-selected="true"],[data-skin="lavender"] .btn.primary,[data-skin="mint"] nav button[aria-selected="true"],[data-skin="mint"] .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-[data-skin="graphite"] .kt[aria-pressed="true"],[data-skin="forest"] .kt[aria-pressed="true"],[data-skin="ocean"] .kt[aria-pressed="true"],[data-skin="cherry"] .kt[aria-pressed="true"],[data-skin="lemon"] .kt[aria-pressed="true"],[data-skin="lavender"] .kt[aria-pressed="true"],[data-skin="mint"] .kt[aria-pressed="true"]{color:var(--on-accent)}
-[data-skin="graphite"] .card{border-radius:8px}
 [data-skin="ocean"] body{background:linear-gradient(180deg,#0E2340 0%,#0A1A2F 60%) fixed}
-[data-skin="forest"] body{background:linear-gradient(180deg,#14281D 0%,#0F1F17 60%) fixed}
 .stemo{margin-left:5px;font-size:1em;line-height:1;display:inline-block;vertical-align:-.05em}
 /* медали и чемпион */
 .board li.champ{background:linear-gradient(90deg,rgba(245,197,66,.22),rgba(245,197,66,.05) 70%);box-shadow:inset 0 0 0 1.5px rgba(245,197,66,.85),0 0 18px rgba(245,197,66,.45);border-radius:12px;border-top-color:transparent;animation:champ 2.4s ease-in-out infinite alternate}
@@ -2262,16 +2251,12 @@ const SKINS = [
   { id: "mm", name: "Миллиметровка", note: "светлая", bg: "#F2EADA", card: "#FBF6EC", ink: "#3A2819", accent: "#C8502D", grid: 1 },
   { id: "matrix", name: "Матрица", note: "тёмная", bg: "#020803", card: "#06120A", ink: "#7DFFA2", accent: "#33FF77", mono: 1 },
   { id: "sunset", name: "Закат", note: "тёмная", bg: "#2A1226", card: "#3A1C32", ink: "#FFEDE3", accent: "#FF8A4C", accent2: "#FF5E7E" },
-  { id: "ice", name: "Арктика", note: "светлая", bg: "#DFF0F7", card: "#FAFDFF", ink: "#0E2A3A", accent: "#1592C9", accent2: "#3CC4E6" },
   { id: "sakura", name: "Сакура", note: "светлая", bg: "#FBEFF2", card: "#FFFAFB", ink: "#4A2633", accent: "#E0567F" },
   { id: "board", name: "Ночная доска", note: "тёмная", bg: "#1C3328", card: "#24402F", ink: "#FFFFFF", accent: "#F2C94C" },
   { id: "space", name: "Космос", note: "тёмная", bg: "#1A0F3C", card: "#2A1E5A", ink: "#F1ECFF", accent: "#B79CFF", accent2: "#7A5CFF" },
-  { id: "graphite", name: "Графит", note: "тёмная", bg: "#17191C", card: "#212429", ink: "#E8EAED", accent: "#C9CED6" },
-  { id: "forest", name: "Лес", note: "тёмная", bg: "#0F1F17", card: "#162B20", ink: "#E6F2E9", accent: "#5DD39E" },
   { id: "ocean", name: "Океан", note: "тёмная", bg: "#0A1A2F", card: "#10243F", ink: "#E3EEFB", accent: "#4DA3FF" },
   { id: "cherry", name: "Вишня", note: "тёмная", bg: "#1E0C10", card: "#2B1218", ink: "#FCE8EC", accent: "#FF4D6D" },
   { id: "lemon", name: "Лимонад", note: "светлая", bg: "#FBF7E1", card: "#FFFDF2", ink: "#2E2A12", accent: "#E0B400" },
-  { id: "lavender", name: "Лаванда", note: "светлая", bg: "#F1EEFB", card: "#FBFAFF", ink: "#2B2345", accent: "#7C5CE0" },
   { id: "mint", name: "Мята", note: "светлая", bg: "#E6F6F1", card: "#F8FDFB", ink: "#11322A", accent: "#14A07A" },
   { id: "synth", name: "Синтвейв", note: "тёмная", bg: "#1A0B2E", card: "#2A1248", ink: "#FFE9FB", accent: "#FF4FD8", accent2: "#8B5CFF" },
   { id: "coffee", name: "Кофе", note: "тёмная", bg: "#1E1612", card: "#2B201A", ink: "#F3E6DA", accent: "#D9A066" },
