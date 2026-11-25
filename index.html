@@ -410,6 +410,22 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .pbg-aurora::before{background:linear-gradient(120deg,rgba(34,197,94,.28),rgba(6,182,212,.22) 40%,rgba(168,85,247,.3) 75%,rgba(236,72,153,.2));background-size:200% 200%;animation:aurora 8s ease-in-out infinite alternate}
 @keyframes aurora{to{background-position:100% 100%}}
 @media (prefers-reduced-motion:reduce){.pbg-aurora::before{animation:none}}
+.pbg-dots::before{background-image:radial-gradient(rgba(42,79,208,.26) 1.3px,transparent 1.8px);background-size:13px 13px}
+.pbg-lines::before{background:repeating-linear-gradient(135deg,rgba(42,79,208,.11) 0 2px,transparent 2px 12px)}
+.pbg-formulas::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='120'%3E%3Cg font-family='Georgia,serif' font-style='italic' font-size='17' fill='%233B5BDB' fill-opacity='.17'%3E%3Ctext x='8' y='26'%3EF = ma%3C/text%3E%3Ctext x='120' y='50'%3EE = mc%C2%B2%3C/text%3E%3Ctext x='20' y='82'%3EpV = %CE%BDRT%3C/text%3E%3Ctext x='130' y='108'%3EI = U/R%3C/text%3E%3C/g%3E%3C/svg%3E") 0 0/220px 120px}
+.pbg-sunset::before{background:linear-gradient(160deg,rgba(255,122,89,.34),rgba(224,71,158,.22) 50%,rgba(139,92,246,.2))}
+.pbg-sine::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='44'%3E%3Cpath d='M0 22 C 15 2, 45 2, 60 22 S 105 42, 120 22' fill='none' stroke='%230EA5B7' stroke-opacity='.35' stroke-width='2'/%3E%3C/svg%3E") 0 0/120px 44px}
+.pbg-circuit::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cg fill='none' stroke='%2316A34A' stroke-opacity='.3' stroke-width='1.6'%3E%3Cpath d='M10 20h40v30h50M30 20v70h40M70 90v-20h30M50 50v20'/%3E%3C/g%3E%3Cg fill='%2316A34A' fill-opacity='.38'%3E%3Ccircle cx='10' cy='20' r='3'/%3E%3Ccircle cx='100' cy='50' r='3'/%3E%3Ccircle cx='70' cy='90' r='3'/%3E%3Ccircle cx='50' cy='70' r='3'/%3E%3C/g%3E%3Crect x='58' y='44' width='16' height='12' rx='2' fill='none' stroke='%2316A34A' stroke-opacity='.35' stroke-width='1.6'/%3E%3C/svg%3E") 0 0/110px 110px}
+.pbg-ocean::before{background:radial-gradient(120% 70% at 20% 0%,rgba(125,211,252,.35),transparent 60%),linear-gradient(180deg,rgba(6,182,212,.14),rgba(37,99,235,.34))}
+.pbg-lightning::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='110'%3E%3Cg fill='%23F2B81F' fill-opacity='.32'%3E%3Cpath d='M38 8 20 48h14l-8 30 26-42H38l10-28z'/%3E%3Cpath d='M104 50 92 74h9l-5 20 17-27h-10l7-17z'/%3E%3C/g%3E%3C/svg%3E") 0 0/130px 110px,linear-gradient(160deg,rgba(76,29,149,.26),rgba(30,27,75,.08))}
+.pbg-magnet::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120'%3E%3Cg fill='none' stroke-width='1.4'%3E%3Cellipse cx='80' cy='60' rx='30' ry='14' stroke='%23E23B3B' stroke-opacity='.28'/%3E%3Cellipse cx='80' cy='60' rx='52' ry='26' stroke='%237C3AED' stroke-opacity='.24'/%3E%3Cellipse cx='80' cy='60' rx='74' ry='40' stroke='%232563EB' stroke-opacity='.2'/%3E%3C/g%3E%3Crect x='64' y='54' width='16' height='12' fill='%23E23B3B' fill-opacity='.2'/%3E%3Crect x='80' y='54' width='16' height='12' fill='%232563EB' fill-opacity='.2'/%3E%3C/svg%3E") center/160px 120px}
+.pbg-galaxy::before{background:radial-gradient(1.2px 1.2px at 20px 20px,rgba(255,255,255,.9),transparent),radial-gradient(1px 1px at 70px 50px,rgba(255,255,255,.8),transparent),radial-gradient(1.5px 1.5px at 40px 80px,rgba(250,204,21,.8),transparent),radial-gradient(60% 80% at 70% 50%,rgba(168,85,247,.38),transparent 70%),radial-gradient(50% 60% at 30% 40%,rgba(59,130,246,.3),transparent 70%),linear-gradient(160deg,rgba(30,27,75,.4),rgba(30,27,75,.15));background-size:90px 100px,90px 100px,90px 100px,100% 100%,100% 100%,100% 100%}
+.pbg-rainbow::before{background:linear-gradient(120deg,rgba(255,59,48,.22),rgba(255,149,0,.22),rgba(255,204,0,.22),rgba(52,199,89,.22),rgba(10,132,255,.22),rgba(175,82,222,.24));background-size:300% 300%;animation:aurora 10s ease-in-out infinite alternate}
+.pbg-podium::before{background:linear-gradient(135deg,rgba(217,150,91,.3) 0 30%,rgba(201,209,220,.32) 30% 62%,rgba(245,197,66,.32) 62%)}
+.pbg-silver::before{background:linear-gradient(135deg,rgba(185,195,209,.5),rgba(255,255,255,.08) 40%,rgba(185,195,209,.22) 60%,rgba(140,150,166,.45));box-shadow:inset 0 0 0 1.5px rgba(160,170,186,.9)}
+.pbg-fire::before{background:radial-gradient(80% 85% at 50% 115%,rgba(255,61,0,.55),transparent 70%),radial-gradient(45% 70% at 15% 110%,rgba(255,179,0,.5),transparent 70%),radial-gradient(45% 70% at 88% 110%,rgba(255,106,0,.5),transparent 70%),linear-gradient(0deg,rgba(255,140,0,.12),transparent 60%)}
+.pbg-crown::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='110'%3E%3Cpath d='M100 62h40l4-28-12 9-12-18-12 18-12-9z' fill='%23F5C542' fill-opacity='.5'/%3E%3Ccircle cx='120' cy='22' r='3' fill='%23F5C542' fill-opacity='.6'/%3E%3C/svg%3E") right top/150px 110px no-repeat,linear-gradient(150deg,rgba(109,40,217,.34),rgba(76,29,149,.12));box-shadow:inset 0 0 0 1.5px rgba(245,197,66,.85)}
+@media (prefers-reduced-motion:reduce){.pbg-rainbow::before{animation:none}}
 /* выбор оформления */
 .cospick h3{margin:12px 0 6px;font:600 .85rem var(--f-body);color:var(--muted)}
 .cosgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
@@ -2330,10 +2346,16 @@ const COS = {
     { id: "cyan", name: "Бирюзовый", lvl: 25 }, { id: "sunset", name: "Закат", lvl: 35 }, { id: "space", name: "Космос", lvl: 45 }],
   bg: [
     { id: "", name: "Без фона" }, { id: "grid", name: "Тетрадь", lvl: 4 }, { id: "waves", name: "Волны", lvl: 8 },
-    { id: "atom", name: "Атомы", lvl: 16 }, { id: "stars", name: "Звёзды", lvl: 24 }, { id: "gold", name: "Золотой", medal: "w1" },
-    { id: "saturn", name: "Сатурн", medal: "m1" }, { id: "aurora", name: "Сияние", lvl: 40 }]
+    { id: "atom", name: "Атомы", lvl: 16 }, { id: "stars", name: "Звёзды", lvl: 24 },
+    { id: "aurora", name: "Сияние", lvl: 40 },
+    { id: "dots", name: "Точки", lvl: 2 }, { id: "lines", name: "Штрихи", lvl: 6 }, { id: "formulas", name: "Формулы", lvl: 10 },
+    { id: "sunset", name: "Закат", lvl: 12 }, { id: "sine", name: "Синусоида", lvl: 14 }, { id: "circuit", name: "Схема", lvl: 20 },
+    { id: "ocean", name: "Океан", lvl: 28 }, { id: "lightning", name: "Молнии", lvl: 32 }, { id: "magnet", name: "Магнитное поле", lvl: 36 },
+    { id: "galaxy", name: "Галактика", lvl: 45 }, { id: "rainbow", name: "Радуга", lvl: 50 },
+    { id: "podium", name: "Пьедестал", medal: "d" }, { id: "silver", name: "Серебро", medal: "w" }, { id: "gold", name: "Золотой", medal: "w1" },
+    { id: "fire", name: "Пламя", medal: "h" }, { id: "saturn", name: "Сатурн", medal: "m1" }, { id: "crown", name: "Королевский", medal: "x" }]
 };
-const MEDAL_REQ = { h: "медаль «Хет-трик»", x: "медаль «Доминатор»", m: "любая медаль месяца", m1: "медаль «Золото месяца»", w: "любая медаль недели", w1: "медаль «Золото недели»" };
+const MEDAL_REQ = { d: "любая медаль дня", h: "медаль «Хет-трик»", x: "медаль «Доминатор»", m: "любая медаль месяца", m1: "медаль «Золото месяца»", w: "любая медаль недели", w1: "медаль «Золото недели»" };
 const hasMedal = req => (state.medals || []).some(m => req.length === 1 ? m.k === req : m.k === req[0] && m.p === +req[1]);
 const cosOpen = it => it.medal ? hasMedal(it.medal) : lvlOf(myPts()) >= (it.lvl || 0);
 const cosReq = it => it.medal ? MEDAL_REQ[it.medal] : it.lvl ? `уровень ${it.lvl}` : "";
@@ -2363,7 +2385,8 @@ function cosPickerHTML() {
   const prev = (k, it) => k === "frame" ? frameWrap(avHTML(myAv(), me.name, "", me.id), it.id)
     : k === "color" ? `<span class="nmprev">${it.id ? `<span class="nc nc-${it.id}">Ник</span>` : "Ник"}</span>`
     : `<span class="bgprev pbg-${it.id || "none"}"></span>`;
-  const row = (k, title) => `<h3>${title}</h3><div class="cosgrid">${COS[k].map(it => { const open = cosOpen(it), on = (c[k] || "") === it.id;
+  const order = list => list.slice().sort((a, b) => (a.medal ? 1 : 0) - (b.medal ? 1 : 0) || (a.lvl || 0) - (b.lvl || 0));
+  const row = (k, title) => `<h3>${title}</h3><div class="cosgrid">${order(COS[k]).map(it => { const open = cosOpen(it), on = (c[k] || "") === it.id;
     return `<button class="cos${on ? " on" : ""}${open ? "" : " locked"}" data-ck="${k}" data-cid="${it.id}" aria-pressed="${on}">${prev(k, it)}<b>${esc(it.name)}</b><small>${open ? (on ? "выбрано" : "") : "🔒 " + esc(cosReq(it))}</small></button>`; }).join("")}</div>`;
   return `<div class="card sec cospick"><header><h2>Оформление</h2><span>уровень ${lvl}</span></header>
     <p class="hintline">Открывается уровнями и медалями. Видно всем: в рейтинге и в профиле.</p>
