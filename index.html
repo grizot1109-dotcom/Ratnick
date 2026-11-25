@@ -15,7 +15,7 @@
 <title>Формулограф</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=PT+Serif:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=PT+Serif:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@500&family=Caveat:wght@700&family=Press+Start+2P&family=Rubik+Mono+One&display=swap">
 <style>
 /* Layout: узкая колонка-тетрадь; сверху вкладки, в тренировке — карточка вопроса над листом в клетку */
 :root{
@@ -322,6 +322,42 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="paper"] .btn.primary,[data-skin="paper"] nav button[aria-selected="true"]{background:#1A1712;color:#FBF7EE}
 [data-skin="paper"] nav,[data-skin="paper"] .seg2,[data-skin="paper"] .sel,[data-skin="paper"] .chip{border-radius:2px}
 [data-skin="paper"] h1,[data-skin="paper"] h2,[data-skin="paper"] .qtext{font-family:"PT Serif",Georgia,serif;font-weight:700;letter-spacing:0}
+/* Чертёж: синий ватман, белая сетка и линии */
+:root[data-skin="blueprint"][data-skin]{--bg:#0F4C8A;--surface:rgba(15,76,138,.6);--sunk:rgba(255,255,255,.06);--line:rgba(255,255,255,.7);--grid:rgba(255,255,255,.15);--ink:#FFFFFF;--muted:#BFD7F2;--accent:#FFFFFF;--accent-soft:rgba(255,255,255,.14);--ok:#B8F5C8;--ok-soft:rgba(184,245,200,.16);--mid:#FFE08A;--mid-soft:rgba(255,224,138,.16);--bad:#FFB0A8;--bad-soft:rgba(255,176,168,.18);--flame:#FFE08A;--flame-core:#fff;--gold:#FFE08A;--on-accent:#0F4C8A;color-scheme:dark}
+[data-skin="blueprint"] body{background:linear-gradient(rgba(255,255,255,.18) 1px,transparent 1px) 0 0/100px 100px,linear-gradient(90deg,rgba(255,255,255,.18) 1px,transparent 1px) 0 0/100px 100px,linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px) 0 0/20px 20px,linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px) 0 0/20px 20px,#0F4C8A}
+[data-skin="blueprint"] .card{border:1.5px solid #fff;border-radius:0;box-shadow:none}
+[data-skin="blueprint"] .btn,[data-skin="blueprint"] nav,[data-skin="blueprint"] .seg2,[data-skin="blueprint"] .sel,[data-skin="blueprint"] .key,[data-skin="blueprint"] .kt,[data-skin="blueprint"] nav button,[data-skin="blueprint"] .seg2 button,[data-skin="blueprint"] .chip{border-radius:0}
+[data-skin="blueprint"] .btn,[data-skin="blueprint"] .sel,[data-skin="blueprint"] .key,[data-skin="blueprint"] .kt{border:1.5px solid rgba(255,255,255,.8);background:transparent;color:#fff;box-shadow:none}
+[data-skin="blueprint"] .btn.primary,[data-skin="blueprint"] nav button[aria-selected="true"],[data-skin="blueprint"] .kt[aria-pressed="true"]{background:#fff;color:#0F4C8A}
+[data-skin="blueprint"] h1,[data-skin="blueprint"] .qtext{font-family:"Rubik Mono One",var(--f-display);font-weight:400;letter-spacing:.02em}
+/* Школьная доска: мел и разводы */
+:root[data-skin="chalk"][data-skin]{--bg:#1F3B2E;--surface:rgba(255,255,255,.03);--sunk:rgba(255,255,255,.06);--line:rgba(244,241,230,.4);--grid:rgba(255,255,255,.08);--ink:#F4F1E6;--muted:#C9CDB8;--accent:#F7E36A;--accent-soft:rgba(247,227,106,.16);--ok:#BFF0B0;--ok-soft:rgba(191,240,176,.16);--mid:#F7E36A;--mid-soft:rgba(247,227,106,.12);--bad:#F7A7A0;--bad-soft:rgba(247,167,160,.16);--flame:#F7A7A0;--flame-core:#F7E36A;--gold:#F7E36A;--on-accent:#1F3B2E;color-scheme:dark}
+[data-skin="chalk"] body{background:radial-gradient(60% 40% at 30% 20%,rgba(255,255,255,.07),transparent),radial-gradient(50% 30% at 80% 70%,rgba(255,255,255,.05),transparent),radial-gradient(80% 60% at 50% 50%,#2A4D3C,#18301F) fixed}
+[data-skin="chalk"] .card{border:2px dashed rgba(244,241,230,.5);border-radius:14px 10px 16px 9px;background:transparent;box-shadow:none}
+[data-skin="chalk"] h1,[data-skin="chalk"] .qtext,[data-skin="chalk"] h2{font-family:"Caveat",cursive;font-weight:700;filter:drop-shadow(0 0 1px rgba(255,255,255,.55))}
+[data-skin="chalk"] .qtext{font-size:1.9rem;line-height:1.15}
+[data-skin="chalk"] h2{font-size:1.6rem}
+[data-skin="chalk"] nav button,[data-skin="chalk"] .seg2 button,[data-skin="chalk"] .btn{font-family:"Caveat",cursive;font-size:1.2rem;font-weight:700}
+[data-skin="chalk"] .btn.primary,[data-skin="chalk"] nav button[aria-selected="true"]{background:rgba(247,227,106,.18);color:#F7E36A;border:2px solid #F7E36A}
+[data-skin="chalk"] .key,[data-skin="chalk"] .kt{background:transparent;border:1.5px solid rgba(244,241,230,.4);color:#F4F1E6;box-shadow:none}
+[data-skin="chalk"] .kt[aria-pressed="true"]{background:rgba(247,227,106,.2);color:#F7E36A;border-color:#F7E36A}
+/* Пиксель: 8-бит, квадратные кнопки с объёмом */
+:root[data-skin="pixel"][data-skin]{--bg:#1B1F3B;--surface:#2B2F5B;--sunk:#22264A;--line:#0A0C1E;--grid:#2B2F5B;--ink:#FFFFFF;--muted:#A8B0FF;--accent:#FF4F7B;--accent-soft:#3B2550;--ok:#4FE07B;--ok-soft:#1E3B2E;--mid:#FFD23F;--mid-soft:#3B3520;--bad:#FF4F4F;--bad-soft:#3B1E2A;--flame:#FFD23F;--flame-core:#fff;--gold:#FFD23F;--on-accent:#fff;color-scheme:dark}
+[data-skin="pixel"] body{background:#1B1F3B}
+[data-skin="pixel"] *{border-radius:0!important}
+[data-skin="pixel"] .card{border:4px solid #0A0C1E;box-shadow:inset -4px -4px 0 rgba(0,0,0,.35),inset 4px 4px 0 rgba(255,255,255,.12),6px 6px 0 #0A0C1E}
+[data-skin="pixel"] h1{font-family:"Press Start 2P",monospace;font-size:1rem;font-weight:400}
+[data-skin="pixel"] .qtext,[data-skin="pixel"] h2{font-family:"Press Start 2P",monospace;font-size:.8rem;line-height:1.8;font-weight:400}
+[data-skin="pixel"] nav button,[data-skin="pixel"] .seg2 button,[data-skin="pixel"] .btn{font-family:"Press Start 2P",monospace;font-size:.5rem;line-height:1.6}
+[data-skin="pixel"] .btn.primary,[data-skin="pixel"] nav button[aria-selected="true"]{background:#FF4F7B;color:#fff;box-shadow:inset -3px -3px 0 rgba(0,0,0,.35)}
+[data-skin="pixel"] .key,[data-skin="pixel"] .kt{border:2px solid #0A0C1E;box-shadow:inset -3px -3px 0 rgba(0,0,0,.3)}
+[data-skin="pixel"] .ltbar i,[data-skin="pixel"] .lvlbar i{background:repeating-linear-gradient(90deg,#4FE07B 0 8px,#2FA05B 8px 10px)}
+/* Лаборатория: плитка и этикетки */
+:root[data-skin="lab"][data-skin]{--bg:#F4F8F6;--surface:#FFFFFF;--sunk:#EEF5F1;--line:#C9DDD2;--grid:#E3EEE8;--ink:#12332A;--muted:#5D7F72;--accent:#16A36B;--accent-soft:#D9F2E6;--ok:#16A36B;--ok-soft:#D9F2E6;--mid:#D19A1A;--mid-soft:#F7ECD0;--bad:#D6453D;--bad-soft:#F8DCD9;--flame:#D6453D;--flame-core:#FFD36E;--on-accent:#fff;color-scheme:light}
+[data-skin="lab"] body{background:linear-gradient(#DCE9E2 1px,transparent 1px) 0 0/40px 40px,linear-gradient(90deg,#DCE9E2 1px,transparent 1px) 0 0/40px 40px,#F4F8F6}
+[data-skin="lab"] .card{border:1.5px solid #C9DDD2;border-top:6px solid #16A36B;border-radius:6px;box-shadow:0 2px 0 #C9DDD2}
+[data-skin="lab"] .btn.primary,[data-skin="lab"] nav button[aria-selected="true"]{background:#16A36B;color:#fff}
+[data-skin="lab"] .qtext::before{content:"№ ";color:#16A36B}
 /* Брутал: чёрно-белый с жёлтыми кнопками */
 :root[data-skin="brutal"][data-skin]{--bg:#FFFFFF;--surface:#FFFFFF;--sunk:#F4F4F4;--line:#000000;--grid:#E8E8E8;--ink:#000000;--muted:#444444;--accent:#000000;--accent-soft:#FFF3A3;--ok:#0A8F3C;--ok-soft:#D9F5E2;--mid:#B88600;--mid-soft:#FFF3C2;--bad:#E0261B;--bad-soft:#FFDCD8;--flame:#FF5A00;--flame-core:#FFD600;--gold:#FFD600;--on-accent:#000;color-scheme:light}
 [data-skin="brutal"] body{background:#FFD600}
@@ -2242,6 +2278,10 @@ const SKINS = [
   { id: "mono", name: "Монохром", note: "светлая", bg: "#FFFFFF", card: "#FFFFFF", ink: "#000000", accent: "#000000" },
   { id: "mononight", name: "Монохром ночь", note: "тёмная", bg: "#000000", card: "#000000", ink: "#FFFFFF", accent: "#FFFFFF" },
   { id: "paper", name: "Газета", note: "светлая", bg: "#F1EADB", card: "#FBF7EE", ink: "#1A1712", accent: "#1A1712" },
+  { id: "blueprint", name: "Чертёж", note: "тёмная", bg: "#0F4C8A", card: "#0F4C8A", ink: "#FFFFFF", accent: "#FFFFFF" },
+  { id: "chalk", name: "Школьная доска", note: "тёмная", bg: "#1F3B2E", card: "#24453A", ink: "#F4F1E6", accent: "#F7E36A" },
+  { id: "pixel", name: "Пиксель", note: "тёмная", bg: "#1B1F3B", card: "#2B2F5B", ink: "#FFFFFF", accent: "#FF4F7B" },
+  { id: "lab", name: "Лаборатория", note: "светлая", bg: "#F4F8F6", card: "#FFFFFF", ink: "#12332A", accent: "#16A36B" },
   { id: "brutal", name: "Брутал", note: "светлая", bg: "#FFFFFF", card: "#FFFFFF", ink: "#000000", accent: "#FFD600" }
 ];
 // порядок в настройках: стеклянные, «Тетрадь», светлые, тёмные
