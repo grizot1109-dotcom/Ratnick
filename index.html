@@ -387,14 +387,41 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 .nc-space{background-image:linear-gradient(90deg,#6366F1,#06B6D4 50%,#A855F7)}
 /* рамки аватарки */
 .avf{display:inline-grid;place-items:center;flex:none;border-radius:50%;padding:2.5px;background:var(--line)}
-.board .avf{grid-area:av}
+.board .avf{grid-area:av;width:max-content;justify-self:center}
+.avf>.av{grid-area:auto}
 .fr-bronze{background:linear-gradient(135deg,#F6C08F,#9C6232)}
 .fr-silver{background:linear-gradient(135deg,#F4F7FB,#7D8899)}
-.fr-gold{background:linear-gradient(135deg,#FFE58A,#C48A08);box-shadow:0 0 8px rgba(245,197,66,.55)}
-.fr-fire{background:conic-gradient(#FF3D00,#FFB300,#FF6A00,#FF2D55,#FF3D00);box-shadow:0 0 10px rgba(255,106,0,.6)}
-.fr-cosmos{background:conic-gradient(#1E1B4B,#6366F1,#06B6D4,#A855F7,#1E1B4B);box-shadow:0 0 8px rgba(99,102,241,.55)}
-.fr-neon{background:#0FF;box-shadow:0 0 6px #0FF,0 0 14px rgba(0,255,255,.7)}
-.fr-violet{background:linear-gradient(135deg,#C084FC,#6D28D9);box-shadow:0 0 10px rgba(139,92,246,.7)}
+/* анимированные рамки: крутящийся слой под аватаркой */
+.avf{position:relative;isolation:isolate}
+.fr-gold,.fr-fire,.fr-cosmos,.fr-violet{background:none;overflow:hidden}
+.fr-gold::before,.fr-fire::before,.fr-cosmos::before,.fr-violet::before{content:"";position:absolute;inset:-30%;z-index:-1;animation:frrot 6s linear infinite}
+.fr-gold{box-shadow:0 0 8px rgba(245,197,66,.55)}
+.fr-gold::before{background:conic-gradient(#C48A08,#FFE58A,#FFF7D6,#F2B81F,#C48A08,#FFE58A,#C48A08);animation-duration:4s}
+.fr-fire{animation:frflick 1.1s ease-in-out infinite alternate}
+.fr-fire::before{background:conic-gradient(#FF3D00,#FFB300,#FF6A00,#FF2D55,#FFB300,#FF3D00);animation-duration:2.2s}
+.fr-cosmos{box-shadow:0 0 8px rgba(99,102,241,.55)}
+.fr-cosmos::before{background:conic-gradient(#1E1B4B,#6366F1,#06B6D4,#A855F7,#1E1B4B);animation-duration:7s}
+.fr-violet{animation:frpulsev 1.8s ease-in-out infinite alternate}
+.fr-violet::before{background:conic-gradient(#6D28D9,#C084FC,#F5C542,#C084FC,#6D28D9);animation-duration:5s}
+.fr-neon{background:#0FF;animation:frneon 1.4s ease-in-out infinite alternate}
+@keyframes frrot{to{transform:rotate(360deg)}}
+@keyframes frflick{0%{box-shadow:0 0 6px rgba(255,106,0,.55)}50%{box-shadow:0 0 14px rgba(255,61,0,.85)}100%{box-shadow:0 0 9px rgba(255,179,0,.7)}}
+@keyframes frneon{from{box-shadow:0 0 4px #0FF,0 0 8px rgba(0,255,255,.4)}to{box-shadow:0 0 8px #0FF,0 0 20px rgba(0,255,255,.85)}}
+@keyframes frpulsev{from{box-shadow:0 0 6px rgba(139,92,246,.5)}to{box-shadow:0 0 16px rgba(139,92,246,.9)}}
+/* эффекты ника */
+.nfx{display:inline-block;white-space:nowrap}
+.nfx-glow{animation:nglow 2.2s ease-in-out infinite alternate}
+@keyframes nglow{from{filter:drop-shadow(0 0 2px rgba(124,155,255,.5))}to{filter:drop-shadow(0 0 7px rgba(124,155,255,.95)) drop-shadow(0 0 2px rgba(255,255,255,.6))}}
+.nfx-shine{position:relative}
+.nfx-shine::after{content:attr(data-t);position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none;background:linear-gradient(100deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:nshine 2.8s linear infinite}
+@keyframes nshine{from{background-position:120% 0}to{background-position:-120% 0}}
+.nfx-wave .ch{display:inline-block;animation:nwave 1.6s ease-in-out infinite;animation-delay:calc(var(--i) * .09s)}
+@keyframes nwave{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-3px)}}
+.nfx-type .ch{animation:ntype 7s steps(1) infinite backwards;animation-delay:calc(var(--i) * .11s)}
+.nfx-type::after{content:"|";margin-left:1px;font-weight:400;opacity:.7;animation:ncaret .9s steps(1) infinite}
+@keyframes ntype{0%{opacity:0}2%{opacity:1}88%{opacity:1}92%{opacity:0}}
+@keyframes ncaret{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.avf,.avf::before,.nfx,.nfx *,.nfx::after{animation:none!important}}
 .fr-rainbow{background:conic-gradient(#FF3B30,#FF9500,#FFCC00,#34C759,#0A84FF,#AF52DE,#FF3B30);animation:frspin 4s linear infinite}
 @keyframes frspin{to{filter:hue-rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.fr-rainbow{animation:none}}
@@ -2355,12 +2382,15 @@ const COS = {
     { id: "podium", name: "Пьедестал", medal: "d" }, { id: "silver", name: "Серебро", medal: "w" }, { id: "gold", name: "Золотой", medal: "w1" },
     { id: "fire", name: "Пламя", medal: "h" }, { id: "saturn", name: "Сатурн", medal: "m1" }, { id: "crown", name: "Королевский", medal: "x" }]
 };
+COS.fx = [
+  { id: "", name: "Без эффекта" }, { id: "glow", name: "Свечение", lvl: 18 }, { id: "shine", name: "Блик", lvl: 26 },
+  { id: "wave", name: "Волна", lvl: 34 }, { id: "type", name: "Печатная машинка", lvl: 42 }];
 const MEDAL_REQ = { d: "любая медаль дня", h: "медаль «Хет-трик»", x: "медаль «Доминатор»", m: "любая медаль месяца", m1: "медаль «Золото месяца»", w: "любая медаль недели", w1: "медаль «Золото недели»" };
 const hasMedal = req => (state.medals || []).some(m => req.length === 1 ? m.k === req : m.k === req[0] && m.p === +req[1]);
 const cosOpen = it => it.medal ? hasMedal(it.medal) : lvlOf(myPts()) >= (it.lvl || 0);
 const cosReq = it => it.medal ? MEDAL_REQ[it.medal] : it.lvl ? `уровень ${it.lvl}` : "";
 // чужое оформление — только известные id
-const cleanCos = c => { const o = {}; if (c && typeof c === "object") for (const k of ["frame", "color", "bg"]) if (COS[k].some(it => it.id && it.id === c[k])) o[k] = c[k]; return o; };
+const cleanCos = c => { const o = {}; if (c && typeof c === "object") for (const k of ["frame", "color", "bg", "fx"]) if (COS[k].some(it => it.id && it.id === c[k])) o[k] = c[k]; return o; };
 function myCos() { const c = cleanCos(state.cos); for (const k in c) if (!cosOpen(COS[k].find(it => it.id === c[k]))) delete c[k]; return c; }
 // уровни и оформление других игроков — из их профилей
 const extra = new Map(); // id → { lvl, cos }
@@ -2378,19 +2408,31 @@ async function loadExtra(ids, rerender) {
 }
 const frameWrap = (html, frame) => frame ? `<span class="avf fr-${frame}">${html}</span>` : html;
 // ник: у первого места золотой с короной, иначе — выбранный цвет
-const nameHTML = (name, champ, color) => champ ? `<span class="crown" title="Первое место">👑</span><span class="gname">${esc(name)}</span>`
-  : color ? `<span class="nc nc-${color}">${esc(name)}</span>` : esc(name);
+// cos — оформление игрока ({ color, fx }); эффекты: свечение, блик, волна, печатная машинка
+function nameHTML(name, champ, cos = {}) {
+  const cls = champ ? "gname" : cos.color ? `nc nc-${cos.color}` : "", fx = cos.fx;
+  const crown = champ ? `<span class="crown" title="Первое место">👑</span>` : "";
+  if (fx === "wave" || fx === "type") {
+    const chars = Array.from(String(name)).map((ch, i) => `<span class="ch ${cls}" style="--i:${i}">${ch === " " ? "&nbsp;" : esc(ch)}</span>`).join("");
+    return `${crown}<span class="nfx nfx-${fx}" aria-label="${esc(name)}">${chars}</span>`;
+  }
+  const inner = cls ? `<span class="${cls}">${esc(name)}</span>` : esc(name);
+  if (fx === "glow") return `${crown}<span class="nfx nfx-glow">${inner}</span>`;
+  if (fx === "shine") return `${crown}<span class="nfx nfx-shine" data-t="${esc(name)}">${inner}</span>`;
+  return crown + inner;
+}
 function cosPickerHTML() {
   const c = myCos(), lvl = lvlOf(myPts());
   const prev = (k, it) => k === "frame" ? frameWrap(avHTML(myAv(), me.name, "", me.id), it.id)
     : k === "color" ? `<span class="nmprev">${it.id ? `<span class="nc nc-${it.id}">Ник</span>` : "Ник"}</span>`
+    : k === "fx" ? `<span class="nmprev">${nameHTML("Ник", false, { color: c.color, fx: it.id })}</span>`
     : `<span class="bgprev pbg-${it.id || "none"}"></span>`;
   const order = list => list.slice().sort((a, b) => (a.medal ? 1 : 0) - (b.medal ? 1 : 0) || (a.lvl || 0) - (b.lvl || 0));
   const row = (k, title) => `<h3>${title}</h3><div class="cosgrid">${order(COS[k]).map(it => { const open = cosOpen(it), on = (c[k] || "") === it.id;
     return `<button class="cos${on ? " on" : ""}${open ? "" : " locked"}" data-ck="${k}" data-cid="${it.id}" aria-pressed="${on}">${prev(k, it)}<b>${esc(it.name)}</b><small>${open ? (on ? "выбрано" : "") : "🔒 " + esc(cosReq(it))}</small></button>`; }).join("")}</div>`;
   return `<div class="card sec cospick"><header><h2>Оформление</h2><span>уровень ${lvl}</span></header>
     <p class="hintline">Открывается уровнями и медалями. Видно всем: в рейтинге и в профиле.</p>
-    ${row("frame", "Рамка аватарки")}${row("color", "Цвет ника")}${row("bg", "Фон профиля")}</div>`;
+    ${row("frame", "Рамка аватарки")}${row("color", "Цвет ника")}${row("fx", "Эффект ника")}${row("bg", "Фон профиля")}</div>`;
 }
 function pickCos(k, id) {
   const it = COS[k].find(x => x.id === id); if (!it) return;
@@ -2416,18 +2458,40 @@ function renderLbList() {
   if (!lbRows) { el.innerHTML = `<p class="empty">Загружаю рейтинг…</p>`; return; }
   const list = boardEntries();
   if (!list.length) { el.innerHTML = `<p class="empty">${{ day: "Сегодня ещё никто не решал.", week: "На этой неделе ещё никто не решал.", month: "В этом месяце ещё никто не решал." }[lbPeriod]} Будь первым!</p>`; return; }
+  const ranks = {}; { let r = 0, pv = null; list.forEach((e, i) => { if (e.pts !== pv) { r = i + 1; pv = e.pts; } ranks[e.id] = r; }); }
   let rank = 0, prev = null;
   el.innerHTML = `<ol class="board">${list.map((e, i) => {
     if (e.pts !== prev) { rank = i + 1; prev = e.pts; }
     const mine = e.id === me.id;
     return `<li data-pid="${esc(e.id)}" data-name="${esc(e.name)}" data-av="${esc(mine ? myAv() : e.avatar || "")}" class="${mine ? "me" : ""}${rank <= 3 && e.pts > 0 ? " top" + rank : ""}${rank === 1 && e.pts > 0 ? " champ" : ""}">
       <span class="rk">${rank}</span>${frameWrap(avHTML(mine ? myAv() : e.avatar, e.name, "", e.id), infoOf(e.id).cos.frame)}
-      <span class="nmc"><span class="nm">${nameHTML(e.name, rank === 1 && e.pts > 0, infoOf(e.id).cos.color)}${lvlHTML(infoOf(e.id).lvl)}${statusHTML(mine ? myAv() : e.avatar)}${mine ? ' <small>ты</small>' : ""}</span>${olHTML(e.id)}</span>
+      <span class="nmc"><span class="nm">${nameHTML(e.name, rank === 1 && e.pts > 0, infoOf(e.id).cos)}${lvlHTML(infoOf(e.id).lvl)}${statusHTML(mine ? myAv() : e.avatar)}${mine ? ' <small>ты</small>' : ""}</span>${olHTML(e.id)}</span>
       <span class="st${e.streak ? "" : " off"}" title="${e.streak} ${plural(e.streak, "день", "дня", "дней")} подряд">${FLAME}${e.streak}</span>
       <span class="pt">${BOLT}<b>${e.pts}</b> Дж</span></li>`;
   }).join("")}</ol>${lbLoading ? '<p class="empty">Обновляю…</p>' : ""}`;
   ensurePhotos(list.filter(e => (parseAv(e.avatar) || {}).photo).map(e => e.id), renderLbList);
   loadExtra(list.map(e => e.id), renderLbList);
+  if (!lbLoading) checkOvertake(list, ranks);
+}
+// обгон: сравниваем своё место с прошлым показом этого же периода
+function checkOvertake(list, ranks) {
+  const key = lbPeriod === "day" ? dayKey() : lbPeriod === "week" ? weekDays()[0] : dayKey(monthStart());
+  const all = state.lbRanks || (state.lbRanks = {}), old = all[lbPeriod];
+  const mine = ranks[me.id], was = old && old.k === key ? old.r[me.id] : null;
+  const same = old && old.k === key && JSON.stringify(old.r) === JSON.stringify(ranks);
+  if (!same) { all[lbPeriod] = { k: key, r: ranks }; persist(); }
+  if (!mine || !was || mine >= was) return;
+  const passed = list.filter(e => e.id !== me.id && old.r[e.id] && old.r[e.id] < was && ranks[e.id] > mine);
+  if (!passed.length) return;
+  const li = document.querySelector("#lbList li.me");
+  if (li) {
+    const h = li.offsetHeight, shift = Math.min(was - mine, 6) * h;
+    li.animate([{ transform: `translateY(${shift}px)`, boxShadow: "0 0 0 2px var(--accent)" }, { transform: "translateY(0)", boxShadow: "0 0 0 2px var(--accent)", offset: .7 }, { transform: "translateY(0)", boxShadow: "0 0 0 0 transparent" }],
+      { duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 1100, easing: "cubic-bezier(.2,.9,.3,1)" });
+    li.style.position = "relative"; li.style.zIndex = 2;
+  }
+  const names = passed.slice(0, 2).map(e => `<b>${esc(e.name)}</b>`).join(" и ") + (passed.length > 2 ? ` и ещё ${passed.length - 2}` : "");
+  toast(`<span class="ic">🚀</span><span>Ты обогнал ${names}! Теперь ты на ${mine} месте</span>`);
 }
 function renderLb() {
   const el = $("view-lb");
@@ -2452,7 +2516,7 @@ function renderLb() {
   }
   const n = streak();
   el.innerHTML = `<div class="card sec mecard">
-      <div class="who"><span id="meAv" title="Сменить аватарку">${frameWrap(avHTML(myAv(), me.name, "big"), myCos().frame)}</span><span class="nmbig">${nameHTML(me.name, champIds().has(me.id), myCos().color)}${lvlHTML(lvlOf(myPts()))}${statusHTML(myAv())}</span><button class="link" id="renameBtn">изменить ник</button><button class="btn" id="myProf">Мой профиль</button></div>
+      <div class="who"><span id="meAv" title="Сменить аватарку">${frameWrap(avHTML(myAv(), me.name, "big"), myCos().frame)}</span><span class="nmbig">${nameHTML(me.name, champIds().has(me.id), myCos())}${lvlHTML(lvlOf(myPts()))}${statusHTML(myAv())}</span><button class="link" id="renameBtn">изменить ник</button><button class="btn" id="myProf">Мой профиль</button></div>
       <div class="mestats">
         <div><span class="v flamev${state.days[dayKey()] ? "" : " off"}">${FLAME}${n}</span><span class="k">${plural(n, "день", "дня", "дней")} подряд</span></div>
         <div><span class="v">${BOLT}${dayPts(state.days[dayKey()])}</span><span class="k">Дж сегодня</span></div>
@@ -2517,7 +2581,7 @@ function checkLevelUp() {
   state.lvlSeen = l; persist();
   const opened = [];
   for (const k in COS) for (const it of COS[k]) if (it.lvl && it.lvl > was && it.lvl <= l)
-    opened.push(`${{ frame: "рамка", color: "цвет ника", bg: "фон профиля" }[k]} «${it.name}»`);
+    opened.push(`${{ frame: "рамка", color: "цвет ника", bg: "фон профиля", fx: "эффект ника" }[k]} «${it.name}»`);
   const ov = document.createElement("div"); ov.className = "lvlup"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", "Новый уровень");
   ov.innerHTML = `<div class="lvlcard"><div class="lvlbig lt${lvlTier(l)}">${l}</div><h2>Новый уровень!</h2><p>Теперь у тебя уровень ${l}.${l < LVL_MAX ? ` До ${l + 1} — ещё ${lvlNeed(l + 1) - myPts()} Дж.` : " Это максимум!"}</p>
     ${opened.length ? `<p class="lvlnew">Открыто: ${opened.map(esc).join(", ")}</p>` : ""}
@@ -2866,7 +2930,7 @@ function renderProfile(st, name, avatar, id) {
   const el = $("view-prof"), mine = id === me.id;
   const back = `<div><button class="link" id="profBack">← Назад</button></div>`;
   const cos = mine ? myCos() : st ? st.cos : {};
-  const head = `<div class="card sec profhead${cos.bg ? " pbg-" + cos.bg : ""}">${frameWrap(avHTML(avatar, name, "big", id), cos.frame)}<div class="t"><span class="nmbig">${nameHTML(name, champIds().has(id), cos.color)}${statusHTML(avatar)}</span>${olHTML(id)}
+  const head = `<div class="card sec profhead${cos.bg ? " pbg-" + cos.bg : ""}">${frameWrap(avHTML(avatar, name, "big", id), cos.frame)}<div class="t"><span class="nmbig">${nameHTML(name, champIds().has(id), cos)}${statusHTML(avatar)}</span>${olHTML(id)}
     ${st ? lvlBarHTML(st.pts) : ""}
     ${st && st.since ? `<small>в игре с ${new Date(st.since + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</small>` : ""}</div>
     ${mine || (st && st.pin.length) ? `<div class="profbar">${mine ? `<button class="btn" id="profEdit">Изменить</button>` : ""}${pinsHTML(st, mine)}</div>` : ""}</div>`;
