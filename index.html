@@ -291,6 +291,22 @@ h2{font-family:var(--f-display);font-weight:500;font-size:1rem;margin:0}
 [data-skin="space"] body{background:radial-gradient(1px 1px at 20% 12%,#fff8,transparent),radial-gradient(1px 1px at 70% 30%,#fff6,transparent),radial-gradient(1.5px 1.5px at 40% 60%,#fff7,transparent),radial-gradient(1px 1px at 85% 80%,#fff5,transparent),radial-gradient(1px 1px at 10% 90%,#fff6,transparent),linear-gradient(180deg,#1A0F3C 0%,#0C0820 100%) fixed}
 [data-skin="space"] .card{background:linear-gradient(180deg,rgba(40,28,90,.92),rgba(28,20,64,.92))}
 [data-skin="space"] nav button[aria-selected="true"],[data-skin="space"] .btn.primary{background:linear-gradient(90deg,#B79CFF,#7A5CFF);border-color:transparent;color:#120B2A}
+/* Синтвейв: ночь 80-х, закатное солнце и неоновая сетка */
+:root[data-skin="synth"][data-skin]{--bg:#1A0B2E;--surface:#2A1248;--sunk:#22103C;--line:#4A2470;--grid:#331A55;--ink:#FFE9FB;--muted:#C59BE0;--accent:#FF4FD8;--accent-soft:#4A1A55;--ok:#4FF0FF;--ok-soft:#123A4A;--mid:#FFB347;--mid-soft:#4A3318;--bad:#FF5470;--bad-soft:#4A1828;--flame:#FF8A3D;--flame-core:#FFE08A;--gold:#FFD23F;--on-accent:#fff;color-scheme:dark}
+[data-skin="synth"] body{background:radial-gradient(120% 60% at 50% 115%,rgba(255,79,216,.45),transparent 60%),radial-gradient(40% 25% at 50% 92%,rgba(255,179,71,.5),transparent 70%),repeating-linear-gradient(0deg,rgba(255,79,216,.12) 0 1px,transparent 1px 34px) bottom/100% 40% no-repeat,#1A0B2E;background-attachment:fixed}
+[data-skin="synth"] .card{box-shadow:0 0 0 1px rgba(255,79,216,.12),0 0 24px rgba(139,92,255,.15)}
+[data-skin="synth"] nav button[aria-selected="true"],[data-skin="synth"] .btn.primary{background:linear-gradient(90deg,#FF4FD8,#8B5CFF);border-color:transparent;color:#fff;box-shadow:0 0 18px rgba(255,79,216,.45)}
+/* Кофе */
+:root[data-skin="coffee"][data-skin]{--bg:#1E1612;--surface:#2B201A;--sunk:#241B16;--line:#43332A;--grid:#33271F;--ink:#F3E6DA;--muted:#B39B87;--accent:#D9A066;--accent-soft:#3D2C1E;--ok:#8FBF6A;--ok-soft:#26321C;--mid:#E0B050;--mid-soft:#3B2F17;--bad:#E07A5F;--bad-soft:#3D221C;--flame:#E08A3C;--flame-core:#FFD9A0;--on-accent:#1E1612;color-scheme:dark}
+[data-skin="coffee"] body{background:linear-gradient(180deg,#241A15,#17110E) fixed}
+[data-skin="coffee"] nav button[aria-selected="true"],[data-skin="coffee"] .btn.primary{background:#D9A066;border-color:transparent;color:#1E1612}
+/* Монохром: только чёрное и белое, жёсткие тени */
+:root[data-skin="mono"][data-skin]{--bg:#FFFFFF;--surface:#FFFFFF;--sunk:#F2F2F2;--line:#111111;--grid:#E5E5E5;--ink:#000000;--muted:#555555;--accent:#000000;--accent-soft:#EDEDED;--ok:#000000;--ok-soft:#EDEDED;--mid:#555555;--mid-soft:#F2F2F2;--bad:#000000;--bad-soft:#E0E0E0;--flame:#000000;--flame-core:#FFFFFF;--on-accent:#fff;color-scheme:light}
+[data-skin="mono"] body{background:#fff}
+[data-skin="mono"] .card{border:2px solid #000;border-radius:6px;box-shadow:4px 4px 0 #000}
+[data-skin="mono"] .btn{border-radius:6px;border:2px solid #000}
+[data-skin="mono"] .btn.primary,[data-skin="mono"] nav button[aria-selected="true"]{background:#000;color:#fff}
+[data-skin="mono"] nav,[data-skin="mono"] .seg2,[data-skin="mono"] .sel,[data-skin="mono"] .chip{border-radius:6px}
 [data-skin="board"] nav button[aria-selected="true"],[data-skin="board"] .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 /* стеклянные темы: общие правила для всех data-skin, начинающихся с g- */
 :root[data-skin="g-black"][data-skin]{--bg:#0B0B0E;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.04);--line:rgba(255,255,255,.12);--grid:rgba(255,255,255,.05);--ink:#F2F2F5;--muted:#A3A3AE;--accent:#D9D9E0;--accent-soft:rgba(255,255,255,.10);--on-accent:#111114;--nav-bg:rgba(255,255,255,.10);--nav-ink:#FFFFFF;--nav-line:rgba(255,255,255,.55);--glow:rgba(255,255,255,.18);--ok:#6EE08F;--ok-soft:rgba(110,224,143,.14);--mid:#F2C14E;--mid-soft:rgba(242,193,78,.14);--bad:#FF6B6B;--bad-soft:rgba(255,107,107,.14);--flame:#FF7A2F;--flame-core:#FFD06A;color-scheme:dark}
@@ -2214,7 +2230,10 @@ const SKINS = [
   { id: "cherry", name: "Вишня", note: "тёмная", bg: "#1E0C10", card: "#2B1218", ink: "#FCE8EC", accent: "#FF4D6D" },
   { id: "lemon", name: "Лимонад", note: "светлая", bg: "#FBF7E1", card: "#FFFDF2", ink: "#2E2A12", accent: "#E0B400" },
   { id: "lavender", name: "Лаванда", note: "светлая", bg: "#F1EEFB", card: "#FBFAFF", ink: "#2B2345", accent: "#7C5CE0" },
-  { id: "mint", name: "Мята", note: "светлая", bg: "#E6F6F1", card: "#F8FDFB", ink: "#11322A", accent: "#14A07A" }
+  { id: "mint", name: "Мята", note: "светлая", bg: "#E6F6F1", card: "#F8FDFB", ink: "#11322A", accent: "#14A07A" },
+  { id: "synth", name: "Синтвейв", note: "тёмная", bg: "#1A0B2E", card: "#2A1248", ink: "#FFE9FB", accent: "#FF4FD8", accent2: "#8B5CFF" },
+  { id: "coffee", name: "Кофе", note: "тёмная", bg: "#1E1612", card: "#2B201A", ink: "#F3E6DA", accent: "#D9A066" },
+  { id: "mono", name: "Монохром", note: "светлая", bg: "#FFFFFF", card: "#FFFFFF", ink: "#000000", accent: "#000000" }
 ];
 // порядок в настройках: стеклянные, «Тетрадь», светлые, тёмные
 const skinOrder = k => k.glass ? -1 : k.id === "note" ? 0 : k.note === "светлая" ? 1 : 2;
