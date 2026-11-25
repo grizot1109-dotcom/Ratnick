@@ -2922,10 +2922,122 @@ function medalTitle(m) {
   if (m.k === "h") return `Хет-трик · 3 золота подряд, по ${fmtDay(m.d)}`;
   return `Доминатор · 5+ золотых дней, ${wk(m.d)}`;
 }
-// картинки медалей лежат в папке medals/
+/* ---------- Медали: металл, лента, физический значок (рисуются кодом) ----------
+   День — круг (атом, молния, магнит), неделя — шестиугольник (орбита, волна, призма),
+   месяц — шестерня (галактика, линза, Солнце), особые — щиты (резонанс ×3, чёрная дыра). */
+const ma_MET = {
+  g: { hi: "#FFF6CC", a: "#FFD95A", b: "#E9A814", c: "#A86D04", d: "#5E3A00", glow: "#FFE27A" },
+  s: { hi: "#FFFFFF", a: "#E9EEF5", b: "#AEB8C8", c: "#6F7B8F", d: "#3A4352", glow: "#DDE8FF" },
+  b: { hi: "#FFE2C4", a: "#F0A868", b: "#C2702F", c: "#83430F", d: "#4A2205", glow: "#FFC28A" }
+};
+function ma_defs(m, id, rib) {
+  const M = ma_MET[m];
+  return `<defs>
+  <linearGradient id="${id}rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${M.hi}"/><stop offset=".25" stop-color="${M.a}"/><stop offset=".55" stop-color="${M.b}"/><stop offset=".8" stop-color="${M.c}"/><stop offset="1" stop-color="${M.a}"/></linearGradient>
+  <linearGradient id="${id}rim2" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${M.hi}"/><stop offset=".4" stop-color="${M.b}"/><stop offset="1" stop-color="${M.d}"/></linearGradient>
+  <radialGradient id="${id}face" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#2E3553"/><stop offset=".7" stop-color="#151A2E"/><stop offset="1" stop-color="#0A0D18"/></radialGradient>
+  <linearGradient id="${id}ic" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${M.hi}"/><stop offset=".5" stop-color="${M.a}"/><stop offset="1" stop-color="${M.b}"/></linearGradient>
+  <linearGradient id="${id}r1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${rib[0]}"/><stop offset=".5" stop-color="${rib[1]}"/><stop offset="1" stop-color="${rib[0]}"/></linearGradient>
+  <linearGradient id="${id}r2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${rib[2]}"/><stop offset=".5" stop-color="${rib[3]}"/><stop offset="1" stop-color="${rib[2]}"/></linearGradient>
+  <filter id="${id}glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="${id}sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity=".45"/></filter>
+  <linearGradient id="${id}leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${M.a}"/><stop offset="1" stop-color="${M.c}"/></linearGradient>
+  </defs>`;
+}
+const MP = (cx, cy, r, a) => [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+function ma_ribbon(id) {
+  return `<g filter="url(#${id}sh)">
+   <path d="M44 2h17l7 40H51z" fill="url(#${id}r1)"/><path d="M48 2h4l7 40h-4z" fill="#fff" fill-opacity=".18"/>
+   <path d="M76 2H59l-7 40h17z" fill="url(#${id}r2)"/><path d="M70 2h-4l-7 40h4z" fill="#fff" fill-opacity=".15"/>
+   <path d="M51 40h18l-2 6H53z" fill="#000" fill-opacity=".35"/></g>`;
+}
+function ma_laurel(id, cy) {
+  const leaf = (x, y, rot, s = 1) => `<path d="M0 0c4-6 12-7 16-4-4 6-12 7-16 4z" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" fill="url(#${id}leaf)" stroke="#000" stroke-opacity=".25" stroke-width=".6"/>`;
+  let L = "", R = "";
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI * (0.62 + i * 0.075), [x, y] = MP(60, cy, 50, a);
+    L += leaf(x, y, (a * 180 / Math.PI) + 100, 0.9 - i * 0.04);
+    const b = Math.PI - a, [x2, y2] = MP(60, cy, 50, b);
+    R += `<g transform="translate(120 0) scale(-1 1)">${leaf(120 - x2, y2, (a * 180 / Math.PI) + 100, 0.9 - i * 0.04)}</g>`;
+  }
+  return `<g>${L}${R}</g>`;
+}
+function ma_body(shape, id, m, cx, cy) {
+  const M = ma_MET[m];
+  let outer, inner, ticks = "";
+  if (shape === "circle") {
+    outer = `<circle cx="${cx}" cy="${cy}" r="42"/>`;
+    inner = `<circle cx="${cx}" cy="${cy}" r="31"/>`;
+    for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, [x1, y1] = MP(cx, cy, 38.5, a), [x2, y2] = MP(cx, cy, 41, a); ticks += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}"/>`; }
+  } else if (shape === "hex") {
+    const pts = r => Array.from({ length: 6 }, (_, i) => MP(cx, cy, r, Math.PI / 6 + i * Math.PI / 3).map(v => v.toFixed(1)).join(",")).join(" ");
+    outer = `<polygon points="${pts(46)}" stroke-linejoin="round"/>`; inner = `<polygon points="${pts(33)}" stroke-linejoin="round"/>`;
+    for (let i = 0; i < 6; i++) { const [x, y] = MP(cx, cy, 40, Math.PI / 6 + i * Math.PI / 3); ticks += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2" fill="${M.c}" stroke="${M.hi}" stroke-width=".8"/>`; }
+  } else if (shape === "gear") {
+    let d = ""; const N = 14;
+    for (let i = 0; i < N * 4; i++) { const a = i / (N * 4) * Math.PI * 2, r = (i % 4 < 2) ? 47 : 41.5; const [x, y] = MP(cx, cy, r, a); d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }
+    outer = `<path d="${d}z" stroke-linejoin="round"/>`; inner = `<circle cx="${cx}" cy="${cy}" r="31"/>`;
+    ticks = `<circle cx="${cx}" cy="${cy}" r="36.5" fill="none" stroke="${M.d}" stroke-opacity=".5" stroke-dasharray="2 3"/>`;
+  } else {
+    outer = `<path d="M60 ${cy - 46}l42 13v30c0 30-19 45-42 55-23-10-42-25-42-55V${cy - 33}z" stroke-linejoin="round"/>`;
+    inner = `<path d="M60 ${cy - 35}l31 10v22c0 23-14 35-31 43-17-8-31-20-31-43V${cy - 25}z" stroke-linejoin="round"/>`;
+  }
+  const wrap = (sh, fill, extra = "") => sh.replace(/\/>$/, ` fill="${fill}" ${extra}/>`);
+  return `<g filter="url(#${id}sh)">${wrap(outer, `url(#${id}rim)`, `stroke="${M.d}" stroke-width="1.6"`)}</g>
+   ${wrap(outer, "none", `stroke="${M.hi}" stroke-opacity=".55" stroke-width="1" transform="translate(-.6 -.8)"`)}
+   <g stroke="${M.d}" stroke-opacity=".55" stroke-width="1.2">${ticks}</g>
+   ${wrap(inner, `url(#${id}rim2)`, `transform="translate(0 0) scale(1.06) translate(${-cx * 0.06} ${-cy * 0.06})"`)}
+   ${wrap(inner, `url(#${id}face)`, `stroke="${M.d}" stroke-width="1.4"`)}
+   ${wrap(inner, "none", `stroke="#fff" stroke-opacity=".08" stroke-width="6"`)}`;
+}
+function ma_stars(cx, cy, n) {
+  let s = ""; const pts = [[-18, -14, 1], [16, -18, .8], [20, 10, .7], [-20, 14, .6], [4, -24, .5], [-8, 22, .6], [24, -4, .5]];
+  for (const [x, y, r] of pts.slice(0, n)) s += `<circle cx="${cx + x}" cy="${cy + y}" r="${r}" fill="#fff" fill-opacity=".7"/>`;
+  return s;
+}
+function ma_plaque(id, m, text, cy) {
+  const M = ma_MET[m];
+  return `<g filter="url(#${id}sh)"><path d="M44 ${cy}h32l-4 11H48z" fill="url(#${id}rim)" stroke="${M.d}" stroke-width="1"/></g>
+   <text x="60" y="${cy + 8.6}" text-anchor="middle" font-family="Onest,system-ui,sans-serif" font-weight="800" font-size="8" fill="${M.d}" letter-spacing=".5">${text}</text>`;
+}
+function ma_shine(shape, cx, cy) {
+  return `<path d="M${cx - 30} ${cy - 20}c10-18 40-24 58-8" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>`;
+}
+const ma_ICONS = {
+  atom: (id, c) => `<g fill="none" stroke="url(#${id}ic)" stroke-width="2.6">${[0, 60, 120].map(r => `<ellipse cx="${c[0]}" cy="${c[1]}" rx="21" ry="7.5" transform="rotate(${r} ${c[0]} ${c[1]})"/>`).join("")}</g><circle cx="${c[0]}" cy="${c[1]}" r="4.6" fill="url(#${id}ic)"/><circle cx="${c[0] + 21}" cy="${c[1]}" r="2.2" fill="#fff"/>`,
+  bolt: (id, c) => `<path d="M${c[0] + 5} ${c[1] - 24} ${c[0] - 12} ${c[1] + 4}h10l-5 20 19-30h-11l6-18z" fill="url(#${id}ic)" stroke="#fff" stroke-opacity=".5" stroke-width=".8" stroke-linejoin="round"/>`,
+  magnet: (id, c) => `<path d="M${c[0] - 15} ${c[1] - 14}v16a15 15 0 0 0 30 0v-16h-9v16a6 6 0 0 1-12 0v-16z" fill="url(#${id}ic)"/><path d="M${c[0] - 15} ${c[1] - 14}h9v7h-9zM${c[0] + 6} ${c[1] - 14}h9v7h-9z" fill="#E8ECF5"/><g fill="none" stroke="url(#${id}ic)" stroke-width="1.4" stroke-dasharray="2 2.5"><path d="M${c[0] - 18} ${c[1] - 16}c-6-6-2-13 5-14M${c[0] + 18} ${c[1] - 16}c6-6 2-13-5-14"/></g>`,
+  orbit: (id, c) => `<circle cx="${c[0]}" cy="${c[1]}" r="9" fill="url(#${id}ic)"/><ellipse cx="${c[0]}" cy="${c[1]}" rx="22" ry="8" fill="none" stroke="url(#${id}ic)" stroke-width="2.4" transform="rotate(-20 ${c[0]} ${c[1]})"/><circle cx="${c[0] + 20}" cy="${c[1] - 8}" r="3.4" fill="#fff"/>`,
+  wave: (id, c) => `<path d="M${c[0] - 22} ${c[1]}c5-14 10-14 15 0s10 14 15 0 10-14 15 0" fill="none" stroke="url(#${id}ic)" stroke-width="3.2" stroke-linecap="round"/><path d="M${c[0] - 22} ${c[1] + 13}h44M${c[0] - 22} ${c[1] - 17}v30" stroke="#8EA0C8" stroke-opacity=".55" stroke-width="1.2"/>`,
+  prism: (id, c) => `<path d="M${c[0] - 22} ${c[1] + 2}l16-3" stroke="#fff" stroke-width="2.2"/><path d="M${c[0]} ${c[1] - 18} ${c[0] + 14} ${c[1] + 12}H${c[0] - 14}z" fill="url(#${id}ic)" fill-opacity=".35" stroke="url(#${id}ic)" stroke-width="2.2" stroke-linejoin="round"/>${["#FF4D4D", "#FFA53B", "#FFE14D", "#4DE07B", "#4DA6FF", "#A35CFF"].map((col, i) => `<path d="M${c[0] + 6} ${c[1] - 1 + i * 1.2}l17 ${-9 + i * 4}" stroke="${col}" stroke-width="1.8"/>`).join("")}`,
+  galaxy: (id, c) => `<g fill="none" stroke="url(#${id}ic)" stroke-width="2.4" stroke-linecap="round"><path d="M${c[0]} ${c[1]}c0-7 9-9 12-3 5 8-3 18-14 17-12-2-16-17-7-26 10-10 30-4 30 10"/><path d="M${c[0]} ${c[1]}c0 7-9 9-12 3-5-8 3-18 14-17" stroke-opacity=".6"/></g><circle cx="${c[0]}" cy="${c[1]}" r="3.6" fill="#fff"/>`,
+  lens: (id, c) => `<path d="M${c[0]} ${c[1] - 22}c8 10 8 34 0 44-8-10-8-34 0-44z" fill="url(#${id}ic)" fill-opacity=".45" stroke="url(#${id}ic)" stroke-width="2"/><g fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity=".9"><path d="M${c[0] - 24} ${c[1] - 10}H${c[0]}L${c[0] + 22} ${c[1] + 8}M${c[0] - 24} ${c[1] + 10}H${c[0]}L${c[0] + 22} ${c[1] - 8}"/></g><circle cx="${c[0] + 14}" cy="${c[1]}" r="1.8" fill="#fff"/>`,
+  sun: (id, c) => `<circle cx="${c[0]}" cy="${c[1]}" r="10" fill="url(#${id}ic)"/>${Array.from({ length: 12 }, (_, i) => { const a = i / 12 * Math.PI * 2, [x1, y1] = MP(c[0], c[1], 14, a), [x2, y2] = MP(c[0], c[1], i % 2 ? 19 : 23, a); return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="url(#${id}ic)" stroke-width="2.4" stroke-linecap="round"/>`; }).join("")}`,
+  reso: (id, c) => `${[0, 1, 2].map(i => `<path d="M${c[0] - 22} ${c[1] - 8 + i * 9}c5-${8 - i * 2} 10-${8 - i * 2} 15 0s10 ${8 - i * 2} 15 0 10-${8 - i * 2} 15 0" fill="none" stroke="url(#${id}ic)" stroke-width="2.4" stroke-opacity="${1 - i * .25}" stroke-linecap="round"/>`).join("")}<text x="${c[0]}" y="${c[1] - 15}" text-anchor="middle" font-family="Onest,sans-serif" font-weight="800" font-size="10" fill="#fff">×3</text>`,
+  hole: (id, c) => `<ellipse cx="${c[0]}" cy="${c[1]}" rx="25" ry="7.5" fill="none" stroke="url(#${id}ic)" stroke-width="3"/><circle cx="${c[0]}" cy="${c[1]}" r="10.5" fill="#000" stroke="url(#${id}ic)" stroke-width="2"/><path d="M${c[0] - 25} ${c[1]}a25 7.5 0 0 0 50 0" fill="none" stroke="url(#${id}ic)" stroke-width="3"/><path d="M${c[0]} ${c[1] - 14}v-12M${c[0]} ${c[1] + 14}v12" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-opacity=".85"/>`
+};
+function medalArt({ shape, m, icon, rib, place, laurels }) {
+  const id = "__ID__", cx = 60, cy = 78;
+  return `<svg viewBox="0 0 120 140" width="120" height="140">${ma_defs(m, id, rib)}${ma_ribbon(id)}
+  ${laurels ? ma_laurel(id, cy) : ""}${ma_body(shape, id, m, cx, cy)}
+  ${ma_stars(cx, cy, shape === "gear" ? 7 : 4)}
+  <g filter="url(#${id}glow)">${ma_ICONS[icon](id, [cx, cy])}</g>
+  ${ma_shine(shape, cx, cy)}${place ? ma_plaque(id, m, place, shape === "shield" ? 122 : 120) : ""}</svg>`;
+}
+const MEDAL_RIB = { d: ["#B71C1C", "#F04444", "#C62828", "#FF6B6B"], w: ["#1A3AA8", "#4C7CF0", "#2348C4", "#6E98FF"], m: ["#4C1D95", "#8B5CF6", "#B8860B", "#F5C542"], x: ["#0B0F1A", "#2A3040", "#B8860B", "#F5C542"] };
+const MEDAL_ART = {
+  d: { shape: "circle", icons: ["atom", "bolt", "magnet"] }, w: { shape: "hex", icons: ["orbit", "wave", "prism"] },
+  m: { shape: "gear", icons: ["galaxy", "lens", "sun"] }, h: { shape: "shield", icons: ["reso"] }, x: { shape: "shield", icons: ["hole"] }
+};
+const medalCache = {}; let medalUid = 0;
 function medalSVG(m, size = 34) {
-  const key = m.k === "h" || m.k === "x" ? m.k : m.k + m.p;
-  return `<img class="medal" src="medals/${key}.webp?v=3" width="${size}" height="${size}" alt="" decoding="async">`;
+  const key = m.k + (m.p || 1);
+  if (!medalCache[key]) {
+    const a = MEDAL_ART[m.k] || MEDAL_ART.d, special = m.k === "h" || m.k === "x", p = special ? 1 : m.p;
+    medalCache[key] = medalArt({ shape: a.shape, m: "gsb"[p - 1], icon: a.icons[special ? 0 : p - 1], rib: MEDAL_RIB[special ? "x" : m.k],
+      place: special ? "" : String(p), laurels: p === 1 }).replace('<svg viewBox="0 0 120 140" width="120" height="140">', `<svg class="medal" viewBox="0 0 120 140" width="__W__" height="__H__" aria-hidden="true">`);
+  }
+  return medalCache[key].replace("__W__", Math.round(size * 120 / 140)).replace("__H__", size).replace(/__ID__/g, "md" + (medalUid++));
 }
 const medalCounts = list => { const c = { dg: 0, ds: 0, db: 0, wg: 0, ws: 0, wb: 0, mg: 0, ms: 0, mb: 0, h: 0, x: 0 }; for (const m of list) { if (m.k === "h" || m.k === "x") c[m.k]++; else c[m.k + "gsb"[m.p - 1]]++; } return c; };
 let medalsBusy = false;
