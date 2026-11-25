@@ -1850,7 +1850,7 @@ function playAnim(kind, box, anchor) {
 function celebrate() {
   const box = $("ai");
   box.classList.remove("flash"); void box.offsetWidth; box.classList.add("flash");
-  requestAnimationFrame(() => playAnim(myCos().anim, box, box.querySelector(".dot")));
+  requestAnimationFrame(() => playAnim(animNow(), box, box.querySelector(".dot")));
   const pts = ptsFor(grade), m = isQuizNow() ? 1 : multOf(combo), line = $("ptsLine");
   requestAnimationFrame(() => {
     const r = line.getBoundingClientRect();
@@ -2423,6 +2423,9 @@ function avatarCardHTML() {
     ${me.status ? `<div><button class="link" id="stReset">Убрать статус</button></div>` : ""}</div>`;
 }
 function setStatus(e) { me.status = e; saveMe(); syncScore(); renderSettings(); }
+const ANIMS = [{ id: "", name: "Вспышка", ic: "✨" }, { id: "confetti", name: "Конфетти", ic: "🎉" }, { id: "ring", name: "Волна", ic: "◎" }, { id: "stars", name: "Звёздочки", ic: "⭐" }, { id: "bolt", name: "Молния", ic: "⚡" }, { id: "fireworks", name: "Фейерверк", ic: "🎆" }];
+// анимация верного ответа — в настройках, все доступны сразу (старый выбор из оформления переносится)
+const animNow = () => { const a = prefs.anim !== undefined ? prefs.anim : (state.cos && state.cos.anim) || ""; return ANIMS.some(x => x.id === a) ? a : ""; };
 function renderSettings() {
   const cur = skinNow();
   $("view-set").innerHTML = avatarCardHTML() + `<div class="card sec"><header><h2>Тема оформления</h2><span>сохраняется на этом телефоне</span></header>
@@ -2433,7 +2436,13 @@ function renderSettings() {
         <span class="pv" style="background:${bg}"><b style="background:${grad}"></b><i style="background:${k.card};color:${k.ink};${k.mono ? "font-family:var(--f-mono);font-style:normal;font-size:.8rem" : ""}">E = mc²</i><u style="background:${grad}"></u></span>
         <span class="nm2">${k.name}<small>${k.glass ? "стекло · " : ""}${k.note}</small></span></button>`;
     }).join("")}</div></div>
+    <div class="card sec"><header><h2>Анимация верного ответа</h2><span>нажми, чтобы посмотреть</span></header>
+      <div class="cosgrid">${ANIMS.map(a => `<button class="cos${a.id === animNow() ? " on" : ""}" data-anim="${a.id}" aria-pressed="${a.id === animNow()}"><span class="nmprev animprev">${a.ic}</span><b>${a.name}</b><small>${a.id === animNow() ? "выбрано" : ""}</small></button>`).join("")}</div></div>
     <div class="card sec"><h2>Что ещё</h2><p class="empty">Ник меняется во вкладке «Рейтинг», статистику можно сбросить во вкладке «Статистика».</p></div>`;
+  $("view-set").querySelectorAll("[data-anim]").forEach(b => b.onclick = () => {
+    prefs.anim = b.dataset.anim; savePrefs(); const y = scrollY; renderSettings(); scrollTo(0, y);
+    const nb = $("view-set").querySelector(`[data-anim="${prefs.anim}"]`); if (nb) playAnim(prefs.anim, nb, nb.querySelector(".animprev"));
+  });
   $("view-set").querySelectorAll(".emojis button").forEach(b => b.onclick = () => setStatus(b.dataset.e === me.status ? "" : b.dataset.e));
   const sr = $("stReset"); if (sr) sr.onclick = () => setStatus("");
   const af = $("avFile"); if (af) af.onchange = () => { if (af.files && af.files[0]) uploadPhoto(af.files[0]); };
@@ -2584,9 +2593,6 @@ const COS = {
     { id: "podium", name: "Пьедестал", medal: "d" }, { id: "silver", name: "Серебро", medal: "w" }, { id: "gold", name: "Золотой", medal: "w1" },
     { id: "fire", name: "Пламя", medal: "h" }, { id: "saturn", name: "Сатурн", medal: "m1" }, { id: "crown", name: "Королевский", medal: "x" }]
 };
-COS.anim = [
-  { id: "", name: "Вспышка", ic: "✨" }, { id: "confetti", name: "Конфетти", lvl: 8, ic: "🎉" }, { id: "ring", name: "Волна", lvl: 14, ic: "◎" },
-  { id: "stars", name: "Звёздочки", lvl: 22, ic: "⭐" }, { id: "bolt", name: "Молния", lvl: 30, ic: "⚡" }, { id: "fireworks", name: "Фейерверк", lvl: 44, ic: "🎆" }];
 COS.fx = [
   { id: "", name: "Без эффекта" }, { id: "glow", name: "Свечение", lvl: 18 }, { id: "shine", name: "Блик", lvl: 26 },
   { id: "wave", name: "Волна", lvl: 34 }, { id: "type", name: "Печатная машинка", lvl: 42 }];
@@ -2595,7 +2601,7 @@ const hasMedal = req => (state.medals || []).some(m => req.length === 1 ? m.k ==
 const cosOpen = it => it.medal ? hasMedal(it.medal) : lvlOf(myPts()) >= (it.lvl || 0);
 const cosReq = it => it.medal ? MEDAL_REQ[it.medal] : it.lvl ? `уровень ${it.lvl}` : "";
 // чужое оформление — только известные id
-const cleanCos = c => { const o = {}; if (c && typeof c === "object") for (const k of ["frame", "color", "bg", "fx", "anim"]) if (COS[k].some(it => it.id && it.id === c[k])) o[k] = c[k]; return o; };
+const cleanCos = c => { const o = {}; if (c && typeof c === "object") for (const k of ["frame", "color", "bg", "fx"]) if (COS[k].some(it => it.id && it.id === c[k])) o[k] = c[k]; return o; };
 function myCos() { const c = cleanCos(state.cos); for (const k in c) if (!cosOpen(COS[k].find(it => it.id === c[k]))) delete c[k]; return c; }
 // уровни и оформление других игроков — из их профилей
 const extra = new Map(); // id → { lvl, cos }
@@ -2630,7 +2636,6 @@ function cosPickerHTML() {
   const c = myCos(), lvl = lvlOf(myPts());
   const prev = (k, it) => k === "frame" ? frameWrap(avHTML(myAv(), me.name, "", me.id), it.id)
     : k === "color" ? `<span class="nmprev">${it.id ? `<span class="nc nc-${it.id}">Ник</span>` : "Ник"}</span>`
-    : k === "anim" ? `<span class="nmprev animprev">${it.ic}</span>`
     : k === "fx" ? `<span class="nmprev">${nameHTML("Ник", false, { color: c.color, fx: it.id })}</span>`
     : `<span class="bgprev pbg-${it.id || "none"}"></span>`;
   const order = list => list.slice().sort((a, b) => (a.medal ? 1 : 0) - (b.medal ? 1 : 0) || (a.lvl || 0) - (b.lvl || 0));
@@ -2638,14 +2643,13 @@ function cosPickerHTML() {
     return `<button class="cos${on ? " on" : ""}${open ? "" : " locked"}" data-ck="${k}" data-cid="${it.id}" aria-pressed="${on}">${prev(k, it)}<b>${esc(it.name)}</b><small>${open ? (on ? "выбрано" : "") : "🔒 " + esc(cosReq(it))}</small></button>`; }).join("")}</div>`;
   return `<div class="card sec cospick"><header><h2>Оформление</h2><span>уровень ${lvl}</span></header>
     <p class="hintline">Открывается уровнями и медалями. Видно всем: в рейтинге и в профиле.</p>
-    ${row("frame", "Рамка аватарки")}${row("color", "Цвет ника")}${row("fx", "Эффект ника")}${row("bg", "Фон профиля")}${row("anim", "Анимация верного ответа")}</div>`;
+    ${row("frame", "Рамка аватарки")}${row("color", "Цвет ника")}${row("fx", "Эффект ника")}${row("bg", "Фон профиля")}</div>`;
 }
 function pickCos(k, id) {
   const it = COS[k].find(x => x.id === id); if (!it) return;
   if (!cosOpen(it)) { toast(`<span>Откроется: ${esc(cosReq(it))}</span>`); return; }
   state.cos = { ...myCos(), [k]: id }; if (!id) delete state.cos[k];
   persist(); syncProfile(); openProfile(me.id, me.name, myAv());
-  if (k === "anim") { const b = document.querySelector(`#view-prof .cos[data-ck="anim"][data-cid="${id}"]`); if (b) playAnim(id, b, b.querySelector(".animprev")); }
 }
 function lvlBarHTML(pts) {
   const l = lvlOf(pts);
@@ -2788,7 +2792,7 @@ function checkLevelUp() {
   state.lvlSeen = l; persist();
   const opened = [];
   for (const k in COS) for (const it of COS[k]) if (it.lvl && it.lvl > was && it.lvl <= l)
-    opened.push(`${{ frame: "рамка", color: "цвет ника", bg: "фон профиля", fx: "эффект ника", anim: "анимация ответа" }[k]} «${it.name}»`);
+    opened.push(`${{ frame: "рамка", color: "цвет ника", bg: "фон профиля", fx: "эффект ника" }[k]} «${it.name}»`);
   const ov = document.createElement("div"); ov.className = "lvlup"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", "Новый уровень");
   ov.innerHTML = `<div class="lvlcard"><div class="lvlbig lt${lvlTier(l)}">${l}</div><h2>Новый уровень!</h2><p>Теперь у тебя уровень ${l}.${l < LVL_MAX ? ` До ${l + 1} — ещё ${lvlNeed(l + 1) - myPts()} Дж.` : " Это максимум!"}</p>
     ${opened.length ? `<p class="lvlnew">Открыто: ${opened.map(esc).join(", ")}</p>` : ""}
