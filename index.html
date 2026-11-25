@@ -1855,7 +1855,7 @@ function fxStep(dt) {
   const c = fxCtx, W = innerWidth, H = innerHeight;
   c.clearRect(0, 0, W, H);
   if (fxFlash > 0) { c.fillStyle = `rgba(255,255,240,${fxFlash})`; c.fillRect(0, 0, W, H); fxFlash = Math.max(0, fxFlash - dt * 3.2); }
-  fxDraws = fxDraws.filter(d => (d.t += dt) < d.life && (d.draw(c, d), true));
+  fxDraws = fxDraws.filter(d => (d.t += dt) < d.life && (d.draw(c, d, dt), true));
   const keep = [];
   for (const p of fxParts) {
     p.t += dt; if (p.t < 0) { keep.push(p); continue; }
@@ -1875,6 +1875,8 @@ function fxStep(dt) {
     else if (p.kind === "star") { const gr = c.createRadialGradient(0, 0, 0, 0, 0, p.size); gr.addColorStop(0, "#FFFBE6"); gr.addColorStop(.5, p.col); gr.addColorStop(1, "#C98A08"); c.shadowColor = p.col; c.shadowBlur = 14; starPath(c, p.size); c.fillStyle = gr; c.fill(); c.lineWidth = 1; c.strokeStyle = "rgba(120,70,0,.5)"; c.stroke(); }
     else if (p.kind === "spark") { c.shadowColor = p.col; c.shadowBlur = 10; c.fillStyle = p.col; c.beginPath(); c.arc(0, 0, p.size * (1 - k * .6), 0, 7); c.fill(); }
     else if (p.kind === "glint") { c.fillStyle = "#fff"; c.shadowColor = p.col; c.shadowBlur = 12; const r = p.size * (1 - Math.abs(k - .5) * 2); c.beginPath(); c.moveTo(0, -r * 2); c.lineTo(r * .35, 0); c.lineTo(0, r * 2); c.lineTo(-r * .35, 0); c.closePath(); c.moveTo(-r * 2, 0); c.lineTo(0, r * .35); c.lineTo(r * 2, 0); c.lineTo(0, -r * .35); c.closePath(); c.fill(); }
+    else if (p.kind === "text") { c.font = `italic 700 ${p.size}px "PT Serif",Georgia,serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.shadowColor = p.col; c.shadowBlur = 14; c.fillStyle = p.col; c.fillText(p.txt, 0, 0); }
+    else if (p.kind === "smoke") { const rr = p.size * (1 + k * 2.4); const g = c.createRadialGradient(0, 0, 0, 0, 0, rr); g.addColorStop(0, "rgba(230,230,240,.55)"); g.addColorStop(1, "rgba(200,200,215,0)"); c.fillStyle = g; c.beginPath(); c.arc(0, 0, rr, 0, 7); c.fill(); }
     else if (p.kind === "rocket") { c.fillStyle = "#fff"; c.shadowColor = p.col; c.shadowBlur = 16; c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fill(); }
     c.restore(); keep.push(p);
   }
@@ -1941,6 +1943,102 @@ function playAnim(kind, box, anchor) {
       const tx = W * fxRnd(.18, .82), ty = H * fxRnd(.12, .38), sx = tx + fxRnd(-60, 60), dur = fxRnd(.55, .75);
       add({ kind: "rocket", x: sx, y: H + 10, vx: (tx - sx) / dur, vy: (ty - H - 10) / dur, size: 3, col: fxPick(FX_COL), life: dur, trail: 12, fade: false, t: -k * .28, onDie: p => burst(p.x, p.y) });
     }
+  }
+  if (kind === "supernova") { // сверхновая: вспышка, ударная волна, обломки, туманность
+    fxFlash = .85; const R = Math.hypot(W, H);
+    fxDraws.push({ t: 0, life: 1.6, draw(c, d) {
+      const q = d.t / d.life, cr = 40 + q * 130, rr = R * .75 * (1 - Math.pow(1 - Math.min(1, q * 1.4), 3));
+      c.save();
+      const g = c.createRadialGradient(cx, cy, 0, cx, cy, cr); g.addColorStop(0, `rgba(255,255,255,${1 - q})`); g.addColorStop(.3, `rgba(255,220,120,${.9 * (1 - q)})`); g.addColorStop(.7, `rgba(255,80,60,${.5 * (1 - q)})`); g.addColorStop(1, "rgba(120,0,160,0)");
+      c.fillStyle = g; c.beginPath(); c.arc(cx, cy, cr, 0, 7); c.fill();
+      c.globalAlpha = Math.max(0, 1 - q * 1.2); c.lineWidth = 14 * (1 - q) + 2; c.strokeStyle = "#FFE9B0"; c.shadowColor = "#FF9F1C"; c.shadowBlur = 30; c.beginPath(); c.arc(cx, cy, rr, 0, 7); c.stroke();
+      c.lineWidth = 3; c.strokeStyle = "#9FD8FF"; c.shadowColor = "#5BC8FF"; c.beginPath(); c.arc(cx, cy, rr * .82, 0, 7); c.stroke();
+      c.globalAlpha = Math.max(0, .8 - q); c.strokeStyle = "#fff"; c.lineWidth = 2; c.shadowBlur = 8;
+      for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2 + d.t * .5, l = cr + rr * (.3 + (i % 3) * .12); c.beginPath(); c.moveTo(cx + Math.cos(a) * cr * .5, cy + Math.sin(a) * cr * .5); c.lineTo(cx + Math.cos(a) * l, cy + Math.sin(a) * l); c.stroke(); }
+      c.restore(); } });
+    fxDraws.push({ t: -.25, life: 2.4, draw(c, d) { if (d.t < 0) return; const q = d.t / d.life; c.save(); c.globalAlpha = Math.sin(Math.PI * q) * .55;
+      for (const [ox, oy, rad, col] of [[-60, -30, 220, "rgba(180,80,255,.6)"], [70, 40, 200, "rgba(60,160,255,.55)"], [10, -80, 170, "rgba(255,90,140,.5)"]]) { const g = c.createRadialGradient(cx + ox, cy + oy, 0, cx + ox, cy + oy, rad * (1 + q)); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g; c.beginPath(); c.arc(cx + ox, cy + oy, rad * (1 + q), 0, 7); c.fill(); }
+      c.restore(); } });
+    for (let i = 0; i < 170; i++) { const t = fxRnd(0, Math.PI * 2), v = fxRnd(200, 950); add({ kind: "spark", x: cx, y: cy, vx: Math.cos(t) * v, vy: Math.sin(t) * v, drag: .95, size: fxRnd(1.5, 4), col: fxPick(["#FFF3C4", "#FFD23F", "#FF9F1C", "#FF5A3C", "#B47CFF", "#9FD8FF"]), life: fxRnd(1, 1.9), trail: 6, tw: Math.random() < .3 }); }
+  }
+  if (kind === "blackhole") { // чёрная дыра: всё затягивает по спирали, потом выбрасывает джеты
+    const ps = []; for (let i = 0; i < 170; i++) ps.push({ a: fxRnd(0, 7), r: fxRnd(110, Math.max(W, H) * .75), s: fxRnd(1.2, 3.2), col: fxPick(["#FFB347", "#FF6B6B", "#B47CFF", "#5B8CFF", "#FFE27A", "#FFFFFF"]) });
+    fxDraws.push({ t: 0, life: 2.4, draw(c, d, dt) {
+      const q = d.t / d.life, pull = q < .72, hr = pull ? 14 + q * 36 : 40;
+      c.save();
+      const dg = c.createRadialGradient(cx, cy, hr * .8, cx, cy, hr * 4.2); dg.addColorStop(0, "rgba(255,210,140,.95)"); dg.addColorStop(.35, "rgba(255,100,60,.5)"); dg.addColorStop(1, "rgba(120,40,200,0)");
+      c.save(); c.translate(cx, cy); c.scale(1, .36); c.rotate(d.t * 3); c.globalAlpha = pull ? Math.min(1, q * 3) : Math.max(0, 1 - (q - .72) / .28); c.fillStyle = dg; c.beginPath(); c.arc(0, 0, hr * 4.2, 0, 7); c.fill(); c.restore();
+      for (const p of ps) {
+        if (pull) { if (p.dead) continue; p.r = Math.max(hr * .9, p.r * Math.pow(.16, dt)); p.a += dt * (1.5 + 260 / Math.max(p.r, 18)); if (p.r <= hr) p.dead = 1; }
+        else { if (!p.v) { p.v = fxRnd(350, 1100); p.r = hr; p.dead = 0; } p.r += p.v * dt; }
+        const x = cx + Math.cos(p.a) * p.r, y = cy + Math.sin(p.a) * p.r * .55;
+        c.globalAlpha = pull ? Math.min(1, (p.r - hr) / 30) : Math.max(0, 1 - (q - .72) / .28);
+        c.strokeStyle = p.col; c.lineWidth = p.s; c.lineCap = "round"; c.shadowColor = p.col; c.shadowBlur = 8;
+        const b = p.a - (pull ? .22 : .05); c.beginPath(); c.moveTo(x, y); c.lineTo(cx + Math.cos(b) * p.r, cy + Math.sin(b) * p.r * .55); c.stroke();
+      }
+      c.globalAlpha = 1; c.shadowBlur = 0; c.fillStyle = "#000"; c.beginPath(); c.arc(cx, cy, hr, 0, 7); c.fill();
+      c.strokeStyle = "rgba(255,225,170,.95)"; c.lineWidth = 2.5; c.shadowColor = "#FFB347"; c.shadowBlur = 20; c.stroke();
+      if (!pull) { const k = (q - .72) / .28, L = H * (.3 + k); c.globalAlpha = 1 - k; const jg = c.createLinearGradient(cx, cy - L, cx, cy + L); jg.addColorStop(0, "rgba(120,200,255,0)"); jg.addColorStop(.5, "rgba(220,245,255,.95)"); jg.addColorStop(1, "rgba(120,200,255,0)"); c.fillStyle = jg; c.shadowColor = "#7FD4FF"; c.shadowBlur = 30; c.fillRect(cx - 7, cy - L, 14, L * 2);
+        if (!d.boom) { d.boom = 1; fxFlash = .5; } }
+      c.restore(); } });
+  }
+  if (kind === "atom") { // атом: орбиты раскрываются, электроны носятся, потом вылетают фотонами
+    const R0 = Math.min(W, H) * .34;
+    fxDraws.push({ t: 0, life: 2, draw(c, d) {
+      const q = d.t / d.life, grow = 1 - Math.pow(1 - Math.min(1, d.t / .4), 3), R = R0 * grow * (q > .72 ? 1 + (q - .72) * 5 : 1);
+      c.save(); c.globalAlpha = q > .72 ? Math.max(0, 1 - (q - .72) / .28) : 1;
+      const ng = c.createRadialGradient(cx, cy, 0, cx, cy, 26); ng.addColorStop(0, "#fff"); ng.addColorStop(.35, "#FFB347"); ng.addColorStop(1, "rgba(255,80,40,0)"); c.fillStyle = ng; c.beginPath(); c.arc(cx, cy, 24 + Math.sin(d.t * 22) * 3, 0, 7); c.fill();
+      [0, 1, 2].forEach(i => {
+        c.save(); c.translate(cx, cy); c.rotate(i * Math.PI / 3 + d.t * .7);
+        c.strokeStyle = "rgba(120,200,255,.85)"; c.lineWidth = 2.5; c.shadowColor = "#5BC8FF"; c.shadowBlur = 16; c.beginPath(); c.ellipse(0, 0, R, R * .3, 0, 0, 7); c.stroke();
+        const a = i * 2.1 + d.t * (8 + i);
+        for (let k = 12; k >= 0; k--) { const b = a - k * .07; c.fillStyle = k ? `rgba(180,240,255,${(1 - k / 12) * .55})` : "#fff"; c.shadowColor = "#9FE8FF"; c.shadowBlur = k ? 0 : 22; c.beginPath(); c.arc(Math.cos(b) * R, Math.sin(b) * R * .3, k ? 6 - k * .4 : 7, 0, 7); c.fill(); }
+        c.restore(); });
+      c.restore();
+      if (q > .72 && !d.burst) { d.burst = 1; fxFlash = .3; for (let i = 0; i < 80; i++) { const t = fxRnd(0, 7), v = fxRnd(300, 800); add({ kind: "spark", x: cx, y: cy, vx: Math.cos(t) * v, vy: Math.sin(t) * v, drag: .96, size: fxRnd(1.5, 3.5), col: fxPick(["#9FE8FF", "#FFFFFF", "#5BC8FF", "#FFD23F"]), life: fxRnd(.7, 1.2), trail: 6 }); } }
+    } });
+  }
+  if (kind === "prism") { // призма: белый луч раскладывается в радугу на весь экран
+    const P = { x: W / 2, y: Math.min(H * .42, Math.max(120, cy)) }, sz = Math.min(W, H) * .17;
+    const A = [P.x, P.y - sz], B = [P.x + sz * .87, P.y + sz * .5], C = [P.x - sz * .87, P.y + sz * .5], inP = [P.x - sz * .43, P.y], outP = [P.x + sz * .38, P.y + sz * .08];
+    const cols = ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#00C7BE", "#0A84FF", "#AF52DE"];
+    fxDraws.push({ t: 0, life: 2.4, draw(c, d) {
+      const t = d.t, fade = t > 1.8 ? 1 - (t - 1.8) / .6 : 1, k1 = Math.min(1, t / .35);
+      c.save(); c.globalAlpha = fade; c.lineCap = "round";
+      c.strokeStyle = "#fff"; c.lineWidth = 6; c.shadowColor = "#fff"; c.shadowBlur = 24; c.beginPath(); c.moveTo(-10, inP[1] + 60); c.lineTo(-10 + (inP[0] + 10) * k1, inP[1] + 60 - 60 * k1); c.stroke();
+      if (t > .35) { const k2 = 1 - Math.pow(1 - Math.min(1, (t - .35) / .45), 3), L = W * 1.3 * k2;
+        cols.forEach((col, i) => { const ang = -.3 + i * .1; c.strokeStyle = col; c.shadowColor = col; c.shadowBlur = 22; c.lineWidth = 11; c.beginPath(); c.moveTo(outP[0], outP[1]); c.lineTo(outP[0] + Math.cos(ang) * L, outP[1] + Math.sin(ang) * L); c.stroke(); });
+        c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 5; c.beginPath(); c.moveTo(inP[0], inP[1]); c.lineTo(outP[0], outP[1]); c.stroke(); }
+      const g = c.createLinearGradient(C[0], A[1], B[0], B[1]); g.addColorStop(0, "rgba(255,255,255,.6)"); g.addColorStop(.5, "rgba(180,220,255,.28)"); g.addColorStop(1, "rgba(255,255,255,.55)");
+      c.shadowBlur = 26; c.shadowColor = "rgba(255,255,255,.8)"; c.fillStyle = g; c.strokeStyle = "#fff"; c.lineWidth = 2.5; c.beginPath(); c.moveTo(...A); c.lineTo(...B); c.lineTo(...C); c.closePath(); c.fill(); c.stroke();
+      c.restore();
+      if (t > .8 && !d.sp) { d.sp = 1; cols.forEach((col, i) => { const ang = -.3 + i * .1; for (let j = 0; j < 9; j++) { const l = fxRnd(W * .3, W * .9); add({ kind: "glint", x: outP[0] + Math.cos(ang) * l, y: outP[1] + Math.sin(ang) * l, vx: 0, vy: 0, size: fxRnd(4, 8), col, life: .7, t: -fxRnd(0, .8), fade: false }); } }); }
+    } });
+  }
+  if (kind === "formulas") { // формулопад: светящиеся формулы сыплются с неба
+    const FS = ["F = ma", "E = mc²", "pV = νRT", "I = U/R", "E = hν", "p = mv", "A = Fs", "Q = cmΔt", "λ = vT", "F = kx", "Φ = BS", "E = mgh", "v = λν", "q = It", "F = qvB", "U = IR", "η = A/Q", "ε = −ΔΦ/Δt"];
+    for (let i = 0; i < 52; i++) add({ kind: "text", txt: fxPick(FS), x: fxRnd(20, W - 20), y: fxRnd(-160, -20), vx: fxRnd(-20, 20), vy: fxRnd(280, 650), size: fxRnd(14, 30), col: fxPick(["#4FE07B", "#FFD23F", "#7FD4FF", "#FFFFFF", "#FF8AD8"]), life: fxRnd(1.6, 2.4), t: -fxRnd(0, .8), rot: fxRnd(-.25, .25), vr: fxRnd(-.6, .6) });
+    for (let i = 0; i < 14; i++) add({ kind: "glint", x: fxRnd(20, W - 20), y: fxRnd(40, H * .8), vx: 0, vy: 0, size: fxRnd(4, 8), col: "#7FD4FF", life: .6, t: -fxRnd(0, 1.4), fade: false });
+  }
+  if (kind === "rocket") { // ракета: взлетает по дуге с дымом и пламенем, в конце — звёздный салют
+    const P0 = [-30, H + 30], P1 = [W * .15, H * .2], P2 = [W * .72, H * .2], dur = 1.15;
+    const at = t => { const u = 1 - t; return [u * u * P0[0] + 2 * u * t * P1[0] + t * t * P2[0], u * u * P0[1] + 2 * u * t * P1[1] + t * t * P2[1]]; };
+    fxDraws.push({ t: 0, life: dur, draw(c, d) {
+      const k = Math.min(1, d.t / dur), e = k * k * (3 - 2 * k), [x, y] = at(e), [x2, y2] = at(Math.min(1, e + .01)), ang = Math.atan2(y2 - y, x2 - x);
+      add({ kind: "smoke", x: x - Math.cos(ang) * 22, y: y - Math.sin(ang) * 22, vx: fxRnd(-20, 20), vy: fxRnd(-10, 30), size: fxRnd(6, 10), col: "#ccc", life: fxRnd(.8, 1.3) });
+      for (let i = 0; i < 2; i++) add({ kind: "spark", x: x - Math.cos(ang) * 20, y: y - Math.sin(ang) * 20, vx: -Math.cos(ang + fxRnd(-.4, .4)) * fxRnd(120, 260), vy: -Math.sin(ang + fxRnd(-.4, .4)) * fxRnd(120, 260), size: fxRnd(1.5, 3), col: fxPick(["#FFD23F", "#FF9F1C", "#FF5A3C"]), life: fxRnd(.25, .45) });
+      c.save(); c.translate(x, y); c.rotate(ang); c.scale(1.4, 1.4);
+      c.fillStyle = "#FFB347"; c.shadowColor = "#FF9F1C"; c.shadowBlur = 22; c.beginPath(); c.moveTo(-14, -5); c.lineTo(-30 - Math.random() * 10, 0); c.lineTo(-14, 5); c.fill();
+      c.shadowBlur = 6; c.shadowColor = "rgba(0,0,0,.4)";
+      c.fillStyle = "#E23B3B"; c.beginPath(); c.moveTo(-10, -6); c.lineTo(-18, -13); c.lineTo(-4, -6); c.fill(); c.beginPath(); c.moveTo(-10, 6); c.lineTo(-18, 13); c.lineTo(-4, 6); c.fill();
+      const bg = c.createLinearGradient(0, -7, 0, 7); bg.addColorStop(0, "#fff"); bg.addColorStop(1, "#B9C3D1"); c.fillStyle = bg; c.beginPath(); c.ellipse(0, 0, 15, 7, 0, 0, 7); c.fill();
+      c.fillStyle = "#E23B3B"; c.beginPath(); c.moveTo(10, -5.5); c.quadraticCurveTo(22, 0, 10, 5.5); c.fill();
+      c.fillStyle = "#5BC8FF"; c.strokeStyle = "#2A4FD0"; c.lineWidth = 1.2; c.beginPath(); c.arc(2, 0, 3.2, 0, 7); c.fill(); c.stroke();
+      c.restore();
+      if (k >= .99 && !d.boom) { d.boom = 1; fxFlash = .25;
+        for (let i = 0; i < 26; i++) { const t = fxRnd(0, 7), v = fxRnd(200, 520); add({ kind: "star", x: P2[0], y: P2[1], vx: Math.cos(t) * v, vy: Math.sin(t) * v, g: 500, drag: .96, size: fxRnd(6, 13), col: fxPick(["#FFD23F", "#FFE27A"]), vr: fxRnd(-8, 8), life: fxRnd(1, 1.6) }); }
+        for (let i = 0; i < 60; i++) { const t = fxRnd(0, 7), v = fxRnd(150, 450); add({ kind: "spark", x: P2[0], y: P2[1], vx: Math.cos(t) * v, vy: Math.sin(t) * v, g: 250, drag: .95, size: fxRnd(1.5, 3), col: fxPick(FX_COL), life: fxRnd(.8, 1.3), trail: 6 }); } }
+    } });
   }
 }
 
@@ -2520,7 +2618,7 @@ function avatarCardHTML() {
     ${me.status ? `<div><button class="link" id="stReset">Убрать статус</button></div>` : ""}</div>`;
 }
 function setStatus(e) { me.status = e; saveMe(); syncScore(); renderSettings(); }
-const ANIMS = [{ id: "", name: "Вспышка", ic: "✨" }, { id: "confetti", name: "Конфетти", ic: "🎉" }, { id: "ring", name: "Волна", ic: "◎" }, { id: "stars", name: "Звёздочки", ic: "⭐" }, { id: "bolt", name: "Молния", ic: "⚡" }, { id: "fireworks", name: "Фейерверк", ic: "🎆" }];
+const ANIMS = [{ id: "", name: "Вспышка", ic: "✨" }, { id: "confetti", name: "Конфетти", ic: "🎉" }, { id: "ring", name: "Волна", ic: "◎" }, { id: "stars", name: "Звёздочки", ic: "⭐" }, { id: "bolt", name: "Молния", ic: "⚡" }, { id: "fireworks", name: "Фейерверк", ic: "🎆" }, { id: "supernova", name: "Сверхновая", ic: "💥" }, { id: "blackhole", name: "Чёрная дыра", ic: "🕳️" }, { id: "atom", name: "Атом", ic: "⚛️" }, { id: "prism", name: "Призма", ic: "🌈" }, { id: "formulas", name: "Формулопад", ic: "📜" }, { id: "rocket", name: "Ракета", ic: "🚀" }];
 // анимация верного ответа — в настройках, все доступны сразу (старый выбор из оформления переносится)
 const animNow = () => { const a = prefs.anim !== undefined ? prefs.anim : (state.cos && state.cos.anim) || ""; return ANIMS.some(x => x.id === a) ? a : ""; };
 function renderSettings() {
