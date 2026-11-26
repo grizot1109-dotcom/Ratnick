@@ -754,6 +754,9 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
 .ach .apb i{display:block;height:100%;background:var(--accent)}
 .ach .apv{font:500 .7rem var(--f-mono);color:var(--muted)}
 .ach:not(.got){opacity:.85}
+[data-skin="mono"] .ach .ic,[data-skin="brutal"] .ach .ic,[data-skin="paper"] .ach .ic{color:#fff}
+[data-skin="mono"] .ach .ic .fl path,[data-skin="brutal"] .ach .ic .fl path,[data-skin="paper"] .ach .ic .fl path{fill:#fff}
+[data-skin="mono"] .ach:not(.got),[data-skin="brutal"] .ach:not(.got){opacity:1}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;gap:12px;align-items:center;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px);font-size:.9rem}
 .toast .ic{width:2.2em;height:2.2em;border-radius:50%;background:var(--accent);color:var(--surface);display:inline-flex;align-items:center;justify-content:center;font:700 .85rem var(--f-math);flex:none}
 .toast .ic .fl{width:1em;height:1em}
