@@ -2457,7 +2457,7 @@ $("gearBtn").onclick = () => show(activeView === "set" ? "train" : "set");
 const SKINS = [
   { id: "g-black", glass: 1, name: "Чёрное стекло", note: "тёмная", bg: "linear-gradient(160deg,#26262D,#08080A)", meta: "#0B0B0E", card: "rgba(255,255,255,.08)", ink: "#F2F2F5", accent: "#D9D9E0" },
   { id: "g-sky", glass: 1, name: "Небо", note: "светлая", bg: "linear-gradient(160deg,#F4F9FF,#BFD9F7)", meta: "#D7E8FB", card: "rgba(255,255,255,.7)", ink: "#0E2340", accent: "#1B73E8", accent2: "#3B8CF5" },
-  { id: "note", name: "Тетрадь", note: "светлая или тёмная, как в системе", bg: "#E9EDF2", card: "#FFFFFF", ink: "#16223A", accent: "#2A4FD0" },
+  { id: "note", name: "Стандартная", note: "светлая или тёмная, как в системе", bg: "#EEF0FB", card: "#FFFFFF", ink: "#141733", accent: "#2F45E0" },
   { id: "neon", name: "Неон", note: "тёмная", bg: "#07080F", card: "#10122A", ink: "#ECEEFF", accent: "#2EF2D0", accent2: "#FF3D9A" },
   { id: "mm", name: "Миллиметровка", note: "светлая", bg: "#F2EADA", card: "#FBF6EC", ink: "#3A2819", accent: "#C8502D", grid: 1 },
   { id: "matrix", name: "Матрица", note: "тёмная", bg: "#020803", card: "#06120A", ink: "#7DFFA2", accent: "#33FF77", mono: 1 },
@@ -3456,5 +3456,202 @@ else if (state.activeDuel && lbOn()) openDuel(state.activeDuel.code);
 checkAch();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,700;1,500;1,700&family=Unbounded:wght@700;800&display=swap">
+<style id="orfskin">
+/* Оформление в стиле «Орфографа»: шапка с фишками, нижние вкладки, цель дня, маршрут разделов */
+html.orf header.top::before,html.orf header.top::after{display:none!important}
+html.orf[data-skin] header.top{padding-top:calc(env(safe-area-inset-top,0px) + 10px)!important;border-bottom:0!important}
+html.orf:not([data-skin]){--bg:#EEF0FB;--surface:#FFFFFF;--sunk:#F4F5FC;--line:#DADDF0;--grid:#E6E8F6;--ink:#141733;--muted:#62668A;--accent:#2F45E0;--accent-soft:#E1E5FD;--co-d:#1D2DA8;--le:#FFD84D;--le-d:#E3B514;
+  --ok:#16A66B;--ok-soft:#D9F6E8;--mid:#E39B14;--mid-soft:#FFF1CC;--bad:#FF5A4E;--bad-soft:#FFE4E1;--flame:#FF7A1A;--on-accent:#fff;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;--f-body:"Golos Text",system-ui,-apple-system,sans-serif;--f-math:"Lora",Georgia,serif;--r:20px;color-scheme:light}
+@media (prefers-color-scheme:dark){html.orf:not([data-skin]){--bg:#0D0F1E;--surface:#181B30;--sunk:#13162A;--line:#2A2E4A;--grid:#1D2140;--ink:#ECEEFA;--muted:#9CA0C2;--accent:#5D70FF;--accent-soft:#232A5C;--co-d:#3A4BD0;--ok:#3FD58F;--ok-soft:#123528;--bad:#FF7A70;--bad-soft:#3E1D1C;--mid-soft:#3B3013;color-scheme:dark}}
+html.orf body{background:var(--bg)!important;font-family:var(--f-body)!important;padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+/* шапка: фишки слева, аватар справа */
+html.orf header.top{position:sticky;top:0;z-index:30;margin:0 -16px 6px!important;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px!important;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:0!important}
+html.orf .brand{display:flex;align-items:center;gap:8px;width:100%}
+html.orf .brand h1{display:none}
+html.orf .ochip,html.orf #flame{display:inline-flex;align-items:center;gap:4px;background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:99px!important;padding:5px 11px!important;font:700 13px var(--f-body)!important;color:var(--ink);height:auto!important;box-shadow:none!important}
+html.orf #flame{color:var(--flame)!important}
+html.orf .ochip.j{color:var(--le-d)}
+html.orf .ochip .bolt{width:14px;height:14px;fill:currentColor}
+html.orf #gearBtn{margin-left:auto;background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:50%!important;width:36px;height:36px;box-shadow:none!important}
+html.orf .oava{width:38px;height:38px;border-radius:50%;flex:none;cursor:pointer;display:grid;place-items:center}
+html.orf .oava .av{width:38px!important;height:38px!important;font-size:14px}
+/* нижняя панель вкладок */
+html.orf nav.obar{position:fixed!important;left:0;right:0;bottom:0;z-index:40;display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:0!important;max-width:none!important;background:var(--surface)!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;padding:8px 6px calc(10px + env(safe-area-inset-bottom,0px))!important;box-shadow:none!important}
+html.orf nav.obar button{display:flex!important;flex-direction:column;align-items:center;gap:3px;font:600 10.5px var(--f-body)!important;color:var(--muted)!important;background:none!important;padding:4px 0!important;border-radius:0!important;letter-spacing:0!important;text-transform:none!important;box-shadow:none!important}
+html.orf nav.obar button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html.orf nav.obar button[aria-selected="true"]{color:var(--accent)!important}
+/* общие карточки и кнопки «с объёмом» */
+html.orf .card{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:20px!important;box-shadow:0 3px 0 var(--line)!important}
+html.orf .btn{border-radius:16px!important;font:700 15px var(--f-body)!important;padding:13px 18px!important;background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--ink)!important;box-shadow:0 3px 0 var(--line)!important}
+html.orf .btn.primary{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;box-shadow:0 4px 0 var(--co-d)!important}
+html.orf .btn:active{transform:translateY(2px)}
+html.orf h1,html.orf h2,html.orf .card h2{font-family:var(--f-display)!important;letter-spacing:-.01em}
+/* цель дня — компактная полоска */
+html.orf .ogoal{display:flex;gap:10px;align-items:center;background:var(--accent);color:#fff;border-radius:16px;padding:8px 12px;margin:2px 0 10px}
+html.orf .ogoal b{font:700 13px var(--f-display);white-space:nowrap}
+html.orf .ogoal small{opacity:.85;font-size:12px;margin-left:auto;white-space:nowrap}
+html.orf .ogoal svg{flex:none}
+/* маршрут: дорожка вниз */
+html.orf .orhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:12px 0 6px}
+html.orf .orhead h2{font:800 26px/1.1 var(--f-display)!important;margin:0}
+html.orf .orhead span{font-size:13px;color:var(--muted)}
+html.orf .orhead .avg{font:800 15px var(--f-display);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 10px;color:var(--accent)}
+html.orf .omap{position:relative;margin:0 -4px}
+html.orf .omap svg.op{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+html.orf .omap .pb{fill:none;stroke:var(--line);stroke-width:16;stroke-linecap:round}
+html.orf .omap .pw{fill:none;stroke:var(--surface);stroke-width:4;stroke-linecap:round;stroke-dasharray:2 14;opacity:.9}
+html.orf .onode{position:absolute;left:0;right:0;height:92px;display:flex;align-items:center;gap:12px;padding:0 2%;background:none;border:0;cursor:pointer;color:var(--ink);text-align:left}
+html.orf .onode.rgt{flex-direction:row-reverse}
+html.orf .onode .oc{position:relative;width:92px;height:92px;flex:none;display:grid;place-items:center;margin-left:calc(24% - 46px - 2%)}
+html.orf .onode.rgt .oc{margin-left:0;margin-right:calc(24% - 46px - 2%)}
+html.orf .onode .oc::before{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--tc);box-shadow:0 7px 0 color-mix(in srgb,var(--tc) 55%,#000),inset 0 -6px 0 rgba(0,0,0,.12),inset 0 5px 0 rgba(255,255,255,.22)}
+html.orf .onode:active .oc::before{transform:translateY(4px);box-shadow:0 3px 0 color-mix(in srgb,var(--tc) 55%,#000)}
+html.orf .onode .og{position:relative;font:italic 700 28px/1 var(--f-math);color:#fff;margin-top:-4px}
+html.orf .onode .rg{position:absolute;inset:0;width:92px;height:92px;transform:rotate(-90deg)}
+html.orf .onode .rg .tr{fill:none;stroke:color-mix(in srgb,var(--tc) 22%,var(--bg));stroke-width:5}
+html.orf .onode .rg .pr{fill:none;stroke:#FFD84D;stroke-width:5;stroke-linecap:round}
+html.orf .onode.cur .oc::after{content:"";position:absolute;inset:2px;border-radius:50%;border:3px solid var(--tc);opacity:.35;animation:ohalo 1.8s ease-out infinite}
+@keyframes ohalo{from{transform:scale(.9);opacity:.6}to{transform:scale(1.18);opacity:0}}
+html.orf .onode .go{position:absolute;left:50%;top:-22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);font:700 12px var(--f-body);border-radius:9px;padding:5px 10px;white-space:nowrap;animation:obob 1.6s ease-in-out infinite;z-index:2}
+html.orf .onode .go::after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:var(--ink)}
+@keyframes obob{50%{transform:translate(-50%,-4px)}}
+html.orf .olab{flex:1;max-width:215px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 12px;display:grid;gap:2px;box-shadow:0 3px 0 var(--line)}
+html.orf .onode.cur .olab{border-color:var(--tc);box-shadow:0 3px 0 var(--tc)}
+html.orf .olab b{font:700 14px/1.2 var(--f-body)}
+html.orf .olab span{font-size:12px;color:var(--muted)}
+html.orf .olab i{display:block;height:6px;border-radius:6px;background:var(--sunk);overflow:hidden;margin-top:5px}
+html.orf .olab i s{display:block;height:100%;border-radius:6px;background:var(--tc)}
+html.orf .olab em{font-style:normal;font-size:11.5px;font-weight:600;color:var(--tc)}
+/* режим «маршрут» скрывает тренировку, и наоборот */
+html.orf.orf-route #view-train>:not(.ogoal):not(.oroute){display:none!important}
+html.orf:not(.orf-route) .oroute{display:none!important}
+html.orf .oback{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+html.orf .oback button{font:600 14px var(--f-body);color:var(--accent);background:none;border:0;cursor:pointer;padding:4px 0}
+html.orf .oback span{margin-left:auto;font:700 12px var(--f-body);padding:4px 10px;border-radius:99px;color:#fff;background:var(--tc,var(--accent))}
+html.orf.orf-route .oback{display:none}
+html.orf #secSel{display:none!important}
+/* режимы */
+html.orf .seg2{background:var(--sunk)!important;border:1px solid var(--line)!important;border-radius:12px!important;padding:3px!important;box-shadow:none!important}
+html.orf .seg2 button{font:600 13px var(--f-body)!important;border-radius:9px!important;color:var(--muted)!important;text-transform:none!important;letter-spacing:0!important}
+html.orf .seg2 button[aria-pressed="true"]{background:var(--surface)!important;color:var(--ink)!important;box-shadow:0 0 0 1px var(--line)!important}
+html.orf .sel{border-radius:12px!important;border:1px solid var(--line)!important;background:var(--surface)!important;font:600 13px var(--f-body)!important}
+/* карточка вопроса как у «Орфографа» */
+html.orf #qCard{border-radius:28px!important;padding:46px 18px 24px!important;text-align:center;position:relative;box-shadow:0 8px 0 -2px color-mix(in srgb,var(--line) 80%,var(--bg))!important}
+html.orf #qCard .eyebrow{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;margin:0!important;border:0!important;padding:0!important}
+html.orf #qSec{font:700 12px var(--f-body)!important;color:var(--accent)!important;background:var(--accent-soft);padding:4px 10px;border-radius:99px;text-transform:none!important;letter-spacing:0!important}
+html.orf #qHist{display:none}
+html.orf #qCard .combo{font-size:11px!important;white-space:nowrap;margin-left:auto}
+html.orf #qCard{padding-top:54px!important}
+html.orf .qtext{font:700 clamp(19px,5.6vw,24px)/1.3 var(--f-math)!important;text-transform:none!important;color:var(--ink)!important;text-wrap:balance}
+html.orf .qtext::after,html.orf .qtext::before{content:none!important}
+/* поле ответа и клавиатура */
+html.orf #editor{border-radius:20px!important;min-height:86px}
+html.orf .key{border:1px solid var(--line)!important;border-bottom-width:4px!important;border-radius:12px!important;background:var(--surface)!important;box-shadow:none!important;font-family:var(--f-math)!important;height:46px}
+html.orf .key:active{transform:translateY(2px);border-bottom-width:2px!important}
+html.orf .key.act,html.orf .key.op,html.orf .key.nav{background:var(--sunk)!important}
+html.orf .kt{border-radius:10px!important;border:1px solid var(--line)!important;font-family:var(--f-body)!important}
+html.orf .kt[aria-pressed="true"]{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+html.orf .quiz .opt{border-radius:16px!important;border:1px solid var(--line)!important;border-bottom-width:4px!important;font-family:var(--f-body)!important}
+/* результат как «шторка» */
+html.orf #reveal{border-radius:28px!important}
+html.orf .ai{border-radius:18px!important;padding:14px!important;font-weight:600}
+html.orf .ai.ok{background:var(--ok)!important;color:#fff}
+html.orf .ai.ok .dot{background:#fff!important}
+html.orf .ai.ok .label,html.orf .ai.ok .note{color:rgba(255,255,255,.85)!important}
+html.orf .ai.ok .fx,html.orf .ai.ok .fx *{color:#fff!important}
+html.orf .ai.bad{background:var(--bad)!important;color:#fff}
+html.orf .ai.bad .dot{background:#fff!important}
+html.orf .ai.bad .label,html.orf .ai.bad .note{color:rgba(255,255,255,.85)!important}
+html.orf .ai.bad .fx,html.orf .ai.bad .fx *{color:#fff!important}
+html.orf .ai.mid{background:var(--le)!important;color:#141733}
+html.orf .g{border-radius:14px!important;border-bottom-width:3px!important}
+/* полоска уровня */
+html.orf .lvltop{display:none!important}
+html.orf .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+/* рейтинг как «Друзья» */
+html.orf .board li{border-radius:0}
+html.orf .board li.me{background:var(--le)!important;color:#141733}
+html.orf .board li.me *:not(.av):not(.lvl):not(.lvl *):not(.av *){color:#141733!important}
+html.orf .board li.me .bolt{fill:#141733!important}
+html.orf .mecard{background:linear-gradient(160deg,var(--accent),var(--co-d))!important;color:#fff;border:0!important;box-shadow:0 4px 0 var(--co-d)!important}
+html.orf .mecard .k,html.orf .mecard .hintline,html.orf .mecard .link{color:rgba(255,255,255,.85)!important}
+html.orf .mecard .mestats>div{background:rgba(255,255,255,.14)!important;border:0!important}
+html.orf .mecard .btn{background:#fff!important;color:var(--accent)!important}
+html.orf .tile{border-radius:16px!important}
+html.orf .tile .v{font-family:var(--f-display)!important}
+html.orf .chip{border-radius:99px!important}
+html.orf #view-set .skins,html.orf #view-set .skins+*{}
+</style>
+<script>
+(() => {
+  const H = document.documentElement; H.classList.add("orf");
+  const ICON = {
+    train: '<svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M7 9.5V15c3 2.2 7 2.2 10 0V9.5"/></svg>',
+    lb: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17.5" cy="9" r="2.5"/><path d="M3 19.5c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M15.5 14.2c3 0 5.5 1.6 5.5 4.6"/></svg>',
+    stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>',
+    ref: '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>',
+    prof: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20.5c1-4 4-6 8-6s7 2 8 6"/></svg>'
+  };
+  const NAMES = { train: "Учиться", lb: "Друзья", stats: "Статистика", ref: "Формулы" };
+  const nav = document.querySelector("header.top nav");
+  for (const k of ["train", "lb", "stats", "ref"]) { const b = document.getElementById("tab-" + k); b.innerHTML = ICON[k] + NAMES[k]; }
+  const pb = document.createElement("button"); pb.setAttribute("role", "tab"); pb.id = "tab-prof"; pb.setAttribute("aria-selected", "false"); pb.innerHTML = ICON.prof + "Профиль";
+  pb.onclick = () => { if (typeof me !== "undefined" && me.name) { profileBack = activeView; openProfile(me.id, me.name, myAv()); } else show("lb"); };
+  nav.appendChild(pb); nav.classList.add("obar"); document.body.appendChild(nav);
+  // шапка: огонёк, джоули сегодня, уровень, настройки, аватар
+  const brand = document.querySelector(".brand"), gear = document.getElementById("gearBtn");
+  const jc = document.createElement("span"); jc.className = "ochip j"; const lc = document.createElement("span"); lc.className = "ochip";
+  const av = document.createElement("span"); av.className = "oava"; av.title = "Профиль"; av.onclick = () => pb.onclick();
+  brand.insertBefore(jc, gear); brand.insertBefore(lc, gear); brand.appendChild(av);
+  // цель дня и маршрут
+  const tv = document.getElementById("view-train"), goal = document.createElement("div"); goal.className = "ogoal";
+  tv.insertBefore(goal, tv.firstChild);
+  const route = document.createElement("div"); route.className = "oroute"; goal.after(route);
+  const back = document.createElement("div"); back.className = "oback"; back.innerHTML = `<button type="button">← Маршрут</button><span></span>`; route.after(back);
+  const GLYPH = { all: ["∑", "#2F45E0"], kin: ["v", "#2F45E0"], dyn: ["F", "#7B5CFF"], cons: ["p", "#16A66B"], stat: ["ρ", "#0EA5B7"], mkt: ["T", "#FF7A1A"], es: ["q", "#E0479E"], dc: ["I", "#D9A010"], mag: ["B", "#2563EB"], osc: ["λ", "#8B5CF6"], ac: ["~", "#14B8A6"], opt: ["n", "#F43F5E"], qnt: ["hν", "#6D28D9"] };
+  const GOAL = 20, ROW = 118;
+  const secF = k => F.filter(f => k === "all" || f.sec === k);
+  const learned = k => secF(k).filter(f => state.f[f.id] && boxOf(state.f[f.id]) >= 3).length;
+  const setMode = on => { H.classList.toggle("orf-route", on); scrollTo(0, 0); };
+  function drawRoute() {
+    const cur = document.getElementById("secSel").value, list = [["all", "Все разделы"], ...SECTIONS], W = 100;
+    const pct = Math.round(learned("all") / F.length * 100);
+    const pts = list.map((_, i) => [i % 2 ? 76 : 24, i * ROW + 46 + 18]);
+    let d = `M${pts[0][0]} ${pts[0][1]}`; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], my = (y0 + y1) / 2; d += ` C${x0} ${my} ${x1} ${my} ${x1} ${y1}`; }
+    const h = list.length * ROW + 10, C = 2 * Math.PI * 40;
+    route.innerHTML = `<div class="orhead"><div><h2>Маршрут</h2><span>${SECTIONS.length} разделов · ${F.length} формул</span></div><b class="avg">${pct}%</b></div>
+      <div class="omap" style="height:${h}px"><svg class="op" viewBox="0 0 ${W} ${h}" preserveAspectRatio="none"><path class="pb" d="${d}" vector-effect="non-scaling-stroke"/><path class="pw" d="${d}" vector-effect="non-scaling-stroke"/></svg>
+      ${list.map(([k, n], i) => { const [g, col] = GLYPH[k] || ["•", "#2F45E0"], tot = secF(k).length, l = learned(k), p = tot ? l / tot : 0, on = cur === k;
+        return `<button class="onode${i % 2 ? " rgt" : ""}${on ? " cur" : ""}" data-sec="${k}" style="top:${i * ROW + 18}px;--tc:${col}">
+          <span class="oc"><svg class="rg" viewBox="0 0 92 92"><circle class="tr" cx="46" cy="46" r="40"/><circle class="pr" cx="46" cy="46" r="40" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}"/></svg><span class="og">${g}</span>${on ? `<span class="go">Начать</span>` : ""}</span>
+          <span class="olab"><b>${n}</b><span>${tot} ${plural(tot, "формула", "формулы", "формул")}</span><i><s style="width:${(p * 100).toFixed(0)}%"></s></i><em>${Math.round(p * 100)}% выучено</em></span></button>`; }).join("")}</div>`;
+    const [g, col] = GLYPH[cur] || GLYPH.all; back.querySelector("span").textContent = cur === "all" ? "Все разделы" : SEC_NAME[cur]; back.style.setProperty("--tc", col);
+  }
+  route.addEventListener("click", e => { const b = e.target.closest(".onode"); if (!b) return; const s = document.getElementById("secSel"); if (s.value !== b.dataset.sec) { s.value = b.dataset.sec; s.dispatchEvent(new Event("change")); } drawRoute(); setMode(false); });
+  back.querySelector("button").onclick = () => { drawRoute(); setMode(true); };
+  document.getElementById("tab-train").addEventListener("click", () => { if (activeView === "train" && !duel) setMode(true); });
+  setMode(true);
+  let lastDuel = false;
+  function refresh() {
+    try {
+      const dd = state.days[dayKey()] || { n: 0 }, n = dd.n || 0, p = Math.min(1, n / GOAL), C = 2 * Math.PI * 13;
+      goal.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 16 16)"/></svg><b>Цель дня ${Math.min(n, GOAL)} / ${GOAL}</b><small>${n >= GOAL ? "огонёк горит 🔥" : `ещё ${GOAL - n}`}</small>`;
+      jc.innerHTML = BOLT + dayPts(state.days[dayKey()]);
+      lc.textContent = "ур. " + lvlOf(myPts());
+      av.innerHTML = avHTML(myAv(), me.name || "Ты", "", me.id);
+      if (duel && !lastDuel) setMode(false); lastDuel = !!duel;
+      if (H.classList.contains("orf-route")) drawRoute();
+    } catch (e) {}
+  }
+  const wrap = name => { const f = window[name]; if (typeof f !== "function") return; window[name] = function () { const r = f.apply(this, arguments); refresh(); return r; }; };
+  ["renderSession", "renderFlame", "show"].forEach(wrap);
+  // перехват прямых вызовов внутри приложения
+  setInterval(refresh, 2000);
+  refresh();
+})();
+</script>
+
 </body>
 </html>
