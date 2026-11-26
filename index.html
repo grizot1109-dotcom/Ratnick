@@ -754,6 +754,9 @@ img.av{object-fit:cover;background:var(--sunk);display:inline-block}
 .ach .apb i{display:block;height:100%;background:var(--accent)}
 .ach .apv{font:500 .7rem var(--f-mono);color:var(--muted)}
 .ach:not(.got){opacity:.85}
+.accform{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.accform input{font:16px var(--f-body);color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.accform .err{color:var(--bad);font-size:.85rem;margin:0;min-height:0}
 [data-skin="mono"] .ach .ic,[data-skin="brutal"] .ach .ic,[data-skin="paper"] .ach .ic{color:#fff}
 [data-skin="mono"] .ach .ic .fl path,[data-skin="brutal"] .ach .ic .fl path,[data-skin="paper"] .ach .ic .fl path{fill:#fff}
 [data-skin="mono"] .ach:not(.got),[data-skin="brutal"] .ach:not(.got){opacity:1}
@@ -1382,7 +1385,7 @@ try { const s = JSON.parse(ls.get(LS_KEY) || "null"); if (s && s.v === 1) state 
 const prefs = (() => { try { return JSON.parse(ls.get(LS_KEY + "-prefs") || "{}"); } catch { return {}; } })();
 const savePrefs = () => ls.set(LS_KEY + "-prefs", JSON.stringify(prefs));
 
-function persist() { ls.set(LS_KEY, JSON.stringify(state)); }
+function persist() { ls.set(LS_KEY, JSON.stringify(state)); if (typeof backupDirty !== "undefined") backupDirty = true; }
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 function dayAdd(r, pts) {
   const d = state.days[dayKey()] || (state.days[dayKey()] = { n: 0, ok: 0, mid: 0 });
@@ -2585,7 +2588,9 @@ function renderSettings() {
     }).join("")}</div></div>
     <div class="card sec"><header><h2>Анимация верного ответа</h2><span>нажми, чтобы посмотреть</span></header>
       <div class="cosgrid">${ANIMS.map(a => `<button class="cos${a.id === animNow() ? " on" : ""}" data-anim="${a.id}" aria-pressed="${a.id === animNow()}"><span class="nmprev animprev">${a.ic}</span><b>${a.name}</b><small>${a.id === animNow() ? "выбрано" : ""}</small></button>`).join("")}</div></div>
+    ${accountCardHTML()}
     <div class="card sec"><h2>Что ещё</h2><p class="empty">Ник меняется во вкладке «Рейтинг», статистику можно сбросить во вкладке «Статистика».</p></div>`;
+  bindAccountCard();
   $("view-set").querySelectorAll("[data-anim]").forEach(b => b.onclick = () => {
     prefs.anim = b.dataset.anim; savePrefs(); const y = scrollY; renderSettings(); scrollTo(0, y);
     const nb = $("view-set").querySelector(`[data-anim="${prefs.anim}"]`); if (nb) playAnim(prefs.anim, nb, nb.querySelector(".animprev"));
@@ -2636,6 +2641,93 @@ async function api(path, opts = {}) {
   });
   if (!r.ok) throw new Error(r.status + " " + (await r.text()).slice(0, 200));
   return r.status === 204 ? null : r.json().catch(() => null);
+}
+/* ---------- Пароль, вход и резервная копия ----------
+   Аккаунт общий с «Орфографом»: тот же ник и пароль (ru_set_password / ru_login).
+   Копия прогресса Формулографа хранится отдельно (fg_save_backup / fg_load_backup). */
+var backupDirty = false;
+const backupData = () => ({ v: 1, at: Date.now(), state, prefs: { skin: prefs.skin, anim: prefs.anim, lbPeriod: prefs.lbPeriod, mode: prefs.mode, kind: prefs.kind, sec: prefs.sec },
+  me: { avatar: me.avatar || "", status: me.status || "" } });
+async function backupMaybe(force) {
+  if (!lbOn() || !me.name) return;
+  const last = prefs.backupAt || 0, now = Date.now();
+  if (!force && !(backupDirty && now - last > 60e3) && now - last < 5 * 60e3) return;
+  try {
+    await api("rpc/fg_save_backup", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name, p_data: backupData() }) });
+    backupDirty = false; prefs.backupAt = now; savePrefs();
+  } catch (e) { if (force) throw e; }
+}
+setInterval(() => { if (document.visibilityState === "visible") backupMaybe(); }, 60e3);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && backupDirty) backupMaybe(true).catch(() => {}); });
+const agoText = t => { if (!t) return "ещё не было"; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "только что" : m < 60 ? `${m} мин назад` : m < 1440 ? `${Math.round(m / 60)} ч назад` : new Date(t).toLocaleDateString("ru-RU"); };
+function accountCardHTML() {
+  if (!lbOn()) return "";
+  if (!me.name) return `<div class="card sec" id="accCard"><h2>Вход по паролю</h2><p class="empty">Уже играл и приложение сбросилось? Войди по нику и паролю — прогресс вернётся.</p>
+    <div><button class="btn" id="goLogin2">Войти по паролю</button></div><div id="accBox"></div></div>`;
+  const login = prefs.login;
+  return `<div class="card sec" id="accCard"><header><h2>Вход и резервная копия</h2></header>
+    <p class="empty">${login ? `Пароль задан. Если приложение сбросится или сменишь телефон — нажми «Войти по паролю» и введи логин <b>${esc(login)}</b>. Прогресс восстановится из копии.`
+      : "Задай пароль, чтобы вернуть аккаунт и весь прогресс, если приложение сбросится или ты сменишь телефон. Логином будет твой ник."} Пароль общий с «Орфографом».</p>
+    <p class="hintline">Копия прогресса на сервере: ${agoText(prefs.backupAt)}</p>
+    <div class="actions"><button class="btn ${login ? "" : "primary"}" id="setPass">${login ? "Сменить пароль" : "Задать пароль"}</button><button class="btn" id="goLogin2">Войти в другой аккаунт</button></div>
+    <div id="accBox"></div></div>`;
+}
+function bindAccountCard() {
+  const sp = $("setPass"); if (sp) sp.onclick = () => passwordForm($("accBox"));
+  const gl = $("goLogin2"); if (gl) gl.onclick = () => loginForm($("accBox"));
+  if (lbOn() && me.name && prefs.login === undefined) api("rpc/ru_has_password", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name }) })
+    .then(l => { prefs.login = l || ""; savePrefs(); if (activeView === "set") renderSettings(); }).catch(() => {});
+}
+function passwordForm(box) {
+  box.innerHTML = `<form class="accform" id="pf"><p class="hintline">Логин: <b>${esc(me.name)}</b> (твой ник, большие и маленькие буквы не важны). Пароль — от 6 символов. Запомни или запиши его.</p>
+    <input type="password" id="p1" placeholder="Пароль" autocomplete="new-password"><input type="password" id="p2" placeholder="Ещё раз" autocomplete="new-password">
+    <p class="err" id="pe"></p><div class="actions"><button class="btn primary" id="psave">Сохранить</button><button class="btn" type="button" id="pcl">Отмена</button></div></form>`;
+  $("pcl").onclick = () => box.innerHTML = "";
+  $("pf").onsubmit = async e => {
+    e.preventDefault();
+    const a = $("p1").value, b = $("p2").value, err = $("pe");
+    if (a.length < 6) return err.textContent = "Пароль — минимум 6 символов";
+    if (a !== b) return err.textContent = "Пароли не совпадают";
+    const btn = $("psave"); btn.disabled = true; btn.textContent = "Сохраняю…";
+    try {
+      const l = await api("rpc/ru_set_password", { method: "POST", body: JSON.stringify({ p_id: me.id, p_secret: me.secret, p_name: me.name, p_password: a }) });
+      prefs.login = l; savePrefs(); await backupMaybe(true);
+      renderSettings(); toast("<span>Пароль сохранён, копия прогресса сделана</span>");
+    } catch (e2) {
+      btn.disabled = false; btn.textContent = "Сохранить";
+      err.textContent = /login taken/.test(e2.message) ? "Такой логин уже занят другим игроком — смени ник и попробуй снова" : "Не получилось: " + e2.message;
+    }
+  };
+  $("p1").focus();
+}
+function loginForm(box) {
+  const hasLocal = Object.keys(state.f).length > 0;
+  box.innerHTML = `<form class="accform" id="lf"><p class="hintline">Введи ник и пароль, которые задавал здесь или в «Орфографе».${hasLocal ? " <b>Прогресс на этом телефоне заменится прогрессом из аккаунта.</b>" : ""}</p>
+    <input id="ll" placeholder="Ник" autocomplete="username" maxlength="20"><input type="password" id="lp" placeholder="Пароль" autocomplete="current-password">
+    <p class="err" id="le"></p><div class="actions"><button class="btn primary" id="lgo">Войти</button><button class="btn" type="button" id="lcl">Отмена</button></div></form>`;
+  $("lcl").onclick = () => box.innerHTML = "";
+  $("lf").onsubmit = async e => {
+    e.preventDefault();
+    const err = $("le"), btn = $("lgo");
+    btn.disabled = true; btn.textContent = "Вхожу…"; err.textContent = "";
+    try {
+      const acc = await api("rpc/ru_login", { method: "POST", body: JSON.stringify({ p_login: $("ll").value, p_password: $("lp").value }) });
+      if (acc && acc.error === "locked") throw new Error("locked");
+      if (!acc || !acc.id) throw new Error("wrong login or password");
+      const backup = await api("rpc/fg_load_backup", { method: "POST", body: JSON.stringify({ p_id: acc.id, p_secret: acc.secret }) });
+      const nm = { id: acc.id, secret: acc.secret, name: acc.name };
+      if (backup && backup.me) { nm.avatar = backup.me.avatar || ""; nm.status = backup.me.status || ""; }
+      ls.set(ME_KEY, JSON.stringify(nm));
+      ls.set(LS_KEY, JSON.stringify(backup && backup.state && backup.state.v === 1 ? backup.state : blank()));
+      const np = Object.assign({}, prefs, (backup && backup.prefs) || {}, { login: ($("ll").value || "").trim().toLowerCase(), backupAt: backup && backup.at || 0 });
+      ls.set(LS_KEY + "-prefs", JSON.stringify(np));
+      location.reload();
+    } catch (e2) {
+      btn.disabled = false; btn.textContent = "Войти";
+      err.textContent = /locked/.test(e2.message) ? "Слишком много попыток. Подожди 15 минут." : /wrong login or password/.test(e2.message) ? "Неверный ник или пароль" : "Не получилось войти: " + e2.message;
+    }
+  };
+  $("ll").focus();
 }
 let syncTimer = null, syncing = Promise.resolve();
 function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(() => syncScore(), 1200); }
@@ -2860,7 +2952,10 @@ function renderLb() {
   if (!me.name || renaming) {
     el.innerHTML = `<div class="card sec"><h2>${renaming ? "Новый ник" : "Придумай ник"}</h2><p class="empty">Под этим именем тебя увидят в рейтинге. Его можно поменять позже. До 16 символов, без смайликов.</p>
       <form class="nameform" id="nameForm"><input id="lbName" maxlength="16" autocomplete="nickname" placeholder="Например, Ньютон2008" aria-label="Ник"><button class="btn primary">Сохранить</button></form>
-      <p class="err" id="nameErr" hidden></p></div>`;
+      <p class="err" id="nameErr" hidden></p>
+      ${renaming ? "" : `<p class="empty" style="margin-top:10px">Уже играл и приложение сбросилось? <button class="link" id="goLogin">Войти по паролю</button></p>`}</div>
+      <div id="loginBox"></div>`;
+    const gl = $("goLogin"); if (gl) gl.onclick = () => loginForm($("loginBox"));
     $("nameForm").onsubmit = e => {
       e.preventDefault();
       const v = $("lbName").value.trim().replace(/\s+/g, " ");
