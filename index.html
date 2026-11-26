@@ -3583,6 +3583,63 @@ html.orf .tile{border-radius:16px!important}
 html.orf .tile .v{font-family:var(--f-display)!important}
 html.orf .chip{border-radius:99px!important}
 html.orf #view-set .skins,html.orf #view-set .skins+*{}
+
+/* ---------- Темы под новый интерфейс ----------
+   В любой теме кроме стандартной: всё берёт цвета темы (акцент, текст на акценте, «верно/неверно»). */
+html.orf[data-skin="mm"],html.orf[data-skin="sakura"]{--on-accent:#fff}
+html.orf[data-skin="neon"]{--on-accent:#07080F}
+html.orf[data-skin="matrix"]{--on-accent:#020803}
+html.orf[data-skin="sunset"]{--on-accent:#2A1226}
+html.orf[data-skin]{--co-d:color-mix(in srgb,var(--accent) 62%,#000);--le:var(--gold,#FFD84D)}
+html.orf .ogoal{color:var(--on-accent,#fff)!important}
+html.orf .btn.primary{color:var(--on-accent,#fff)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)!important}
+html.orf[data-skin] .onode{--tc:var(--accent)!important}
+html.orf[data-skin] .onode .og{color:var(--on-accent,#fff)}
+html.orf[data-skin] .onode .rg .pr{stroke:var(--le)}
+html.orf[data-skin] .omap .pb{stroke:color-mix(in srgb,var(--line) 70%,var(--accent))}
+html.orf[data-skin] .omap .pw{stroke:var(--bg)}
+html.orf[data-skin] .oback span{background:var(--accent)!important;color:var(--on-accent,#fff)}
+html.orf[data-skin] .orhead .avg{color:var(--accent)}
+html.orf .ochip.j{color:var(--gold,var(--le-d,#E3B514))}
+/* итог ответа: в темах — мягкая плашка цвета темы с рамкой, текст читаемый */
+html.orf[data-skin] .ai.ok,html.orf[data-skin] .ai.bad,html.orf[data-skin] .ai.mid{color:var(--ink)!important;box-shadow:inset 0 0 0 2px var(--c)!important;background:var(--cs)!important}
+html.orf[data-skin] .ai.ok{--c:var(--ok);--cs:var(--ok-soft)}
+html.orf[data-skin] .ai.bad{--c:var(--bad);--cs:var(--bad-soft)}
+html.orf[data-skin] .ai.mid{--c:var(--mid);--cs:var(--mid-soft)}
+html.orf[data-skin] .ai .dot{background:var(--c)!important}
+html.orf[data-skin] .ai .label,html.orf[data-skin] .ai .note{color:var(--muted)!important}
+html.orf[data-skin] .ai .fx,html.orf[data-skin] .ai .fx *{color:var(--ink)!important}
+html.orf[data-skin] .mecard{color:var(--on-accent,#fff)!important}
+html.orf[data-skin] .mecard .k,html.orf[data-skin] .mecard .hintline,html.orf[data-skin] .mecard .link{color:inherit!important;opacity:.85}
+html.orf[data-skin] .mecard .btn{background:var(--surface)!important;color:var(--ink)!important}
+html.orf[data-skin="brutal"] .ogoal{background:#FFD600!important;color:#000!important;border:3px solid #000;box-shadow:4px 4px 0 #000}
+html.orf[data-skin="brutal"] .onode{--tc:#FFD600!important}
+html.orf[data-skin="brutal"] .onode .og{color:#000}
+html.orf[data-skin="brutal"] .oback span{background:#FFD600!important;color:#000}
+html.orf[data-skin="brutal"] .mecard{color:#000!important;background:#FFD600!important}
+html.orf[data-skin="mono"] .onode .oc::before,html.orf[data-skin="mononight"] .onode .oc::before{box-shadow:0 6px 0 var(--ink)!important;border:2px solid var(--ink)}
+html.orf[data-skin="mononight"] .onode .oc::before{box-shadow:0 6px 0 #555!important}
+html.orf[data-skin="mononight"] .mecard,html.orf[data-skin="blueprint"] .mecard{color:var(--on-accent)!important}
+/* стекло: карточки маршрута прозрачные как у темы */
+html.orf[data-skin^="g-"] .olab,html.orf[data-skin^="g-"] .orhead .avg,html.orf[data-skin^="g-"] .ochip,html.orf[data-skin^="g-"] #flame,html.orf[data-skin^="g-"] #gearBtn{background:var(--surface)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+html.orf[data-skin^="g-"] nav.obar{background:color-mix(in srgb,var(--bg) 70%,transparent)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+/* тёмные темы: верхняя полоска и нижняя панель в цвет фона */
+html.orf[data-skin] header.top{background:color-mix(in srgb,var(--bg) 85%,transparent)!important}
+html.orf[data-skin] nav.obar{background:var(--bg)!important;border-top:1px solid var(--line)!important;box-shadow:none!important}
+html.orf nav.obar button{border:0!important;background:none!important;box-shadow:none!important;outline:0!important;-webkit-mask:none!important;mask:none!important}
+html.orf[data-skin="brutal"] .btn.primary{background:#FFD600!important;color:#000!important;box-shadow:3px 3px 0 #000!important}
+html.orf[data-skin="brutal"] .olab em{color:#000}
+/* плакат и пиксель: острые углы и в новых элементах */
+html.orf[data-skin="poster"] .ogoal,html.orf[data-skin="poster"] .olab,html.orf[data-skin="poster"] .ochip,html.orf[data-skin="poster"] .orhead .avg,html.orf[data-skin="brutal"] .olab,html.orf[data-skin="brutal"] .ochip,html.orf[data-skin="paper"] .olab,html.orf[data-skin="paper"] .ogoal,html.orf[data-skin="blueprint"] .olab,html.orf[data-skin="blueprint"] .ogoal,html.orf[data-skin="blueprint"] .ochip,html.orf[data-skin="lab"] .olab{border-radius:4px!important}
+html.orf[data-skin="poster"] .olab,html.orf[data-skin="brutal"] .olab,html.orf[data-skin="paper"] .olab{border:2px solid var(--ink)!important;box-shadow:3px 3px 0 var(--ink)!important}
+html.orf[data-skin="blueprint"] .olab{background:transparent!important;border:1.5px solid #fff!important;box-shadow:none!important}
+html.orf[data-skin="chalk"] .olab{background:transparent!important;border:2px dashed rgba(244,241,230,.5)!important;box-shadow:none!important}
+html.orf[data-skin="chalk"] .olab b,html.orf[data-skin="chalk"] .orhead h2{font-family:"Caveat",cursive!important;font-size:1.3em!important}
+html.orf[data-skin="pixel"] .olab,html.orf[data-skin="pixel"] .ogoal,html.orf[data-skin="pixel"] .ochip,html.orf[data-skin="pixel"] .onode .oc::before{border-radius:0!important}
+html.orf[data-skin="pixel"] .olab{border:3px solid #0A0C1E!important;box-shadow:4px 4px 0 #0A0C1E!important}
+html.orf[data-skin="pixel"] .orhead h2,html.orf[data-skin="pixel"] .olab b,html.orf[data-skin="pixel"] .ogoal b{font-family:"Press Start 2P",monospace!important;font-size:11px!important;line-height:1.6}
+html.orf[data-skin="pixel"] .orhead h2{font-size:18px!important}
+html.orf[data-skin="matrix"] .olab b,html.orf[data-skin="matrix"] .orhead h2{font-family:var(--f-mono)!important}
 </style>
 <script>
 (() => {
@@ -3637,7 +3694,7 @@ html.orf #view-set .skins,html.orf #view-set .skins+*{}
   function refresh() {
     try {
       const dd = state.days[dayKey()] || { n: 0 }, n = dd.n || 0, p = Math.min(1, n / GOAL), C = 2 * Math.PI * 13;
-      goal.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 16 16)"/></svg><b>Цель дня ${Math.min(n, GOAL)} / ${GOAL}</b><small>${n >= GOAL ? "огонёк горит 🔥" : `ещё ${GOAL - n}`}</small>`;
+      goal.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-opacity=".28" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="var(--le,#FFD84D)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 16 16)"/></svg><b>Цель дня ${Math.min(n, GOAL)} / ${GOAL}</b><small>${n >= GOAL ? "огонёк горит 🔥" : `ещё ${GOAL - n}`}</small>`;
       jc.innerHTML = BOLT + dayPts(state.days[dayKey()]);
       lc.textContent = "ур. " + lvlOf(myPts());
       av.innerHTML = avHTML(myAv(), me.name || "Ты", "", me.id);
